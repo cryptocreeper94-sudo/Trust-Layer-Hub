@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,6 @@ import {
   Pressable,
   Platform,
   FlatList,
-  KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +16,8 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { useChat } from "@/hooks/useChat";
+import { useAuth } from "@/lib/auth-context";
 import { MOCK_CHANNELS, MOCK_MESSAGES } from "@/constants/mock-data";
 
 type ViewMode = "channels" | "messages";
@@ -25,9 +26,10 @@ function ChannelItem({
   channel,
   onPress,
 }: {
-  channel: typeof MOCK_CHANNELS[0];
+  channel: { id: string; name: string; lastMessage?: string; lastMessageTime?: string; unread?: number; isPublic?: boolean };
   onPress: () => void;
 }) {
+  const isPublic = channel.isPublic !== false;
   return (
     <Pressable
       style={({ pressed }) => [styles.channelItem, pressed && { opacity: 0.7 }]}
@@ -38,18 +40,20 @@ function ChannelItem({
     >
       <View style={styles.channelIcon}>
         <Ionicons
-          name={channel.isPublic ? "megaphone" : "person"}
+          name={isPublic ? "megaphone" : "person"}
           size={18}
-          color={channel.isPublic ? Colors.primary : Colors.secondary}
+          color={isPublic ? Colors.primary : Colors.secondary}
         />
       </View>
       <View style={styles.channelInfo}>
-        <Text style={styles.channelName}>{channel.isPublic ? "#" : ""}{channel.name}</Text>
-        <Text style={styles.channelLastMsg} numberOfLines={1}>{channel.lastMessage}</Text>
+        <Text style={styles.channelName}>{isPublic ? "#" : ""}{channel.name}</Text>
+        {channel.lastMessage && (
+          <Text style={styles.channelLastMsg} numberOfLines={1}>{channel.lastMessage}</Text>
+        )}
       </View>
       <View style={styles.channelMeta}>
-        <Text style={styles.channelTime}>{channel.lastMessageTime}</Text>
-        {channel.unread > 0 && (
+        {channel.lastMessageTime && <Text style={styles.channelTime}>{channel.lastMessageTime}</Text>}
+        {(channel.unread || 0) > 0 && (
           <View style={styles.unreadBadge}>
             <Text style={styles.unreadText}>{channel.unread}</Text>
           </View>
@@ -59,18 +63,26 @@ function ChannelItem({
   );
 }
 
-function MessageBubble({ msg }: { msg: typeof MOCK_MESSAGES[0] }) {
+function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?: string; senderInitials?: string; content?: string; text?: string; timestamp: string; isMe?: boolean } }) {
+  const isMe = msg.isMe === true;
+  const displayName = msg.username || msg.sender || "Unknown";
+  const initials = msg.senderInitials || displayName.slice(0, 2).toUpperCase();
+  const content = msg.content || msg.text || "";
+  const timeStr = msg.timestamp.includes("T")
+    ? new Date(msg.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    : msg.timestamp;
+
   return (
-    <View style={[styles.messageRow, msg.isMe && styles.messageRowMe]}>
-      {!msg.isMe && (
+    <View style={[styles.messageRow, isMe && styles.messageRowMe]}>
+      {!isMe && (
         <View style={styles.msgAvatar}>
-          <Text style={styles.msgAvatarText}>{msg.senderInitials}</Text>
+          <Text style={styles.msgAvatarText}>{initials}</Text>
         </View>
       )}
-      <View style={[styles.msgBubble, msg.isMe ? styles.msgBubbleMe : styles.msgBubbleOther]}>
-        {!msg.isMe && <Text style={styles.msgSender}>{msg.sender}</Text>}
-        <Text style={styles.msgText}>{msg.text}</Text>
-        <Text style={styles.msgTime}>{msg.timestamp}</Text>
+      <View style={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleOther]}>
+        {!isMe && <Text style={styles.msgSender}>{displayName}</Text>}
+        <Text style={styles.msgText}>{content}</Text>
+        <Text style={styles.msgTime}>{timeStr}</Text>
       </View>
     </View>
   );
@@ -79,14 +91,40 @@ function MessageBubble({ msg }: { msg: typeof MOCK_MESSAGES[0] }) {
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { isAuthenticated } = useAuth();
+  const chat = useChat();
   const [viewMode, setViewMode] = useState<ViewMode>("channels");
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [localMessages, setLocalMessages] = useState(MOCK_MESSAGES);
+
+  const isLiveChat = chat.isConnected;
+  const displayMessages = isLiveChat ? chat.messages : localMessages;
+
+  useEffect(() => {
+    chat.fetchChannels();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const tryConnect = async () => {
+        try {
+          await chat.connect();
+        } catch {}
+      };
+      tryConnect();
+    }
+    return () => {
+      chat.disconnect();
+    };
+  }, [isAuthenticated]);
 
   const handleOpenChannel = (channelId: string) => {
     setActiveChannel(channelId);
     setViewMode("messages");
+    if (isLiveChat) {
+      chat.switchChannel(channelId);
+    }
   };
 
   const handleBack = () => {
@@ -97,19 +135,35 @@ export default function ChatScreen() {
   const handleSend = () => {
     if (!inputText.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newMsg = {
-      id: "m" + Date.now(),
-      sender: "You",
-      senderInitials: "SV",
-      text: inputText.trim(),
-      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      isMe: true,
-    };
-    setMessages(prev => [...prev, newMsg]);
+
+    if (isLiveChat) {
+      chat.sendMessage(inputText);
+    } else {
+      const newMsg = {
+        id: "m" + Date.now(),
+        sender: "You",
+        senderInitials: "ME",
+        text: inputText.trim(),
+        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        isMe: true,
+      };
+      setLocalMessages(prev => [...prev, newMsg]);
+    }
     setInputText("");
   };
 
-  const activeChannelData = MOCK_CHANNELS.find(c => c.id === activeChannel);
+  const channelsToShow = chat.channels.length > 0
+    ? chat.channels.map(c => ({
+        id: c.id,
+        name: c.name,
+        lastMessage: c.description || "",
+        lastMessageTime: "",
+        unread: 0,
+        isPublic: true,
+      }))
+    : MOCK_CHANNELS;
+
+  const activeChannelData = channelsToShow.find(c => c.id === activeChannel);
 
   if (viewMode === "messages") {
     return (
@@ -121,20 +175,28 @@ export default function ChatScreen() {
           </Pressable>
           <View style={styles.msgHeaderInfo}>
             <Text style={styles.msgHeaderName}>
-              {activeChannelData?.isPublic ? "#" : ""}{activeChannelData?.name}
+              {activeChannelData?.isPublic !== false ? "#" : ""}{activeChannelData?.name || activeChannel}
             </Text>
-            <View style={styles.onlineDot} />
+            <View style={[styles.onlineDot, { backgroundColor: isLiveChat ? Colors.success : Colors.warning }]} />
           </View>
           <View style={{ width: 44 }} />
         </View>
 
         <FlatList
-          data={messages}
+          data={displayMessages}
           keyExtractor={item => item.id}
           renderItem={({ item }) => <MessageBubble msg={item} />}
           contentContainerStyle={styles.messagesList}
           showsVerticalScrollIndicator={false}
         />
+
+        {chat.typingUsers.length > 0 && (
+          <View style={styles.typingBar}>
+            <Text style={styles.typingText}>
+              {chat.typingUsers.join(", ")} {chat.typingUsers.length === 1 ? "is" : "are"} typing...
+            </Text>
+          </View>
+        )}
 
         <View style={[styles.inputContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : (Platform.OS === "web" ? 34 : 12) }]}>
           <View style={styles.inputRow}>
@@ -143,7 +205,10 @@ export default function ChatScreen() {
               placeholder="Type a message..."
               placeholderTextColor={Colors.textMuted}
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={(text) => {
+                setInputText(text);
+                if (isLiveChat) chat.sendTyping();
+              }}
               returnKeyType="send"
               onSubmitEditing={handleSend}
             />
@@ -178,12 +243,19 @@ export default function ChatScreen() {
         <GradientText text="Signal Chat" style={styles.screenTitle} />
         <Text style={styles.subtitle}>Encrypted messaging with blockchain-verified identities</Text>
 
+        {isLiveChat && (
+          <View style={styles.liveIndicator}>
+            <View style={styles.liveIndicatorDot} />
+            <Text style={styles.liveIndicatorText}>Connected</Text>
+          </View>
+        )}
+
         <View style={styles.sectionLabel}>
           <Ionicons name="megaphone" size={14} color={Colors.primary} />
           <Text style={styles.sectionLabelText}>Public Channels</Text>
         </View>
         <GlassCard>
-          {MOCK_CHANNELS.filter(c => c.isPublic).map((ch, i, arr) => (
+          {channelsToShow.filter(c => c.isPublic !== false).map((ch, i, arr) => (
             <React.Fragment key={ch.id}>
               <ChannelItem channel={ch} onPress={() => handleOpenChannel(ch.id)} />
               {i < arr.length - 1 && <View style={styles.divider} />}
@@ -191,18 +263,22 @@ export default function ChatScreen() {
           ))}
         </GlassCard>
 
-        <View style={styles.sectionLabel}>
-          <Ionicons name="person" size={14} color={Colors.secondary} />
-          <Text style={styles.sectionLabelText}>Direct Messages</Text>
-        </View>
-        <GlassCard>
-          {MOCK_CHANNELS.filter(c => !c.isPublic).map((ch, i, arr) => (
-            <React.Fragment key={ch.id}>
-              <ChannelItem channel={ch} onPress={() => handleOpenChannel(ch.id)} />
-              {i < arr.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </GlassCard>
+        {channelsToShow.some(c => c.isPublic === false) && (
+          <>
+            <View style={styles.sectionLabel}>
+              <Ionicons name="person" size={14} color={Colors.secondary} />
+              <Text style={styles.sectionLabelText}>Direct Messages</Text>
+            </View>
+            <GlassCard>
+              {channelsToShow.filter(c => c.isPublic === false).map((ch, i, arr) => (
+                <React.Fragment key={ch.id}>
+                  <ChannelItem channel={ch} onPress={() => handleOpenChannel(ch.id)} />
+                  {i < arr.length - 1 && <View style={styles.divider} />}
+                </React.Fragment>
+              ))}
+            </GlassCard>
+          </>
+        )}
 
         <View style={styles.encryptionNote}>
           <Ionicons name="lock-closed" size={14} color={Colors.success} />
@@ -235,6 +311,23 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     marginBottom: 8,
+  },
+  liveIndicator: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+  },
+  liveIndicatorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.success,
+  },
+  liveIndicatorText: {
+    fontSize: 12,
+    color: Colors.success,
+    fontFamily: "Inter_500Medium",
   },
   sectionLabel: {
     flexDirection: "row" as const,
@@ -347,7 +440,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.success,
   },
   messagesList: {
     paddingHorizontal: 16,
@@ -407,6 +499,16 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     marginTop: 4,
     textAlign: "right" as const,
+  },
+  typingBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  typingText: {
+    fontSize: 12,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    fontStyle: "italic" as const,
   },
   inputContainer: {
     paddingHorizontal: 16,

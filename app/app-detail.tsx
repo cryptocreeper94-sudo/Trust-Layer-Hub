@@ -19,6 +19,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
+import { getSessionToken, buildAppLaunchUrl } from "@/lib/api";
 
 export default function AppDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,7 +42,9 @@ export default function AppDetailScreen() {
   const handleLaunch = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (app.url) {
-      await WebBrowser.openBrowserAsync(app.url);
+      const token = await getSessionToken();
+      const launchUrl = buildAppLaunchUrl(app.url, token);
+      await WebBrowser.openBrowserAsync(launchUrl);
     }
   };
 

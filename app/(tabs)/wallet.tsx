@@ -1,23 +1,22 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
-  Pressable,
   Platform,
   Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
-import { MOCK_BALANCE, MOCK_TRANSACTIONS, SHELL_TIERS } from "@/constants/mock-data";
+import { SHELL_TIERS } from "@/constants/mock-data";
+import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 
 function PortfolioSegment({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
   const pct = total > 0 ? (value / total) * 100 : 0;
@@ -31,7 +30,7 @@ function PortfolioSegment({ label, value, total, color }: { label: string; value
   );
 }
 
-function TransactionItem({ tx }: { tx: typeof MOCK_TRANSACTIONS[0] }) {
+function TransactionItem({ tx }: { tx: { id: string; type: string; amount: number; asset: string; from: string; txHash: string; createdAt: string } }) {
   const iconName = tx.type === "received" ? "arrow-down" :
     tx.type === "sent" ? "arrow-up" :
     tx.type === "staked" ? "lock-closed" : "cart";
@@ -84,7 +83,17 @@ function ShellTierCard({ tier, onPurchase }: { tier: typeof SHELL_TIERS[0]; onPu
 export default function WalletScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
-  const totalAssets = MOCK_BALANCE.sig + MOCK_BALANCE.shells + MOCK_BALANCE.stSig;
+  const { data: balance } = useBalance();
+  const { data: shells } = useShellBalance();
+  const { data: dwcBag } = useDwcBag();
+  const { data: transactions } = useTransactions();
+
+  const sigBalance = balance?.sig || 0;
+  const stSigBalance = balance?.stSig || 0;
+  const shellBalance = shells || 0;
+  const portfolioValue = dwcBag?.currentValue || 0;
+  const txList = transactions || [];
+  const totalAssets = sigBalance + shellBalance + stSigBalance;
 
   const handlePurchase = (tierName: string) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -111,7 +120,7 @@ export default function WalletScreen() {
         <GlassCard glow>
           <Text style={styles.heroLabel}>Signal Balance</Text>
           <Text style={styles.heroValue}>
-            {MOCK_BALANCE.sig.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            {sigBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </Text>
           <Text style={styles.heroUnit}>SIG</Text>
           <View style={styles.heroDivider} />
@@ -119,13 +128,13 @@ export default function WalletScreen() {
             <View style={styles.heroSubItem}>
               <Text style={styles.heroSubLabel}>Fiat Estimate</Text>
               <Text style={styles.heroSubValue}>
-                ${MOCK_BALANCE.portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                ${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </Text>
             </View>
             <View style={styles.heroSubItem}>
-              <Text style={styles.heroSubLabel}>24h Change</Text>
-              <Text style={[styles.heroSubValue, { color: Colors.success }]}>
-                +{MOCK_BALANCE.change24h}%
+              <Text style={styles.heroSubLabel}>Staked</Text>
+              <Text style={[styles.heroSubValue, { color: Colors.secondary }]}>
+                {stSigBalance.toLocaleString()} stSIG
               </Text>
             </View>
           </View>
@@ -135,7 +144,7 @@ export default function WalletScreen() {
           <View style={styles.shellHeader}>
             <View>
               <Text style={styles.shellLabel}>Shell Balance</Text>
-              <Text style={styles.shellValue}>{MOCK_BALANCE.shells.toLocaleString()}</Text>
+              <Text style={styles.shellValue}>{shellBalance.toLocaleString()}</Text>
             </View>
             <View style={styles.shellConversion}>
               <Text style={styles.shellConversionText}>1 Shell = $0.001</Text>
@@ -167,14 +176,18 @@ export default function WalletScreen() {
         </View>
         <GlassCard>
           <View style={styles.portfolioBar}>
-            <View style={[styles.portfolioSegmentBar, { flex: MOCK_BALANCE.sig / totalAssets, backgroundColor: Colors.primary }]} />
-            <View style={[styles.portfolioSegmentBar, { flex: MOCK_BALANCE.shells / totalAssets, backgroundColor: Colors.secondary }]} />
-            <View style={[styles.portfolioSegmentBar, { flex: MOCK_BALANCE.stSig / totalAssets, backgroundColor: Colors.success }]} />
+            {totalAssets > 0 && (
+              <>
+                <View style={[styles.portfolioSegmentBar, { flex: sigBalance / totalAssets, backgroundColor: Colors.primary }]} />
+                <View style={[styles.portfolioSegmentBar, { flex: shellBalance / totalAssets, backgroundColor: Colors.secondary }]} />
+                <View style={[styles.portfolioSegmentBar, { flex: stSigBalance / totalAssets, backgroundColor: Colors.success }]} />
+              </>
+            )}
           </View>
           <View style={styles.segmentsContainer}>
-            <PortfolioSegment label="SIG" value={MOCK_BALANCE.sig} total={totalAssets} color={Colors.primary} />
-            <PortfolioSegment label="Shells" value={MOCK_BALANCE.shells} total={totalAssets} color={Colors.secondary} />
-            <PortfolioSegment label="stSIG" value={MOCK_BALANCE.stSig} total={totalAssets} color={Colors.success} />
+            <PortfolioSegment label="SIG" value={sigBalance} total={totalAssets} color={Colors.primary} />
+            <PortfolioSegment label="Shells" value={shellBalance} total={totalAssets} color={Colors.secondary} />
+            <PortfolioSegment label="stSIG" value={stSigBalance} total={totalAssets} color={Colors.success} />
           </View>
         </GlassCard>
 
@@ -182,12 +195,19 @@ export default function WalletScreen() {
           <GradientText text="Transaction History" style={styles.sectionTitle} />
         </View>
         <GlassCard>
-          {MOCK_TRANSACTIONS.map((tx, i) => (
-            <React.Fragment key={tx.id}>
-              <TransactionItem tx={tx} />
-              {i < MOCK_TRANSACTIONS.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
+          {txList.length > 0 ? (
+            txList.map((tx, i) => (
+              <React.Fragment key={tx.id}>
+                <TransactionItem tx={tx} />
+                {i < txList.length - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))
+          ) : (
+            <View style={styles.emptyTx}>
+              <Ionicons name="receipt-outline" size={24} color={Colors.textMuted} />
+              <Text style={styles.emptyText}>No transactions yet</Text>
+            </View>
+          )}
         </GlassCard>
       </ScrollView>
     </View>
@@ -405,5 +425,16 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginVertical: 8,
+  },
+  emptyTx: {
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
   },
 });

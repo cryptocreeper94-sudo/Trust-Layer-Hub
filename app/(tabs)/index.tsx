@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
@@ -17,8 +16,10 @@ import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { CountdownTimer } from "@/components/CountdownTimer";
-import { MOCK_USER, MOCK_BALANCE, MOCK_NEWS, MOCK_TRANSACTIONS, FEATURED_APP_IDS } from "@/constants/mock-data";
+import { MOCK_NEWS, FEATURED_APP_IDS } from "@/constants/mock-data";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
+import { useAuth } from "@/lib/auth-context";
+import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 
 function QuickAction({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
@@ -84,7 +85,7 @@ function FeaturedAppCard({ app }: { app: typeof ECOSYSTEM_APPS[0] }) {
   );
 }
 
-function ActivityItem({ tx }: { tx: typeof MOCK_TRANSACTIONS[0] }) {
+function ActivityItem({ tx }: { tx: { id: string; type: string; amount: number; asset: string; from: string; txHash: string; createdAt: string } }) {
   const iconName = tx.type === "received" ? "arrow-down" :
     tx.type === "sent" ? "arrow-up" :
     tx.type === "staked" ? "lock-closed" : "cart";
@@ -119,7 +120,21 @@ function ActivityItem({ tx }: { tx: typeof MOCK_TRANSACTIONS[0] }) {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { user, isAuthenticated } = useAuth();
+  const { data: balance } = useBalance();
+  const { data: shells } = useShellBalance();
+  const { data: dwcBag } = useDwcBag();
+  const { data: transactions } = useTransactions();
+
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
+
+  const displayName = user?.displayName || user?.username || "Explorer";
+  const trustLayerId = user?.trustLayerId || "guest.tlid";
+  const sigBalance = balance?.sig || 0;
+  const stSigBalance = balance?.stSig || 0;
+  const shellBalance = shells || 0;
+  const portfolioValue = dwcBag?.currentValue || 0;
+  const recentTxs = transactions || [];
 
   return (
     <View style={styles.container}>
@@ -135,44 +150,49 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.username}>{MOCK_USER.displayName}</Text>
+            <Text style={styles.username}>{displayName}</Text>
           </View>
-          <View style={styles.trustIdBadge}>
+          <Pressable
+            style={styles.trustIdBadge}
+            onPress={() => {
+              if (!isAuthenticated) {
+                router.push("/login");
+              }
+            }}
+          >
             <Ionicons name="shield-checkmark" size={14} color={Colors.primary} />
-            <Text style={styles.trustIdText}>{MOCK_USER.trustLayerId}</Text>
-          </View>
+            <Text style={styles.trustIdText}>
+              {isAuthenticated ? trustLayerId : "Sign In"}
+            </Text>
+          </Pressable>
         </View>
 
         <GlassCard glow>
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Portfolio Value</Text>
-            <View style={styles.changeRow}>
-              <Ionicons name="trending-up" size={14} color={Colors.success} />
-              <Text style={styles.changeText}>+{MOCK_BALANCE.change24h}%</Text>
-            </View>
           </View>
           <Text style={styles.balanceValue}>
-            ${MOCK_BALANCE.portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </Text>
           <View style={styles.balanceRow}>
             <View style={styles.balanceItem}>
               <Text style={styles.balanceItemLabel}>SIG</Text>
               <Text style={styles.balanceItemValue}>
-                {MOCK_BALANCE.sig.toLocaleString()}
+                {sigBalance.toLocaleString()}
               </Text>
             </View>
             <View style={styles.balanceDivider} />
             <View style={styles.balanceItem}>
               <Text style={styles.balanceItemLabel}>Shells</Text>
               <Text style={styles.balanceItemValue}>
-                {MOCK_BALANCE.shells.toLocaleString()}
+                {shellBalance.toLocaleString()}
               </Text>
             </View>
             <View style={styles.balanceDivider} />
             <View style={styles.balanceItem}>
               <Text style={styles.balanceItemLabel}>stSIG</Text>
               <Text style={styles.balanceItemValue}>
-                {MOCK_BALANCE.stSig.toLocaleString()}
+                {stSigBalance.toLocaleString()}
               </Text>
             </View>
           </View>
@@ -222,12 +242,19 @@ export default function HomeScreen() {
           <GradientText text="Recent Activity" style={styles.sectionTitle} />
         </View>
         <GlassCard>
-          {MOCK_TRANSACTIONS.slice(0, 5).map((tx, i) => (
-            <React.Fragment key={tx.id}>
-              <ActivityItem tx={tx} />
-              {i < 4 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
+          {recentTxs.length > 0 ? (
+            recentTxs.slice(0, 5).map((tx, i) => (
+              <React.Fragment key={tx.id}>
+                <ActivityItem tx={tx} />
+                {i < Math.min(recentTxs.length, 5) - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))
+          ) : (
+            <View style={styles.emptyActivity}>
+              <Ionicons name="receipt-outline" size={24} color={Colors.textMuted} />
+              <Text style={styles.emptyText}>No recent activity</Text>
+            </View>
+          )}
         </GlassCard>
 
         <View style={{ marginTop: 20 }}>
@@ -293,16 +320,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
-  },
-  changeRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 4,
-  },
-  changeText: {
-    fontSize: 13,
-    color: Colors.success,
-    fontFamily: "Inter_600SemiBold",
   },
   balanceValue: {
     fontSize: 36,
@@ -489,5 +506,16 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginVertical: 8,
+  },
+  emptyActivity: {
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
   },
 });

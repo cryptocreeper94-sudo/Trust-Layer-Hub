@@ -14,11 +14,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
-import { MOCK_USER, MOCK_BALANCE } from "@/constants/mock-data";
+import { GradientButton } from "@/components/GradientButton";
+import { useAuth } from "@/lib/auth-context";
+import { useMembership, useSubscriptionStatus } from "@/hooks/useMembership";
+import { MOCK_USER } from "@/constants/mock-data";
 
 function SettingRow({
   icon,
@@ -85,11 +89,38 @@ function LinkedAppItem({ name, connected }: { name: string; connected: boolean }
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { user, isAuthenticated, logout } = useAuth();
+  const { data: membership } = useMembership();
+  const { data: subscription } = useSubscriptionStatus();
   const [notifications, setNotifications] = useState(true);
   const [biometrics, setBiometrics] = useState(false);
 
-  const scoreColor = MOCK_USER.guardianScore >= 90 ? Colors.success :
-    MOCK_USER.guardianScore >= 70 ? Colors.warning : Colors.error;
+  const displayName = user?.displayName || user?.username || MOCK_USER.displayName;
+  const username = user?.username || MOCK_USER.username;
+  const email = user?.email || MOCK_USER.email;
+  const trustLayerId = membership?.trustLayerId || user?.trustLayerId || MOCK_USER.trustLayerId;
+  const membershipStatus = membership?.membershipStatus || "active";
+  const voidTier = MOCK_USER.voidTier;
+  const guardianScore = MOCK_USER.guardianScore;
+  const avatarInitials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "TL";
+
+  const scoreColor = guardianScore >= 90 ? Colors.success :
+    guardianScore >= 70 ? Colors.warning : Colors.error;
+
+  const handleSignOut = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          router.replace("/login");
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -108,29 +139,63 @@ export default function ProfileScreen() {
             style={styles.avatarGradient}
           >
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{MOCK_USER.avatarInitials}</Text>
+              <Text style={styles.avatarText}>{avatarInitials}</Text>
             </View>
           </LinearGradient>
-          <Text style={styles.displayName}>{MOCK_USER.displayName}</Text>
+          <Text style={styles.displayName}>{displayName}</Text>
           <View style={styles.trustIdRow}>
             <Ionicons name="shield-checkmark" size={14} color={Colors.primary} />
-            <Text style={styles.trustId}>{MOCK_USER.trustLayerId}</Text>
+            <Text style={styles.trustId}>{trustLayerId}</Text>
           </View>
-          <Text style={styles.memberNumber}>Member {MOCK_USER.memberNumber}</Text>
+          {membershipStatus === "active" && (
+            <View style={styles.activeBadge}>
+              <Ionicons name="checkmark-circle" size={12} color={Colors.success} />
+              <Text style={styles.activeBadgeText}>Active Member</Text>
+            </View>
+          )}
         </View>
+
+        {!isAuthenticated && (
+          <GradientButton
+            title="Sign In to Your Account"
+            onPress={() => router.push("/login")}
+            style={{ marginBottom: 8 }}
+          />
+        )}
 
         <View style={styles.statsRow}>
           <GlassCard glow style={styles.statCard}>
             <Text style={styles.statLabel}>THE VOID</Text>
-            <Text style={[styles.statValue, { color: Colors.secondary }]}>{MOCK_USER.voidTier}</Text>
+            <Text style={[styles.statValue, { color: Colors.secondary }]}>{voidTier}</Text>
             <Text style={styles.statSub}>Membership Tier</Text>
           </GlassCard>
           <GlassCard glow style={styles.statCard}>
             <Text style={styles.statLabel}>Guardian Score</Text>
-            <Text style={[styles.statValue, { color: scoreColor }]}>{MOCK_USER.guardianScore}</Text>
+            <Text style={[styles.statValue, { color: scoreColor }]}>{guardianScore}</Text>
             <Text style={styles.statSub}>Security Rating</Text>
           </GlassCard>
         </View>
+
+        {subscription && subscription.tier !== "free" && (
+          <>
+            <View style={styles.sectionHeader}>
+              <GradientText text="Subscription" style={styles.sectionTitle} />
+            </View>
+            <GlassCard glow>
+              <View style={styles.subscriptionRow}>
+                <Ionicons name="diamond" size={20} color={Colors.primary} />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.subscriptionTier}>
+                    {subscription.tier.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                  </Text>
+                  <Text style={styles.subscriptionActive}>
+                    {subscription.active ? "Active" : "Inactive"}
+                  </Text>
+                </View>
+              </View>
+            </GlassCard>
+          </>
+        )}
 
         <View style={styles.sectionHeader}>
           <GradientText text="Identity" style={styles.sectionTitle} />
@@ -138,24 +203,17 @@ export default function ProfileScreen() {
         <GlassCard>
           <View style={styles.identityRow}>
             <Text style={styles.identityLabel}>Trust Layer ID</Text>
-            <Text style={styles.identityValue}>{MOCK_USER.trustLayerId}</Text>
+            <Text style={styles.identityValue}>{trustLayerId}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.identityRow}>
             <Text style={styles.identityLabel}>Username</Text>
-            <Text style={styles.identityValue}>{MOCK_USER.username}</Text>
+            <Text style={styles.identityValue}>{username}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.identityRow}>
             <Text style={styles.identityLabel}>Email</Text>
-            <Text style={styles.identityValue}>{MOCK_USER.email}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.identityRow}>
-            <Text style={styles.identityLabel}>Member Since</Text>
-            <Text style={styles.identityValue}>
-              {new Date(MOCK_USER.joinedDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-            </Text>
+            <Text style={styles.identityValue}>{email}</Text>
           </View>
         </GlassCard>
 
@@ -201,19 +259,15 @@ export default function ProfileScreen() {
           <LinkedAppItem name="Signal Chat" connected />
         </GlassCard>
 
-        <Pressable
-          style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.7 }]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-              { text: "Cancel", style: "cancel" },
-              { text: "Sign Out", style: "destructive" },
-            ]);
-          }}
-        >
-          <Ionicons name="log-out-outline" size={18} color={Colors.error} />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </Pressable>
+        {isAuthenticated && (
+          <Pressable
+            style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.7 }]}
+            onPress={handleSignOut}
+          >
+            <Ionicons name="log-out-outline" size={18} color={Colors.error} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </Pressable>
+        )}
 
         <View style={styles.footerSection}>
           <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
@@ -289,11 +343,20 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontFamily: "Inter_500Medium",
   },
-  memberNumber: {
-    fontSize: 12,
-    color: Colors.textTertiary,
-    fontFamily: "Inter_400Regular",
-    marginTop: 2,
+  activeBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: "rgba(16,185,129,0.1)",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  activeBadgeText: {
+    fontSize: 11,
+    color: Colors.success,
+    fontFamily: "Inter_500Medium",
   },
   statsRow: {
     flexDirection: "row" as const,
@@ -322,6 +385,20 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
     textAlign: "center" as const,
+  },
+  subscriptionRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+  },
+  subscriptionTier: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  subscriptionActive: {
+    fontSize: 12,
+    color: Colors.success,
+    fontFamily: "Inter_400Regular",
   },
   sectionHeader: {
     marginTop: 4,
