@@ -395,7 +395,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/verify-2fa", async (req: Request, res: Response) => {
+  app.post("/api/auth/phone/verify", async (req: Request, res: Response) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader?.startsWith("Bearer ")) {
@@ -488,7 +488,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/resend-code", async (req: Request, res: Response) => {
+  app.post("/api/auth/resend-verification", async (req: Request, res: Response) => {
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader?.startsWith("Bearer ")) {
@@ -560,6 +560,53 @@ export function registerAuthRoutes(app: Express): void {
     });
   });
 
+  app.post("/api/auth/exchange-token", async (req: Request, res: Response) => {
+    try {
+      const { hubSessionToken } = req.body;
+      if (!hubSessionToken) {
+        return res.status(400).json({ error: "hubSessionToken is required" });
+      }
+
+      const [session] = await db
+        .select()
+        .from(sessions)
+        .where(and(eq(sessions.token, hubSessionToken), gt(sessions.expiresAt, new Date())));
+
+      if (!session) {
+        return res.status(401).json({ error: "Invalid or expired session token" });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, session.userId));
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const ecosystemToken = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await db.insert(sessions).values({
+        userId: user.id,
+        token: ecosystemToken,
+        expiresAt,
+      });
+
+      res.json({
+        ecosystemToken,
+        expiresIn: 3600,
+        userId: user.id.toString(),
+        email: user.email,
+        displayName: user.firstName || user.username,
+      });
+    } catch (error: any) {
+      console.error("Token exchange error:", error?.message);
+      res.status(500).json({ error: "Token exchange failed" });
+    }
+  });
+
   app.post("/api/auth/logout", authenticateToken, async (req: Request, res: Response) => {
     try {
       const token = (req as any).sessionToken;
@@ -570,7 +617,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/update-phone", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/user/phone-settings", authenticateToken, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
       const { phone } = req.body;
@@ -624,7 +671,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/verify-phone", authenticateToken, async (req: Request, res: Response) => {
+  app.post("/api/auth/phone/verify-setup", authenticateToken, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
       const { code } = req.body;

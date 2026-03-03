@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function verify2FA(code: string) {
     const data = await apiPost<{ user: User; sessionToken: string }>(
-      "/api/auth/verify-2fa",
+      "/api/auth/phone/verify",
       { code },
       true
     );
@@ -128,12 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function resendCode(type: "email_verify" | "sms_2fa") {
-    await apiPost("/api/auth/resend-code", { type }, true);
+    await apiPost("/api/auth/resend-verification", { type }, true);
   }
 
   async function updatePhone(phone: string) {
     const data = await apiPost<{ success: boolean; requiresVerification?: boolean }>(
-      "/api/auth/update-phone",
+      "/api/user/phone-settings",
       { phone },
       true
     );
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function verifyPhone(code: string) {
-    await apiPost("/api/auth/verify-phone", { code }, true);
+    await apiPost("/api/auth/phone/verify-setup", { code }, true);
     await refreshUser();
     setAuthStep("idle");
   }

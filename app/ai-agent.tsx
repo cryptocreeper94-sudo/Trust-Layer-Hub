@@ -214,7 +214,7 @@ export default function AIAgentScreen() {
         const baseUrl = getApiUrl().replace(/\/$/, "");
         const ttsText = text.length > 500 ? text.substring(0, 500) + "..." : text;
 
-        const response = await fetch(`${baseUrl}/api/ai/tts`, {
+        const response = await fetch(`${baseUrl}/api/voice/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: ttsText }),

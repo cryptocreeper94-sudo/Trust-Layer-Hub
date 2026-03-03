@@ -89,7 +89,9 @@ server/
 
 ## API Integration
 All screens try live Trust Layer API endpoints first and fall back to mock data:
-- Auth: POST /api/auth/register, /login, /verify-email, /verify-2fa, /resend-code, /update-phone, /verify-phone, /logout; GET /api/auth/me
+- Auth: POST /api/auth/register, /login, /verify-email, /auth/phone/verify (2FA), /auth/resend-verification, /logout; GET /api/auth/me
+- Phone: POST /api/user/phone-settings (update phone), /api/auth/phone/verify-setup (verify phone)
+- SSO: POST /api/auth/exchange-token (Hub session → 1hr ecosystem token for child apps)
 - Balance: GET /api/balance, /api/shells/my-balance, /api/user/dwc-bag
 - Transactions: GET /api/user/transactions
 - Membership: GET /api/user/membership
@@ -97,10 +99,9 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Guardian: POST /api/guardian/scan (public)
 - Presale: GET /api/presale/stats, /api/presale/tiers (public)
 - Subscriptions: GET /api/subscription/status, /api/subscription/plans
-- Chat: WebSocket wss://{url}/ws/chat with separate JWT auth (/api/chat/auth/login)
-- AI Agent: POST /api/ai/chat (OpenAI streaming), POST /api/ai/tts (ElevenLabs TTS), GET /api/ai/voices
-- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/verify/:hallmarkId (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth)
-- SSO: Apps launched with ?auth_token={sessionToken}
+- Chat: WebSocket wss://trusthub.tlid.io/ws/chat with separate auth (POST /api/chat/auth/login)
+- AI/Voice: POST /api/ai/chat (OpenAI streaming), POST /api/voice/tts (ElevenLabs TTS), GET /api/voice/voices
+- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth)
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)

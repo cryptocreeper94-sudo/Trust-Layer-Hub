@@ -37,6 +37,7 @@ You should:
 
 export function registerAIRoutes(app: Express): void {
   app.post("/api/ai/chat", async (req: Request, res: Response) => {
+    // Also accessible at /api/ai/chat for backward compatibility
     try {
       const { messages } = req.body;
 
@@ -83,7 +84,7 @@ export function registerAIRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/ai/tts", async (req: Request, res: Response) => {
+  app.post("/api/voice/tts", async (req: Request, res: Response) => {
     try {
       const { text, voice_id } = req.body;
 
@@ -154,7 +155,7 @@ export function registerAIRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/ai/voices", async (_req: Request, res: Response) => {
+  app.get("/api/voice/voices", async (_req: Request, res: Response) => {
     try {
       if (!ELEVENLABS_API_KEY) {
         throw new Error("No API key");

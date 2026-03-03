@@ -52,7 +52,7 @@ export async function generateTrustHubHallmark(params: HallmarkParams) {
   const dataHash = generateSHA256(payload);
   const { txHash, blockHeight } = simulateBlockchain();
 
-  const verificationUrl = `/api/hallmark/verify/${thId}`;
+  const verificationUrl = `/api/hallmark/${thId}/verify`;
 
   const [hallmark] = await db
     .insert(hallmarks)
@@ -128,7 +128,7 @@ export function registerHallmarkRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/hallmark/verify/:hallmarkId", async (req: Request, res: Response) => {
+  app.get("/api/hallmark/:hallmarkId/verify", async (req: Request, res: Response) => {
     try {
       const hallmarkId = req.params.hallmarkId as string;
 

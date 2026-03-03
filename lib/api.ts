@@ -112,6 +112,21 @@ export async function apiPost<T>(path: string, body?: unknown, requireAuth = tru
   return res.json();
 }
 
+export async function exchangeToken(): Promise<string | null> {
+  try {
+    const sessionToken = await getSessionToken();
+    if (!sessionToken) return null;
+    const data = await apiPost<{ ecosystemToken: string }>(
+      "/api/auth/exchange-token",
+      { hubSessionToken: sessionToken },
+      false
+    );
+    return data.ecosystemToken;
+  } catch {
+    return null;
+  }
+}
+
 export function buildAppLaunchUrl(appUrl: string, token: string | null): string {
   if (!appUrl || !token) return appUrl;
   const sep = appUrl.includes("?") ? "&" : "?";
