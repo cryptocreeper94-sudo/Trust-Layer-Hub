@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { authenticateToken } from "./auth";
+import { createTrustStamp } from "./hallmark";
 
 const STAKING_APY = 12.5;
 const COOLDOWN_DAYS = 7;
@@ -38,15 +39,24 @@ export function registerStakingRoutes(app: Express): void {
 
   app.post("/api/staking/stake", authenticateToken, async (req: Request, res: Response) => {
     try {
+      const user = (req as any).user;
       const { amount } = req.body;
       if (!amount || amount <= 0) {
         return res.status(400).json({ error: "Invalid stake amount" });
       }
 
+      const txHash = "0x" + Date.now().toString(16) + "stake" + Math.random().toString(16).slice(2, 10);
+
+      createTrustStamp({
+        userId: user.id,
+        category: "staking-stake",
+        data: { amount, txHash, asset: "SIG", newStakedBalance: 50000 + amount, timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Stake stamp error:", err?.message));
+
       res.json({
         success: true,
         message: `Successfully staked ${amount.toLocaleString()} SIG`,
-        txHash: "0x" + Date.now().toString(16) + "stake" + Math.random().toString(16).slice(2, 10),
+        txHash,
         newStakedBalance: 50000 + amount,
         estimatedMonthlyReward: ((50000 + amount) * STAKING_APY / 100 / 12).toFixed(2),
       });
@@ -66,12 +76,20 @@ export function registerStakingRoutes(app: Express): void {
 
       userCooldowns.set(user.id, { amount, startedAt: new Date() });
 
+      const txHash = "0x" + Date.now().toString(16) + "unstk" + Math.random().toString(16).slice(2, 10);
+
+      createTrustStamp({
+        userId: user.id,
+        category: "staking-unstake",
+        data: { amount, txHash, asset: "stSIG", cooldownDays: COOLDOWN_DAYS, timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Unstake stamp error:", err?.message));
+
       res.json({
         success: true,
         message: `Unstaking ${amount.toLocaleString()} stSIG initiated`,
         cooldownDays: COOLDOWN_DAYS,
         availableDate: new Date(Date.now() + COOLDOWN_DAYS * 86400000).toISOString(),
-        txHash: "0x" + Date.now().toString(16) + "unstk" + Math.random().toString(16).slice(2, 10),
+        txHash,
       });
     } catch (error: any) {
       console.error("Unstake error:", error?.message);
@@ -81,6 +99,7 @@ export function registerStakingRoutes(app: Express): void {
 
   app.post("/api/wallet/send", authenticateToken, async (req: Request, res: Response) => {
     try {
+      const user = (req as any).user;
       const { to, amount, asset } = req.body;
       if (!to || !amount || !asset) {
         return res.status(400).json({ error: "to, amount, and asset are required" });
@@ -92,10 +111,18 @@ export function registerStakingRoutes(app: Express): void {
         return res.status(400).json({ error: "Amount must be positive" });
       }
 
+      const txHash = "0x" + Date.now().toString(16) + "send" + Math.random().toString(16).slice(2, 10);
+
+      createTrustStamp({
+        userId: user.id,
+        category: "wallet-send",
+        data: { to, amount, asset, txHash, timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Send stamp error:", err?.message));
+
       res.json({
         success: true,
         message: `Sent ${amount.toLocaleString()} ${asset} to ${to}`,
-        txHash: "0x" + Date.now().toString(16) + "send" + Math.random().toString(16).slice(2, 10),
+        txHash,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -124,6 +151,7 @@ export function registerStakingRoutes(app: Express): void {
 
   app.post("/api/wallet/swap", authenticateToken, async (req: Request, res: Response) => {
     try {
+      const user = (req as any).user;
       const { fromAsset, toAsset, amount } = req.body;
       if (!fromAsset || !toAsset || !amount) {
         return res.status(400).json({ error: "fromAsset, toAsset, and amount are required" });
@@ -144,6 +172,13 @@ export function registerStakingRoutes(app: Express): void {
       }
 
       const outputAmount = amount * rate;
+      const txHash = "0x" + Date.now().toString(16) + "swap" + Math.random().toString(16).slice(2, 10);
+
+      createTrustStamp({
+        userId: user.id,
+        category: "wallet-swap",
+        data: { fromAsset, toAsset, inputAmount: amount, outputAmount, rate, txHash, timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Swap stamp error:", err?.message));
 
       res.json({
         success: true,
@@ -153,7 +188,7 @@ export function registerStakingRoutes(app: Express): void {
         inputAmount: amount,
         outputAmount,
         rate,
-        txHash: "0x" + Date.now().toString(16) + "swap" + Math.random().toString(16).slice(2, 10),
+        txHash,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {

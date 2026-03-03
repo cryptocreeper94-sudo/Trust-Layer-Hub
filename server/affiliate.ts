@@ -3,6 +3,7 @@ import { db } from "./db";
 import { users, affiliateReferrals, affiliateCommissions } from "./db/schema";
 import { eq, and, desc, sql, count } from "drizzle-orm";
 import { authenticateToken } from "./auth";
+import { createTrustStamp } from "./hallmark";
 
 const AFFILIATE_TIERS = [
   { name: "Base", minReferrals: 0, commissionRate: 10 },
@@ -165,6 +166,12 @@ export function registerAffiliateRoutes(app: Express): void {
       if (totalPending < 10) {
         return res.status(400).json({ error: "Minimum payout is 10 SIG" });
       }
+
+      createTrustStamp({
+        userId: user.id,
+        category: "affiliate-payout-request",
+        data: { amount: totalPending, currency: "SIG", commissionsCount: pendingCommissions.length, timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Payout stamp error:", err?.message));
 
       res.json({
         message: "Payout request submitted. You will receive your SIG tokens within 48 hours.",

@@ -50,6 +50,7 @@ app/
     profile.tsx            # User Profile
   app-detail.tsx           # App detail modal with SSO
   ai-agent.tsx             # AI Agent chat modal
+  hallmark-detail.tsx      # Genesis hallmark detail screen (TH-00000001)
 components/
   GlassCard.tsx            # Glassmorphism card
   GradientText.tsx         # Gradient text with MaskedView
@@ -121,7 +122,7 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Subscriptions: GET /api/subscription/status, /api/subscription/plans
 - Chat: WebSocket wss://trusthub.tlid.io/ws/chat with separate auth (POST /api/chat/auth/login)
 - AI/Voice: POST /api/ai/chat (OpenAI streaming), POST /api/voice/tts (ElevenLabs TTS), GET /api/voice/voices
-- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth)
+- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth), GET /api/hallmark/genesis (public)
 - Plaid: POST /api/plaid/create-link-token (auth), POST /api/plaid/exchange-token (auth), GET /api/plaid/accounts (auth), GET /api/plaid/transactions/:accountId (auth), DELETE /api/plaid/accounts/:id (auth)
 - Wallets: POST /api/wallets/connect (auth), GET /api/wallets (auth), DELETE /api/wallets/:id (auth), GET /api/wallets/:id/balances (auth)
 - Multi-Sig: GET /api/multisig/vault (auth), GET /api/multisig/pending (auth), POST /api/multisig/approve/:txId (auth), POST /api/multisig/reject/:txId (auth), GET /api/multisig/history (auth)
@@ -138,8 +139,10 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Twilio-compliant SMS opt-in screen with consent checkbox and legal language
 - Terms of Service and Privacy Policy screens (linked from login, register, profile, SMS opt-in)
 - Hallmark System: TH-XXXXXXXX numbered blockchain audit trail with SHA-256 hashing
+  - Genesis Hallmark TH-00000001: auto-created on server startup, clickable badge in profile footer opens detail screen
   - Tier 1 Hallmarks: formal records for registration, purchases, certifications (with QR/verification)
   - Tier 2 Trust Stamps: automatic audit trail for logins, profile updates, balance changes
+  - Blockchain stamps on: stake, unstake, send, swap, Stripe connect/disconnect, affiliate payout requests
 - Unified Financial Wallet:
   - Trust Layer native wallet (SIG, Shells, stSIG)
   - Plaid bank account linking (sandbox mode, one-time link, persistent access token)

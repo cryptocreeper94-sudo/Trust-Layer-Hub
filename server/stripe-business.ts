@@ -3,6 +3,7 @@ import { db } from "./db";
 import { stripeConnections } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { authenticateToken } from "./auth";
+import { createTrustStamp } from "./hallmark";
 
 function getStripeClientForUser(connection: any) {
   if (connection?.accessToken) {
@@ -198,6 +199,12 @@ export function registerStripeRoutes(app: Express): void {
           });
       }
 
+      createTrustStamp({
+        userId: user.id,
+        category: "stripe-connect",
+        data: { businessName: businessName || "Unknown", timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Stripe connect stamp error:", err?.message));
+
       res.json({ connected: true, message: "Stripe account connected successfully." });
     } catch (error) {
       res.status(500).json({ error: "Failed to connect Stripe" });
@@ -212,6 +219,12 @@ export function registerStripeRoutes(app: Express): void {
         .update(stripeConnections)
         .set({ connected: false, accessToken: null, updatedAt: new Date() })
         .where(eq(stripeConnections.userId, user.id));
+
+      createTrustStamp({
+        userId: user.id,
+        category: "stripe-disconnect",
+        data: { timestamp: new Date().toISOString() },
+      }).catch((err) => console.error("Stripe disconnect stamp error:", err?.message));
 
       res.json({ disconnected: true });
     } catch (error) {

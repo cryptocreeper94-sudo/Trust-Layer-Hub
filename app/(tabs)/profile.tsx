@@ -312,6 +312,20 @@ export default function ProfileScreen() {
         )}
 
         <View style={styles.footerSection}>
+          <Pressable
+            style={styles.hallmarkBadge}
+            onPress={() => router.push("/hallmark-detail")}
+            testID="genesis-hallmark-link"
+          >
+            <View style={styles.hallmarkIcon}>
+              <Ionicons name="shield-checkmark" size={16} color={Colors.primary} />
+            </View>
+            <View style={styles.hallmarkInfo}>
+              <Text style={styles.hallmarkLabel}>Genesis Hallmark</Text>
+              <Text style={styles.hallmarkId}>TH-00000001</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
+          </Pressable>
           <View style={styles.legalRow}>
             <Pressable onPress={() => router.push("/terms")}>
               <Text style={styles.footerLink}>Terms of Service</Text>
@@ -598,5 +612,42 @@ const styles = StyleSheet.create({
   legalDot: {
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  hallmarkBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.12)",
+    marginBottom: 16,
+  },
+  hallmarkIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,255,255,0.1)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  hallmarkInfo: {
+    flex: 1,
+  },
+  hallmarkLabel: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+  },
+  hallmarkId: {
+    fontSize: 15,
+    color: Colors.primary,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    letterSpacing: 0.5,
   },
 });

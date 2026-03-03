@@ -106,7 +106,87 @@ export async function createTrustStamp(params: TrustStampParams) {
   return stamp;
 }
 
+const GENESIS_HALLMARK = {
+  appId: "trusthub-genesis",
+  appName: "Trust Layer Hub",
+  productName: "Genesis Block",
+  releaseType: "genesis",
+  metadata: {
+    ecosystem: "Trust Layer",
+    version: "1.0.0",
+    domain: "trusthub.tlid.io",
+    operator: "DarkWave Studios LLC",
+    chain: "Trust Layer Blockchain",
+    consensus: "Proof of Trust",
+    launchDate: "2026-08-23T00:00:00.000Z",
+    totalApps: 32,
+    nativeAsset: "SIG",
+    utilityToken: "Shells",
+  },
+};
+
+export async function seedGenesisHallmark(): Promise<void> {
+  try {
+    const [existing] = await db
+      .select()
+      .from(hallmarks)
+      .where(eq(hallmarks.thId, "TH-00000001"));
+
+    if (existing) {
+      console.log("Genesis hallmark TH-00000001 already exists");
+      return;
+    }
+
+    await db.execute(
+      sql`INSERT INTO trusthub_counter (id, current_sequence) VALUES ('th-master', '0') ON CONFLICT (id) DO UPDATE SET current_sequence = '0'`
+    );
+
+    const hallmark = await generateTrustHubHallmark(GENESIS_HALLMARK);
+    console.log(`Genesis hallmark created: ${hallmark.thId}`);
+  } catch (error: any) {
+    console.error("Failed to seed genesis hallmark:", error?.message);
+  }
+}
+
 export function registerHallmarkRoutes(app: Express): void {
+  app.get("/api/hallmark/genesis", async (_req: Request, res: Response) => {
+    try {
+      const [genesis] = await db
+        .select()
+        .from(hallmarks)
+        .where(eq(hallmarks.thId, "TH-00000001"));
+
+      if (!genesis) {
+        return res.json({
+          thId: "TH-00000001",
+          appName: "Trust Layer Hub",
+          productName: "Genesis Block",
+          releaseType: "genesis",
+          dataHash: "pending",
+          txHash: "pending",
+          blockHeight: "pending",
+          verified: false,
+          metadata: GENESIS_HALLMARK.metadata,
+        });
+      }
+
+      res.json({
+        verified: true,
+        thId: genesis.thId,
+        appName: genesis.appName,
+        productName: genesis.productName,
+        releaseType: genesis.releaseType,
+        dataHash: genesis.dataHash,
+        txHash: genesis.txHash,
+        blockHeight: genesis.blockHeight,
+        createdAt: genesis.createdAt,
+        metadata: genesis.metadata,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to fetch genesis hallmark" });
+    }
+  });
+
   app.post("/api/hallmark/generate", authenticateToken, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
