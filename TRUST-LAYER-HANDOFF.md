@@ -275,5 +275,5 @@ trusthub_counter: id ('th-master'), current_sequence
 **Domain**: trusthub.tlid.io
 **Dev Portal**: darkwavestudios.io
 **Security**: TrustShield.tech
-**Support**: team@tlid.io
+**Support**: team@dwsc.io
 **Launch**: August 23, 2026 (CST)

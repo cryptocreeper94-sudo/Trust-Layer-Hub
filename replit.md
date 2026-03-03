@@ -132,5 +132,5 @@ August 23, 2026 (CST) - displayed in countdown timer
 - "DarkWave Studios LLC" for legal entity only (footer)
 - Signal (SIG) is a NATIVE ASSET, never "token"
 - Domain: trusthub.tlid.io (TLID = Trust Layer ID)
-- Support: team@tlid.io
+- Support: team@dwsc.io
 - Footer: DarkWave Studios LLC → trusthub.tlid.io, Protected by TrustShield.tech
