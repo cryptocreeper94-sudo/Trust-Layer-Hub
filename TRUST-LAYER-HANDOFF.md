@@ -272,7 +272,8 @@ trusthub_counter: id ('th-master'), current_sequence
 ## Contact
 
 **Entity**: DarkWave Studios LLC
+**Domain**: trusthub.tlid.io
 **Dev Portal**: darkwavestudios.io
 **Security**: TrustShield.tech
-**Support**: team@dwsc.io
+**Support**: team@tlid.io
 **Launch**: August 23, 2026 (CST)

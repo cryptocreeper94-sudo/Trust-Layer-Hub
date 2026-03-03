@@ -294,7 +294,7 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
           <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
-          <Pressable onPress={() => Linking.openURL("https://darkwavestudios.io")}>
+          <Pressable onPress={() => Linking.openURL("https://trusthub.tlid.io")}>
             <Text style={styles.footerLink}>DarkWave Studios LLC</Text>
           </Pressable>
           <Text style={styles.copyright}>&copy; 2026 DarkWave Studios LLC. All rights reserved.</Text>

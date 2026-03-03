@@ -195,8 +195,8 @@ export default function TermsScreen() {
         </Text>
         <Text style={styles.body}>
           DarkWave Studios LLC{"\n"}
-          Email: legal@darkwavestudios.io{"\n"}
-          Website: https://darkwavestudios.io
+          Email: legal@tlid.io{"\n"}
+          Website: https://trusthub.tlid.io
         </Text>
 
         <View style={styles.footerDivider} />

@@ -1,8 +1,10 @@
 {
   "name": "Trust Layer Hub",
   "short_name": "Trust Layer",
+  "id": "io.tlid.trusthub",
   "description": "The front door to the Trust Layer blockchain ecosystem. Manage your Signal (SIG) wallet, access 32 ecosystem apps, chat securely, and verify on-chain with the Hallmark System.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0c1224",

@@ -134,7 +134,7 @@ export default function PrivacyScreen() {
         <Text style={styles.bullet}>{"\u2022"} Opt-out — Opt out of SMS communications by replying STOP at any time</Text>
         <Text style={styles.bullet}>{"\u2022"} Withdraw consent — Withdraw consent for data processing where applicable</Text>
         <Text style={styles.body}>
-          To exercise any of these rights, please contact us at privacy@darkwavestudios.io.
+          To exercise any of these rights, please contact us at privacy@tlid.io.
         </Text>
 
         <Text style={styles.sectionTitle}>8. Data Retention</Text>
@@ -163,8 +163,8 @@ export default function PrivacyScreen() {
         </Text>
         <Text style={styles.body}>
           DarkWave Studios LLC{"\n"}
-          Email: privacy@darkwavestudios.io{"\n"}
-          Website: https://darkwavestudios.io
+          Email: privacy@tlid.io{"\n"}
+          Website: https://trusthub.tlid.io
         </Text>
 
         <View style={styles.footerDivider} />
