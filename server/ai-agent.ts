@@ -1,13 +1,13 @@
 import type { Express, Request, Response } from "express";
 import OpenAI from "openai";
-import { ReplitConnectors } from "@replit/connectors-sdk";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const connectors = new ReplitConnectors();
+const ELEVENLABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
+const ELEVENLABS_BASE_URL = "https://api.elevenlabs.io";
 
 const SYSTEM_PROMPT = `You are the Trust Layer AI Agent — a knowledgeable and friendly assistant for the Trust Layer blockchain ecosystem. You help users understand and navigate the 32-app ecosystem built by DarkWave Studios LLC.
 
@@ -93,9 +93,16 @@ export function registerAIRoutes(app: Express): void {
 
       const voiceId = voice_id || "21m00Tcm4TlvDq8ikWAM";
 
-      const ttsResponse = await connectors.proxy("elevenlabs", `/v1/text-to-speech/${voiceId}`, {
+      if (!ELEVENLABS_API_KEY) {
+        return res.status(500).json({ error: "ElevenLabs API key not configured" });
+      }
+
+      const ttsResponse = await globalThis.fetch(`${ELEVENLABS_BASE_URL}/v1/text-to-speech/${voiceId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "xi-api-key": ELEVENLABS_API_KEY,
+        },
         body: JSON.stringify({
           text,
           model_id: "eleven_turbo_v2_5",
@@ -110,7 +117,7 @@ export function registerAIRoutes(app: Express): void {
 
       if (!ttsResponse.ok) {
         const errText = await ttsResponse.text();
-        console.error("ElevenLabs TTS error:", errText);
+        console.error("ElevenLabs TTS error:", ttsResponse.status, errText);
         return res.status(500).json({ error: "TTS generation failed" });
       }
 
@@ -120,15 +127,20 @@ export function registerAIRoutes(app: Express): void {
 
       res.json({ audio: base64Audio, contentType: "audio/mpeg" });
     } catch (error: any) {
-      console.error("TTS error:", error);
+      console.error("TTS error:", error?.message || error);
       res.status(500).json({ error: "TTS generation failed" });
     }
   });
 
   app.get("/api/ai/voices", async (_req: Request, res: Response) => {
     try {
-      const voicesResponse = await connectors.proxy("elevenlabs", "/v1/voices", {
+      if (!ELEVENLABS_API_KEY) {
+        throw new Error("No API key");
+      }
+
+      const voicesResponse = await globalThis.fetch(`${ELEVENLABS_BASE_URL}/v1/voices`, {
         method: "GET",
+        headers: { "xi-api-key": ELEVENLABS_API_KEY },
       });
 
       if (!voicesResponse.ok) {
