@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -19,6 +19,19 @@ import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { useAuth } from "@/lib/auth-context";
 
+function PasswordRule({ met, label }: { met: boolean; label: string }) {
+  return (
+    <View style={styles.ruleRow}>
+      <Ionicons
+        name={met ? "checkmark-circle" : "ellipse-outline"}
+        size={14}
+        color={met ? Colors.success : Colors.textMuted}
+      />
+      <Text style={[styles.ruleText, met && styles.ruleTextMet]}>{label}</Text>
+    </View>
+  );
+}
+
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -33,24 +46,40 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const passwordRules = useMemo(() => ({
+    minLength: password.length >= 8,
+    hasUppercase: /[A-Z]/.test(password),
+    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password),
+  }), [password]);
+
+  const passwordValid = passwordRules.minLength && passwordRules.hasUppercase && passwordRules.hasSpecial;
+
   const handleRegister = async () => {
     if (!firstName.trim() || !email.trim() || !username.trim() || !password.trim()) {
       setError("Please fill in all fields.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (!passwordValid) {
+      setError("Please meet all password requirements.");
       return;
     }
     setError("");
     setLoading(true);
     try {
       await register(email.trim(), username.trim(), password, firstName.trim());
-      router.replace("/(tabs)");
+      router.replace("/verify");
     } catch (err: any) {
       const msg = err?.message || "Registration failed. Please try again.";
-      if (msg.includes("409") || msg.includes("exists")) {
+      if (msg.includes("409") || msg.includes("exists") || msg.includes("already")) {
         setError("An account with this email or username already exists.");
+      } else if (msg.includes("400")) {
+        const parsed = msg.match(/: (.*)/)?.[1];
+        try {
+          const obj = JSON.parse(parsed || "{}");
+          setError(obj.error || msg);
+        } catch {
+          setError(msg);
+        }
       } else {
         setError(msg);
       }
@@ -143,7 +172,7 @@ export default function RegisterScreen() {
               <Ionicons name="lock-closed-outline" size={18} color={Colors.textMuted} />
               <TextInput
                 style={styles.input}
-                placeholder="Minimum 6 characters"
+                placeholder="Create a strong password"
                 placeholderTextColor={Colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -162,6 +191,14 @@ export default function RegisterScreen() {
               </Pressable>
             </View>
           </View>
+
+          {password.length > 0 && (
+            <View style={styles.rulesContainer}>
+              <PasswordRule met={passwordRules.minLength} label="At least 8 characters" />
+              <PasswordRule met={passwordRules.hasUppercase} label="At least one uppercase letter" />
+              <PasswordRule met={passwordRules.hasSpecial} label="At least one special character" />
+            </View>
+          )}
         </GlassCard>
 
         <GradientButton
@@ -259,6 +296,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textPrimary,
     fontFamily: "Inter_400Regular",
+  },
+  rulesContainer: {
+    gap: 6,
+    marginTop: 4,
+  },
+  ruleRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  ruleText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+  },
+  ruleTextMet: {
+    color: Colors.success,
   },
   registerButton: {
     marginTop: 4,

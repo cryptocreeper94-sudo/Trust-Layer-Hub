@@ -6,7 +6,6 @@ import {
   TextInput,
   Pressable,
   Platform,
-  Alert,
   ActivityIndicator,
   useWindowDimensions,
   ScrollView,
@@ -26,7 +25,7 @@ export default function LoginScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const { login } = useAuth();
+  const { login, authStep } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,18 +41,25 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      router.replace("/(tabs)");
     } catch (err: any) {
       const msg = err?.message || "Login failed. Please try again.";
-      if (msg.includes("401") || msg.includes("403")) {
+      if (msg.includes("401") || msg.includes("403") || msg.includes("Invalid")) {
         setError("Invalid email or password.");
       } else {
         setError(msg);
       }
-    } finally {
       setLoading(false);
+      return;
     }
+    setLoading(false);
   };
+
+  React.useEffect(() => {
+    if (authStep === "email_verify" || authStep === "sms_2fa") {
+      router.replace("/verify");
+    } else if (authStep === "idle") {
+    }
+  }, [authStep]);
 
   return (
     <View style={styles.container}>

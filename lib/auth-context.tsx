@@ -17,17 +17,28 @@ interface User {
   trustLayerId?: string;
   membershipStatus?: string;
   membershipType?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  twoFactorEnabled?: boolean;
   [key: string]: unknown;
 }
+
+type AuthStep = "idle" | "email_verify" | "sms_2fa";
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  authStep: AuthStep;
+  phoneHint: string;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string, firstName?: string) => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
+  verify2FA: (code: string) => Promise<void>;
+  resendCode: (type: "email_verify" | "sms_2fa") => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  clearAuthStep: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -35,6 +46,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authStep, setAuthStep] = useState<AuthStep>("idle");
+  const [phoneHint, setPhoneHint] = useState("");
 
   useEffect(() => {
     checkSession();
@@ -55,23 +68,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function login(email: string, password: string) {
-    const data = await apiPost<{ user: User; sessionToken: string }>(
-      "/api/auth/login",
-      { email, password },
-      false
-    );
+    const data = await apiPost<{
+      user: User;
+      sessionToken: string;
+      requiresEmailVerification?: boolean;
+      requires2FA?: boolean;
+      phoneHint?: string;
+    }>("/api/auth/login", { email, password }, false);
+
     await setSessionToken(data.sessionToken);
     setUser(data.user);
+
+    if (data.requiresEmailVerification) {
+      setAuthStep("email_verify");
+    } else if (data.requires2FA) {
+      setAuthStep("sms_2fa");
+      setPhoneHint(data.phoneHint || "");
+    } else {
+      setAuthStep("idle");
+    }
   }
 
   async function register(email: string, username: string, password: string, firstName?: string) {
+    const data = await apiPost<{
+      user: User;
+      sessionToken: string;
+      requiresEmailVerification?: boolean;
+    }>("/api/auth/register", { email, username, password, firstName }, false);
+
+    await setSessionToken(data.sessionToken);
+    setUser(data.user);
+
+    if (data.requiresEmailVerification) {
+      setAuthStep("email_verify");
+    }
+  }
+
+  async function verifyEmail(code: string) {
+    const data = await apiPost<{ success: boolean; user: User }>(
+      "/api/auth/verify-email",
+      { code },
+      true
+    );
+    setUser(data.user);
+    setAuthStep("idle");
+  }
+
+  async function verify2FA(code: string) {
     const data = await apiPost<{ user: User; sessionToken: string }>(
-      "/api/auth/register",
-      { email, username, password, firstName },
-      false
+      "/api/auth/verify-2fa",
+      { code },
+      true
     );
     await setSessionToken(data.sessionToken);
     setUser(data.user);
+    setAuthStep("idle");
+  }
+
+  async function resendCode(type: "email_verify" | "sms_2fa") {
+    await apiPost("/api/auth/resend-code", { type }, true);
   }
 
   async function logout() {
@@ -81,6 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await clearSessionToken();
     await clearChatToken();
     setUser(null);
+    setAuthStep("idle");
+    setPhoneHint("");
   }
 
   async function refreshUser() {
@@ -90,17 +147,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   }
 
+  function clearAuthStep() {
+    setAuthStep("idle");
+  }
+
   const value = useMemo(
     () => ({
       user,
       isLoading,
-      isAuthenticated: !!user,
+      isAuthenticated: !!user && authStep === "idle",
+      authStep,
+      phoneHint,
       login,
       register,
+      verifyEmail,
+      verify2FA,
+      resendCode,
       logout,
       refreshUser,
+      clearAuthStep,
     }),
-    [user, isLoading]
+    [user, isLoading, authStep, phoneHint]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

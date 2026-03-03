@@ -12,7 +12,10 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 - **State**: TanStack Query v5 + React Context (auth) + local state
 - **Storage**: expo-secure-store (tokens), AsyncStorage (preferences)
 - **UI Effects**: expo-blur (glassmorphism), expo-linear-gradient, @react-native-masked-view/masked-view (gradient text)
-- **Auth**: Bearer token auth with SecureStore persistence
+- **Auth**: Email/password with bcrypt hashing, Resend email verification, Twilio SMS 2FA
+- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes tables)
+- **Email**: Resend (Replit Connectors SDK) for verification + password reset emails
+- **SMS**: Twilio for 2FA codes
 
 ## Architecture
 - **Theme**: Dark only (#0c1224 base, cyan/purple accents)
@@ -28,7 +31,8 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 app/
   _layout.tsx              # Root layout with providers (QueryClient, Auth)
   login.tsx                # Login screen
-  register.tsx             # Registration screen
+  register.tsx             # Registration screen (password strength rules)
+  verify.tsx               # Email verification + SMS 2FA code entry
   (tabs)/
     _layout.tsx            # Tab navigator (5 tabs)
     index.tsx              # Home Dashboard
@@ -61,13 +65,20 @@ lib/
   query-client.ts          # TanStack Query setup
 server/
   index.ts                 # Express server
-  routes.ts                # API routes
+  routes.ts                # API routes (auth + AI)
+  auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
+  db/
+    schema.ts              # Drizzle schema (users, verification_codes, sessions)
+    index.ts               # Database connection (Neon + Drizzle)
+  services/
+    resend.ts              # Resend email service (verification, password reset)
+    twilio.ts              # Twilio SMS service (2FA codes)
 ```
 
 ## API Integration
 All screens try live Trust Layer API endpoints first and fall back to mock data:
-- Auth: POST /api/auth/login, /register, GET /api/auth/me, POST /api/auth/logout
+- Auth: POST /api/auth/register, /login, /verify-email, /verify-2fa, /resend-code, /update-phone, /verify-phone, /logout; GET /api/auth/me
 - Balance: GET /api/balance, /api/shells/my-balance, /api/user/dwc-bag
 - Transactions: GET /api/user/transactions
 - Membership: GET /api/user/membership
@@ -80,7 +91,9 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - SSO: Apps launched with ?auth_token={sessionToken}
 
 ## Key Features
-- Login/Register screens with real auth flow + "Continue as Guest" option
+- Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
+- Email verification via Resend (6-digit code, Trust Layer branded email)
+- SMS 2FA via Twilio (6-digit code on login when phone is configured)
 - Registration captures First Name for personalized greeting
 - CST time-of-day greeting on home screen (Good morning/afternoon/evening, {firstName})
 - Desktop-responsive layout: content centered with max-width on web (720px content, 960px explore, 480px auth)
