@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
@@ -25,6 +26,8 @@ export default function AppDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
 
   const app = ECOSYSTEM_APPS.find(a => String(a.id) === id);
 
@@ -59,7 +62,7 @@ export default function AppDetailScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { maxWidth: isDesktop ? 640 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.iconSection}>

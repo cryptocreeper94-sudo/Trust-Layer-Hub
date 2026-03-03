@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -117,9 +118,23 @@ function ActivityItem({ tx }: { tx: { id: string; type: string; amount: number; 
   );
 }
 
+function getCSTGreeting(): string {
+  const now = new Date();
+  const cstOffset = -6;
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const cstMs = utcMs + cstOffset * 3600000;
+  const cstDate = new Date(cstMs);
+  const hour = cstDate.getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { user, isAuthenticated } = useAuth();
   const { data: balance } = useBalance();
   const { data: shells } = useShellBalance();
@@ -128,13 +143,22 @@ export default function HomeScreen() {
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
 
-  const displayName = user?.displayName || user?.username || "Explorer";
+  const firstName = user?.firstName || user?.displayName?.split(" ")[0] || user?.username || "Explorer";
   const trustLayerId = user?.trustLayerId || "guest.tlid";
   const sigBalance = balance?.sig || 0;
   const stSigBalance = balance?.stSig || 0;
   const shellBalance = shells || 0;
   const portfolioValue = dwcBag?.currentValue || 0;
   const recentTxs = transactions || [];
+
+  const [greeting, setGreeting] = useState(getCSTGreeting);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreeting(getCSTGreeting());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -143,14 +167,20 @@ export default function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + webTopInset + 16, paddingBottom: 100 },
+          {
+            paddingTop: insets.top + webTopInset + 16,
+            paddingBottom: 100,
+            maxWidth: isDesktop ? 720 : undefined,
+            alignSelf: isDesktop ? "center" as const : undefined,
+            width: isDesktop ? "100%" : undefined,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.username}>{displayName}</Text>
+            <Text style={styles.greeting}>{greeting},</Text>
+            <Text style={styles.username}>{firstName}</Text>
           </View>
           <Pressable
             style={styles.trustIdBadge}

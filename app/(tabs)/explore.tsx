@@ -8,6 +8,7 @@ import {
   Pressable,
   Platform,
   FlatList,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,6 +62,9 @@ function AppGridCard({ app }: { app: EcosystemApp }) {
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
+  const numColumns = isDesktop && width >= 1024 ? 3 : 2;
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
 
@@ -83,7 +87,7 @@ export default function ExploreScreen() {
   return (
     <View style={styles.container}>
       <BackgroundGlow />
-      <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12 }]}>
+      <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
         <GradientText text="Explore" style={styles.screenTitle} />
         <Text style={styles.subtitle}>32 Apps. One Ecosystem.</Text>
 
@@ -121,10 +125,11 @@ export default function ExploreScreen() {
       </View>
 
       <FlatList
+        key={numColumns}
         data={filteredApps}
         keyExtractor={item => String(item.id)}
-        numColumns={2}
-        contentContainerStyle={styles.gridContent}
+        numColumns={numColumns}
+        contentContainerStyle={[styles.gridContent, { maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
         columnWrapperStyle={styles.gridRow}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <AppGridCard app={item} />}
@@ -213,7 +218,6 @@ const styles = StyleSheet.create({
   },
   appGridItem: {
     flex: 1,
-    maxWidth: "49%" as any,
   },
   appCardInner: {
     alignItems: "center" as const,

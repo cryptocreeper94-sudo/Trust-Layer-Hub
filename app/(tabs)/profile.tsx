@@ -9,6 +9,7 @@ import {
   Switch,
   Alert,
   Linking,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -89,6 +90,8 @@ function LinkedAppItem({ name, connected }: { name: string; connected: boolean }
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { user, isAuthenticated, logout } = useAuth();
   const { data: membership } = useMembership();
   const { data: subscription } = useSubscriptionStatus();
@@ -129,10 +132,14 @@ export default function ProfileScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + webTopInset + 16, paddingBottom: 100 },
+          {
+            paddingTop: insets.top + webTopInset + 16,
+            paddingBottom: 100,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={isDesktop ? { maxWidth: 720, width: "100%", alignSelf: "center" as const } : undefined}>
         <View style={styles.profileHeader}>
           <LinearGradient
             colors={["rgba(0,255,255,0.15)", "rgba(147,51,234,0.15)"]}
@@ -282,6 +289,7 @@ export default function ProfileScreen() {
             <Ionicons name="shield-checkmark" size={12} color={Colors.success} />
             <Text style={styles.shieldText}>Protected by TrustShield.tech</Text>
           </Pressable>
+        </View>
         </View>
       </ScrollView>
     </View>

@@ -6,6 +6,7 @@ import {
   ScrollView,
   Platform,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -83,6 +84,8 @@ function ShellTierCard({ tier, onPurchase }: { tier: typeof SHELL_TIERS[0]; onPu
 export default function WalletScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { data: balance } = useBalance();
   const { data: shells } = useShellBalance();
   const { data: dwcBag } = useDwcBag();
@@ -111,7 +114,13 @@ export default function WalletScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + webTopInset + 16, paddingBottom: 100 },
+          {
+            paddingTop: insets.top + webTopInset + 16,
+            paddingBottom: 100,
+            maxWidth: isDesktop ? 720 : undefined,
+            alignSelf: isDesktop ? "center" as const : undefined,
+            width: isDesktop ? "100%" : undefined,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

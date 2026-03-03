@@ -8,6 +8,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +24,8 @@ import { useAuth } from "@/lib/auth-context";
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +58,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <BackgroundGlow />
-      <View style={[styles.content, { paddingTop: insets.top + webTopInset + 60 }]}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: insets.top + webTopInset + 60, maxWidth: isDesktop ? 480 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]} keyboardShouldPersistTaps="handled">
         <View style={styles.logoSection}>
           <View style={styles.logoIcon}>
             <Ionicons name="shield-checkmark" size={40} color={Colors.primary} />
@@ -138,7 +142,7 @@ export default function LoginScreen() {
         >
           <Text style={styles.skipText}>Continue as Guest</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -149,9 +153,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
     gap: 20,
+    paddingBottom: 40,
   },
   logoSection: {
     alignItems: "center" as const,

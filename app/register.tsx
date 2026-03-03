@@ -6,6 +6,8 @@ import {
   TextInput,
   Pressable,
   Platform,
+  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,7 +22,10 @@ import { useAuth } from "@/lib/auth-context";
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { register } = useAuth();
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +34,7 @@ export default function RegisterScreen() {
   const [error, setError] = useState("");
 
   const handleRegister = async () => {
-    if (!email.trim() || !username.trim() || !password.trim()) {
+    if (!firstName.trim() || !email.trim() || !username.trim() || !password.trim()) {
       setError("Please fill in all fields.");
       return;
     }
@@ -40,7 +45,7 @@ export default function RegisterScreen() {
     setError("");
     setLoading(true);
     try {
-      await register(email.trim(), username.trim(), password);
+      await register(email.trim(), username.trim(), password, firstName.trim());
       router.replace("/(tabs)");
     } catch (err: any) {
       const msg = err?.message || "Registration failed. Please try again.";
@@ -57,7 +62,7 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <BackgroundGlow />
-      <View style={[styles.content, { paddingTop: insets.top + webTopInset + 40 }]}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: insets.top + webTopInset + 40, maxWidth: isDesktop ? 480 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={Colors.primary} />
@@ -77,6 +82,24 @@ export default function RegisterScreen() {
         ) : null}
 
         <GlassCard>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>First Name</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-outline" size={18} color={Colors.textMuted} />
+              <TextInput
+                style={styles.input}
+                placeholder="Your first name"
+                placeholderTextColor={Colors.textMuted}
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                returnKeyType="next"
+                autoComplete="given-name"
+                textContentType="givenName"
+              />
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
             <View style={styles.inputWrapper}>
@@ -155,7 +178,7 @@ export default function RegisterScreen() {
             <Text style={styles.loginLink}>Sign In</Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -166,9 +189,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
     gap: 20,
+    paddingBottom: 40,
   },
   headerRow: {
     flexDirection: "row" as const,

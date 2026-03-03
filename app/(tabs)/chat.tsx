@@ -8,6 +8,7 @@ import {
   Pressable,
   Platform,
   FlatList,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -91,6 +92,8 @@ function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?:
 export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === "web" && width >= 768;
   const { isAuthenticated } = useAuth();
   const chat = useChat();
   const [viewMode, setViewMode] = useState<ViewMode>("channels");
@@ -169,7 +172,7 @@ export default function ChatScreen() {
     return (
       <View style={styles.container}>
         <BackgroundGlow />
-        <View style={[styles.msgHeader, { paddingTop: insets.top + webTopInset + 8 }]}>
+        <View style={[styles.msgHeader, { paddingTop: insets.top + webTopInset + 8, maxWidth: isDesktop ? 720 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
           <Pressable onPress={handleBack} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </Pressable>
@@ -186,7 +189,7 @@ export default function ChatScreen() {
           data={displayMessages}
           keyExtractor={item => item.id}
           renderItem={({ item }) => <MessageBubble msg={item} />}
-          contentContainerStyle={styles.messagesList}
+          contentContainerStyle={[styles.messagesList, { maxWidth: isDesktop ? 720 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
           showsVerticalScrollIndicator={false}
         />
 
@@ -236,7 +239,13 @@ export default function ChatScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + webTopInset + 16, paddingBottom: 100 },
+          {
+            paddingTop: insets.top + webTopInset + 16,
+            paddingBottom: 100,
+            maxWidth: isDesktop ? 720 : undefined,
+            alignSelf: isDesktop ? "center" as const : undefined,
+            width: isDesktop ? "100%" : undefined,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

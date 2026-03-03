@@ -79,8 +79,12 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 
 ## Key Features
 - Login/Register screens with real auth flow + "Continue as Guest" option
+- Registration captures First Name for personalized greeting
+- CST time-of-day greeting on home screen (Good morning/afternoon/evening, {firstName})
+- Desktop-responsive layout: content centered with max-width on web (720px content, 960px explore, 480px auth)
+- Desktop breakpoint: 768px — below that uses mobile full-width layout
 - Dashboard with live portfolio balance, quick actions, news carousel, featured apps, activity feed, launch countdown
-- 32-app directory with search, category filtering, 2-column grid
+- 32-app directory with search, category filtering, 2-column grid (3 columns on desktop 1024px+)
 - Wallet with live SIG/Shell balances, Shell purchase tiers, portfolio breakdown, transaction history
 - Signal Chat with WebSocket support, channels, typing indicators, DMs
 - Profile with live membership data, subscription status, settings, linked apps, real sign out

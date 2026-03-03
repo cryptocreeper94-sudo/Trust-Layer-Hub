@@ -12,6 +12,7 @@ interface User {
   id: string;
   email: string;
   username: string;
+  firstName?: string;
   displayName?: string;
   trustLayerId?: string;
   membershipStatus?: string;
@@ -24,7 +25,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
+  register: (email: string, username: string, password: string, firstName?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -63,10 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }
 
-  async function register(email: string, username: string, password: string) {
+  async function register(email: string, username: string, password: string, firstName?: string) {
     const data = await apiPost<{ user: User; sessionToken: string }>(
       "/api/auth/register",
-      { email, username, password },
+      { email, username, password, firstName },
       false
     );
     await setSessionToken(data.sessionToken);
