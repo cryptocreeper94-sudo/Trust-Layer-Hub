@@ -265,6 +265,27 @@ export default function ProfileScreen() {
         </GlassCard>
 
         <View style={styles.sectionHeader}>
+          <GradientText text="Business & Affiliate" style={styles.sectionTitle} />
+        </View>
+        <GlassCard>
+          <SettingRow
+            icon="card"
+            label="Stripe Dashboard"
+            value="Business"
+            onPress={() => router.push("/stripe-dashboard")}
+            testID="setting-stripe"
+          />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="people"
+            label="Affiliate Program"
+            value="Earn SIG"
+            onPress={() => router.push("/affiliate")}
+            testID="setting-affiliate"
+          />
+        </GlassCard>
+
+        <View style={styles.sectionHeader}>
           <GradientText text="Linked Apps" style={styles.sectionTitle} />
         </View>
         <GlassCard>

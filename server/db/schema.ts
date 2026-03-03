@@ -7,9 +7,12 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   passwordHash: text("password_hash").notNull(),
   phone: text("phone"),
+  uniqueHash: text("unique_hash").unique(),
+  role: text("role").default("user").notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   phoneVerified: boolean("phone_verified").default(false).notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
+  referredBy: text("referred_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -113,4 +116,39 @@ export const multisigTransactions = pgTable("multisig_transactions", {
   status: text("status").default("pending").notNull(),
   signatures: jsonb("signatures"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const affiliateReferrals = pgTable("affiliate_referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull().references(() => users.id),
+  referredUserId: integer("referred_user_id").references(() => users.id),
+  referralHash: text("referral_hash").notNull(),
+  platform: text("platform").default("trusthub").notNull(),
+  status: text("status").default("pending").notNull(),
+  convertedAt: timestamp("converted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const affiliateCommissions = pgTable("affiliate_commissions", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull().references(() => users.id),
+  referralId: integer("referral_id").references(() => affiliateReferrals.id),
+  amount: text("amount").notNull(),
+  currency: text("currency").default("SIG").notNull(),
+  tier: text("tier").default("base").notNull(),
+  status: text("status").default("pending").notNull(),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const stripeConnections = pgTable("stripe_connections", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  stripeAccountId: text("stripe_account_id"),
+  stripeCustomerId: text("stripe_customer_id"),
+  accessToken: text("access_token"),
+  connected: boolean("connected").default(false).notNull(),
+  businessName: text("business_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

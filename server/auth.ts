@@ -109,6 +109,10 @@ export function registerAuthRoutes(app: Express): void {
 
       const passwordHash = await bcrypt.hash(password, 12);
 
+      const uniqueHash = crypto.randomBytes(16).toString("hex");
+
+      const referredBy = req.body.referralCode || null;
+
       const [newUser] = await db
         .insert(users)
         .values({
@@ -117,9 +121,12 @@ export function registerAuthRoutes(app: Express): void {
           firstName: firstName || null,
           passwordHash,
           phone: phone || null,
+          uniqueHash,
+          role: "user",
           emailVerified: false,
           phoneVerified: false,
           twoFactorEnabled: false,
+          referredBy,
         })
         .returning();
 
@@ -553,9 +560,12 @@ export function registerAuthRoutes(app: Express): void {
         username: user.username,
         firstName: user.firstName,
         displayName: user.firstName || user.username,
+        uniqueHash: user.uniqueHash,
+        role: user.role || "user",
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
         twoFactorEnabled: user.twoFactorEnabled,
+        referredBy: user.referredBy,
       },
     });
   });

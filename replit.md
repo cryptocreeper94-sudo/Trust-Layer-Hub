@@ -75,6 +75,8 @@ hooks/
   useWorldNews.ts          # World news feed (API + fallback)
   useStaking.ts            # Staking info, stake/unstake mutations (APY, cooldown)
   useWalletActions.ts      # Send, receive, swap token mutations
+  useAffiliate.ts          # Affiliate dashboard, link, payout request
+  useStripeBusiness.ts     # Stripe status, dashboard, connect/disconnect
 lib/
   api.ts                   # API client with Bearer auth, SecureStore, SSO
   auth-context.tsx         # Auth provider (login, register, logout, session check)
@@ -86,7 +88,7 @@ web/
   index.html               # Custom Expo web HTML template with PWA meta tags
 server/
   index.ts                 # Express server (serves public/ + static-build/)
-  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news + staking)
+  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news + staking + affiliate + stripe)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
   hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing)
@@ -95,8 +97,10 @@ server/
   multisig.ts              # Multi-sig vault management (approve, reject, history)
   news.ts                  # World news feed API (curated national/world stories)
   staking.ts               # Staking endpoints (stake/unstake/info) + send/receive/swap
+  affiliate.ts             # Affiliate program (dashboard, link, tracking, payouts)
+  stripe-business.ts       # Stripe business dashboard (balance, payments, payouts, connect/disconnect)
   db/
-    schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions)
+    schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions, affiliate_referrals, affiliate_commissions, stripe_connections)
     index.ts               # Database connection (Neon + Drizzle)
   services/
     resend.ts              # Resend email service (verification, password reset)
@@ -124,6 +128,8 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - News: GET /api/news/world (public, curated world news feed)
 - Staking: GET /api/staking/info (auth), POST /api/staking/stake (auth), POST /api/staking/unstake (auth)
 - Wallet Actions: POST /api/wallet/send (auth), GET /api/wallet/receive (auth), POST /api/wallet/swap (auth)
+- Affiliate: GET /api/affiliate/dashboard (auth), GET /api/affiliate/link (auth), POST /api/affiliate/track (public), POST /api/affiliate/request-payout (auth)
+- Stripe: GET /api/stripe/status (auth), GET /api/stripe/dashboard (auth), POST /api/stripe/connect (auth), DELETE /api/stripe/disconnect (auth)
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
@@ -161,6 +167,10 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Expandable token list per connected wallet
 - Pull-to-refresh on wallet screen (invalidates all wallet queries)
 - Payment methods section: Apple Pay, Google Pay (coming soon), Add Card placeholder
+- Affiliate program: unique hash-based referral ID (cross-platform), tiered commissions (Base 10% → Diamond 20%), referral tracking, SIG payouts
+- Stripe business dashboard: connect Stripe account, view balance/payments/payouts, revenue stats
+- User role system: "user" vs "developer/admin" roles on each account
+- User uniqueHash generated on registration — used as affiliate ID across all 32+ ecosystem apps
 - Dashboard with live portfolio balance, quick actions, photorealistic news carousel, world news carousel, featured apps, activity feed, launch countdown
 - 32-app directory with search, category filtering, 2-column grid (3 columns on desktop 1024px+)
 - Signal Chat with WebSocket support, channels, typing indicators, DMs
