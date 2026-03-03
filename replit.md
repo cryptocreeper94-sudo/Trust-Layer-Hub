@@ -73,6 +73,8 @@ hooks/
   useExternalWallets.ts    # WalletConnect/Phantom wallet connections
   useMultisig.ts           # Multi-sig vault, pending txs, approve/reject
   useWorldNews.ts          # World news feed (API + fallback)
+  useStaking.ts            # Staking info, stake/unstake mutations (APY, cooldown)
+  useWalletActions.ts      # Send, receive, swap token mutations
 lib/
   api.ts                   # API client with Bearer auth, SecureStore, SSO
   auth-context.tsx         # Auth provider (login, register, logout, session check)
@@ -84,7 +86,7 @@ web/
   index.html               # Custom Expo web HTML template with PWA meta tags
 server/
   index.ts                 # Express server (serves public/ + static-build/)
-  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news)
+  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news + staking)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
   hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing)
@@ -92,6 +94,7 @@ server/
   wallets.ts               # External wallet connections (WalletConnect, Phantom)
   multisig.ts              # Multi-sig vault management (approve, reject, history)
   news.ts                  # World news feed API (curated national/world stories)
+  staking.ts               # Staking endpoints (stake/unstake/info) + send/receive/swap
   db/
     schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions)
     index.ts               # Database connection (Neon + Drizzle)
@@ -119,6 +122,8 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Wallets: POST /api/wallets/connect (auth), GET /api/wallets (auth), DELETE /api/wallets/:id (auth), GET /api/wallets/:id/balances (auth)
 - Multi-Sig: GET /api/multisig/vault (auth), GET /api/multisig/pending (auth), POST /api/multisig/approve/:txId (auth), POST /api/multisig/reject/:txId (auth), GET /api/multisig/history (auth)
 - News: GET /api/news/world (public, curated world news feed)
+- Staking: GET /api/staking/info (auth), POST /api/staking/stake (auth), POST /api/staking/unstake (auth)
+- Wallet Actions: POST /api/wallet/send (auth), GET /api/wallet/receive (auth), POST /api/wallet/swap (auth)
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
@@ -150,6 +155,12 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Photorealistic AI-generated images on news cards and ecosystem highlight cards
 - World News carousel on home screen showing curated national/world news stories with stock photography, source attribution, and time-ago display
 - Developer Portal link in hamburger menu (external link to developers.tlid.io)
+- Wallet quick actions: Send, Receive, Swap, Stake with bottom-sheet modals
+- Staking section with 12.5% APY, stake/unstake, 7-day cooldown, reward projections
+- External wallet balances displayed inline (ETH, SOL, USDC, LINK, RAY with USD values)
+- Expandable token list per connected wallet
+- Pull-to-refresh on wallet screen (invalidates all wallet queries)
+- Payment methods section: Apple Pay, Google Pay (coming soon), Add Card placeholder
 - Dashboard with live portfolio balance, quick actions, photorealistic news carousel, world news carousel, featured apps, activity feed, launch countdown
 - 32-app directory with search, category filtering, 2-column grid (3 columns on desktop 1024px+)
 - Signal Chat with WebSocket support, channels, typing indicators, DMs

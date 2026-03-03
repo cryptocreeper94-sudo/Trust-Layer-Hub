@@ -7,6 +7,7 @@ import { registerPlaidRoutes } from "./plaid";
 import { registerWalletRoutes } from "./wallets";
 import { registerMultisigRoutes } from "./multisig";
 import { registerNewsRoutes } from "./news";
+import { registerStakingRoutes } from "./staking";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
@@ -16,6 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerWalletRoutes(app);
   registerMultisigRoutes(app);
   registerNewsRoutes(app);
+  registerStakingRoutes(app);
 
   const httpServer = createServer(app);
 

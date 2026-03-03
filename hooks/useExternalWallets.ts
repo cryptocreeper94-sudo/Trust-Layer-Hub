@@ -2,21 +2,26 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiGet, apiPost } from "@/lib/api";
 import { queryClient } from "@/lib/query-client";
 
-interface ExternalWallet {
+interface WalletToken {
+  symbol: string;
+  balance: string;
+  usd: string;
+}
+
+interface WalletBalances {
+  native: string;
+  usd: string;
+  tokens: WalletToken[];
+}
+
+export interface ExternalWallet {
   id: number;
   address: string;
   chain: string;
   walletType: string;
   label: string;
   lastSynced: string;
-  balances?: WalletBalance[];
-}
-
-interface WalletBalance {
-  symbol: string;
-  name: string;
-  balance: string;
-  usdValue: string;
+  balances?: WalletBalances;
 }
 
 export function useExternalWallets() {
@@ -32,6 +37,18 @@ export function useExternalWallets() {
     },
     staleTime: 30000,
   });
+}
+
+export function getExternalWalletsTotalUsd(wallets: ExternalWallet[]): number {
+  return wallets.reduce((sum, w) => {
+    if (!w.balances) return sum;
+    const nativeUsd = parseFloat(w.balances.usd.replace(/,/g, "")) || 0;
+    const tokenUsd = (w.balances.tokens || []).reduce(
+      (t, tok) => t + (parseFloat(tok.usd.replace(/,/g, "")) || 0),
+      0
+    );
+    return sum + nativeUsd + tokenUsd;
+  }, 0);
 }
 
 export function useConnectWallet() {
@@ -61,12 +78,12 @@ export function useWalletBalances(walletId: number | null) {
   return useQuery({
     queryKey: ["wallet-balances", walletId],
     queryFn: async () => {
-      if (!walletId) return [];
+      if (!walletId) return null;
       try {
-        const data = await apiGet<{ balances: WalletBalance[] }>(`/api/wallets/${walletId}/balances`);
-        return data.balances || [];
+        const data = await apiGet<{ balances: WalletBalances }>(`/api/wallets/${walletId}/balances`);
+        return data.balances || null;
       } catch {
-        return [];
+        return null;
       }
     },
     enabled: !!walletId,
