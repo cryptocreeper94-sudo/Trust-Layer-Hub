@@ -27,7 +27,12 @@
       }
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Trust Layer Hub",
+      "shortName": "Trust Layer",
+      "description": "The front door to the Trust Layer blockchain ecosystem",
+      "themeColor": "#0c1224",
+      "backgroundColor": "#0c1224"
     },
     "plugins": [
       [

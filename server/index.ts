@@ -198,7 +198,19 @@ function configureExpoAndLanding(app: express.Application) {
     next();
   });
 
+  app.get("/sw.js", (_req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Content-Type", "application/javascript");
+    res.sendFile(path.resolve(process.cwd(), "public", "sw.js"));
+  });
+  app.get("/manifest.json", (_req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Content-Type", "application/json");
+    res.sendFile(path.resolve(process.cwd(), "public", "manifest.json"));
+  });
+
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
+  app.use(express.static(path.resolve(process.cwd(), "public")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
   log("Expo routing: Checking expo-platform header on / and /manifest");

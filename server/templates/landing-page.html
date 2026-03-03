@@ -1,9 +1,17 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <title>APP_NAME_PLACEHOLDER</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c1224" />
+    <meta name="description" content="The front door to the Trust Layer blockchain ecosystem. Manage your Signal (SIG) wallet, access 32 ecosystem apps, chat securely, and verify on-chain." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Trust Layer" />
+    <link rel="apple-touch-icon" href="/assets/images/icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
     <style>
       * {
         box-sizing: border-box;
@@ -454,6 +462,20 @@
           }, 500);
         }
       })();
+    </script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").then(
+            function (reg) {
+              console.log("Service Worker registered:", reg.scope);
+            },
+            function (err) {
+              console.log("Service Worker registration failed:", err);
+            }
+          );
+        });
+      }
     </script>
   </body>
 </html>

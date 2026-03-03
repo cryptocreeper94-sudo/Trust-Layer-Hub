@@ -16,6 +16,7 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 - **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter tables)
 - **Email**: Resend (Replit Connectors SDK) for verification + password reset emails
 - **SMS**: Twilio for 2FA codes
+- **PWA**: Service worker (stale-while-revalidate), web manifest, offline support, Add to Home Screen
 
 ## Architecture
 - **Theme**: Dark only (#0c1224 base, cyan/purple accents)
@@ -44,6 +45,7 @@ app/
     chat.tsx               # Signal Chat
     profile.tsx            # User Profile
   app-detail.tsx           # App detail modal with SSO
+  ai-agent.tsx             # AI Agent chat modal
 components/
   GlassCard.tsx            # Glassmorphism card
   GradientText.tsx         # Gradient text with MaskedView
@@ -66,8 +68,13 @@ lib/
   api.ts                   # API client with Bearer auth, SecureStore, SSO
   auth-context.tsx         # Auth provider (login, register, logout, session check)
   query-client.ts          # TanStack Query setup
+public/
+  manifest.json            # PWA web app manifest
+  sw.js                    # Service worker (cache, offline)
+web/
+  index.html               # Custom Expo web HTML template with PWA meta tags
 server/
-  index.ts                 # Express server
+  index.ts                 # Express server (serves public/ + static-build/)
   routes.ts                # API routes (auth + AI + hallmark)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
