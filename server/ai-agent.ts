@@ -91,39 +91,61 @@ export function registerAIRoutes(app: Express): void {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const voiceId = voice_id || "21m00Tcm4TlvDq8ikWAM";
+      let base64Audio: string | null = null;
 
-      if (!ELEVENLABS_API_KEY) {
-        return res.status(500).json({ error: "ElevenLabs API key not configured" });
+      if (ELEVENLABS_API_KEY) {
+        try {
+          const voiceId = voice_id || "21m00Tcm4TlvDq8ikWAM";
+          const ttsResponse = await globalThis.fetch(`${ELEVENLABS_BASE_URL}/v1/text-to-speech/${voiceId}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "xi-api-key": ELEVENLABS_API_KEY,
+            },
+            body: JSON.stringify({
+              text,
+              model_id: "eleven_turbo_v2_5",
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                style: 0.0,
+                use_speaker_boost: true,
+              },
+            }),
+          });
+
+          if (ttsResponse.ok) {
+            const arrayBuffer = await ttsResponse.arrayBuffer();
+            base64Audio = Buffer.from(arrayBuffer).toString("base64");
+            console.log("TTS: ElevenLabs success");
+          } else {
+            const errText = await ttsResponse.text();
+            console.error("ElevenLabs TTS error:", ttsResponse.status, errText, "— falling back to OpenAI");
+          }
+        } catch (elevenErr: any) {
+          console.error("ElevenLabs TTS exception:", elevenErr?.message, "— falling back to OpenAI");
+        }
+      } else {
+        console.log("TTS: No ElevenLabs key, using OpenAI");
       }
 
-      const ttsResponse = await globalThis.fetch(`${ELEVENLABS_BASE_URL}/v1/text-to-speech/${voiceId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_turbo_v2_5",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true,
-          },
-        }),
-      });
+      if (!base64Audio) {
+        try {
+          const mp3Response = await openai.audio.speech.create({
+            model: "tts-1",
+            voice: "nova",
+            input: text,
+            response_format: "mp3",
+          });
 
-      if (!ttsResponse.ok) {
-        const errText = await ttsResponse.text();
-        console.error("ElevenLabs TTS error:", ttsResponse.status, errText);
-        return res.status(500).json({ error: "TTS generation failed" });
+          const arrayBuffer = await mp3Response.arrayBuffer();
+          base64Audio = Buffer.from(arrayBuffer).toString("base64");
+          console.log("TTS: OpenAI fallback success");
+        } catch (openaiErr: any) {
+          console.error("OpenAI TTS fallback error:", openaiErr?.message);
+          return res.status(500).json({ error: "TTS generation failed on both providers" });
+        }
       }
-
-      const arrayBuffer = await ttsResponse.arrayBuffer();
-      const audioBuffer = Buffer.from(arrayBuffer);
-      const base64Audio = audioBuffer.toString("base64");
 
       res.json({ audio: base64Audio, contentType: "audio/mpeg" });
     } catch (error: any) {
