@@ -24,10 +24,11 @@ import { useAuth } from "@/lib/auth-context";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { useWorldNews } from "@/hooks/useWorldNews";
 
-function QuickAction({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.quickAction, pressed && { opacity: 0.7 }]}
+      testID={testID}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
@@ -41,7 +42,7 @@ function QuickAction({ icon, label, onPress }: { icon: string; label: string; on
   );
 }
 
-function NewsCard({ item }: { item: typeof MOCK_NEWS[0] }) {
+function NewsCard({ item, cardWidth }: { item: typeof MOCK_NEWS[0]; cardWidth?: number }) {
   const categoryColor =
     item.category === "Milestone" ? Colors.primary :
     item.category === "Launch" ? Colors.secondary :
@@ -49,7 +50,7 @@ function NewsCard({ item }: { item: typeof MOCK_NEWS[0] }) {
     Colors.textSecondary;
 
   return (
-    <View style={styles.newsCardWrapper}>
+    <View style={[styles.newsCardWrapper, cardWidth ? { width: cardWidth } : undefined]}>
       <GlassCard>
         {item.image && (
           <View style={styles.newsImageContainer}>
@@ -71,7 +72,7 @@ function NewsCard({ item }: { item: typeof MOCK_NEWS[0] }) {
   );
 }
 
-function WorldNewsCard({ item }: { item: { id: string; title: string; summary: string; category: string; source: string; imageUrl: string; publishedAt: string } }) {
+function WorldNewsCard({ item, cardWidth }: { item: { id: string; title: string; summary: string; category: string; source: string; imageUrl: string; publishedAt: string }; cardWidth?: number }) {
   const categoryColor =
     item.category === "Finance" ? Colors.success :
     item.category === "Technology" ? Colors.primary :
@@ -83,7 +84,7 @@ function WorldNewsCard({ item }: { item: { id: string; title: string; summary: s
   const timeAgo = getTimeAgo(item.publishedAt);
 
   return (
-    <View style={styles.worldNewsCardWrapper}>
+    <View style={[styles.worldNewsCardWrapper, cardWidth ? { width: cardWidth } : undefined]}>
       <GlassCard>
         {item.imageUrl ? (
           <View style={styles.worldNewsImageContainer}>
@@ -199,6 +200,9 @@ export default function HomeScreen() {
   const { data: worldNews } = useWorldNews();
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
+  const contentWidth = isDesktop ? Math.min(width, 720) : width;
+  const newsCardWidth = Math.round(contentWidth * 0.72);
+  const worldNewsCardWidth = Math.round(contentWidth * 0.76);
 
   const firstName = user?.firstName || user?.displayName?.split(" ")[0] || user?.username || "Explorer";
   const trustLayerId = user?.trustLayerId || "guest.tlid";
@@ -286,10 +290,10 @@ export default function HomeScreen() {
         </GlassCard>
 
         <View style={styles.quickActionsRow}>
-          <QuickAction icon="cart" label="Buy Shells" onPress={() => router.push("/(tabs)/wallet")} />
-          <QuickAction icon="send" label="Send SIG" onPress={() => {}} />
-          <QuickAction icon="scan" label="Scan" onPress={() => {}} />
-          <QuickAction icon="git-compare" label="Bridge" onPress={() => {}} />
+          <QuickAction icon="cart" label="Buy Shells" onPress={() => router.push("/(tabs)/wallet")} testID="home-quick-buy" />
+          <QuickAction icon="send" label="Send SIG" onPress={() => router.push("/(tabs)/wallet")} testID="home-quick-send" />
+          <QuickAction icon="scan" label="Scan" onPress={() => {}} testID="home-quick-scan" />
+          <QuickAction icon="git-compare" label="Bridge" onPress={() => {}} testID="home-quick-bridge" />
         </View>
 
         <View style={styles.sectionHeader}>
@@ -299,11 +303,11 @@ export default function HomeScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContent}
-          snapToInterval={288}
+          snapToInterval={newsCardWidth + 12}
           decelerationRate="fast"
         >
           {MOCK_NEWS.map((item) => (
-            <NewsCard key={item.id} item={item} />
+            <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
           ))}
         </ScrollView>
 
@@ -315,17 +319,17 @@ export default function HomeScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContent}
-          snapToInterval={308}
+          snapToInterval={worldNewsCardWidth + 12}
           decelerationRate="fast"
         >
           {(worldNews || []).map((item) => (
-            <WorldNewsCard key={item.id} item={item} />
+            <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
           ))}
         </ScrollView>
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
-          <Pressable onPress={() => router.push("/(tabs)/explore")}>
+          <Pressable onPress={() => router.push("/(tabs)/explore")} testID="home-see-all-apps">
             <Text style={styles.seeAll}>See All</Text>
           </Pressable>
         </View>
@@ -617,7 +621,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   featuredAppWrapper: {
-    width: 156,
+    width: 152,
   },
   featuredAppContent: {
     alignItems: "center" as const,

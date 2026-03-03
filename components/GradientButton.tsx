@@ -13,6 +13,7 @@ interface GradientButtonProps {
   disabled?: boolean;
   loading?: boolean;
   small?: boolean;
+  testID?: string;
 }
 
 export function GradientButton({
@@ -24,6 +25,7 @@ export function GradientButton({
   disabled = false,
   loading = false,
   small = false,
+  testID,
 }: GradientButtonProps) {
   const gradientColors = colors || Colors.gradientCyan;
 
@@ -49,6 +51,7 @@ export function GradientButton({
           pressed && styles.pressed,
         ]}
         android_ripple={{ color: "rgba(255,255,255,0.1)" }}
+        testID={testID}
       >
         {loading ? (
           <ActivityIndicator color="#fff" size="small" />

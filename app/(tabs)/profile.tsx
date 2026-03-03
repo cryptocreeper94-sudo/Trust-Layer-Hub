@@ -33,6 +33,7 @@ function SettingRow({
   toggle,
   toggleValue,
   onToggle,
+  testID,
 }: {
   icon: string;
   label: string;
@@ -41,12 +42,14 @@ function SettingRow({
   toggle?: boolean;
   toggleValue?: boolean;
   onToggle?: (val: boolean) => void;
+  testID?: string;
 }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.settingRow, !toggle && pressed && { opacity: 0.7 }]}
       onPress={toggle ? undefined : onPress}
       disabled={!!toggle}
+      testID={testID}
     >
       <View style={styles.settingIcon}>
         <Ionicons name={icon as any} size={18} color={Colors.primary} />
@@ -234,6 +237,7 @@ export default function ProfileScreen() {
             toggle
             toggleValue={notifications}
             onToggle={setNotifications}
+            testID="setting-notifications"
           />
           <View style={styles.divider} />
           <SettingRow
@@ -242,6 +246,7 @@ export default function ProfileScreen() {
             toggle
             toggleValue={biometrics}
             onToggle={setBiometrics}
+            testID="setting-biometrics"
           />
           <View style={styles.divider} />
           <SettingRow
@@ -249,13 +254,14 @@ export default function ProfileScreen() {
             label="SMS Security (2FA)"
             value={user?.twoFactorEnabled ? "Enabled" : "Set Up"}
             onPress={() => router.push("/sms-optin")}
+            testID="setting-sms-2fa"
           />
           <View style={styles.divider} />
-          <SettingRow icon="lock-closed" label="Security PIN" value="Set" onPress={() => {}} />
+          <SettingRow icon="lock-closed" label="Security PIN" value="Set" onPress={() => {}} testID="setting-security-pin" />
           <View style={styles.divider} />
-          <SettingRow icon="language" label="Language" value="English" onPress={() => {}} />
+          <SettingRow icon="language" label="Language" value="English" onPress={() => {}} testID="setting-language" />
           <View style={styles.divider} />
-          <SettingRow icon="moon" label="Display" value="Dark" onPress={() => {}} />
+          <SettingRow icon="moon" label="Display" value="Dark" onPress={() => {}} testID="setting-display" />
         </GlassCard>
 
         <View style={styles.sectionHeader}>
@@ -277,6 +283,7 @@ export default function ProfileScreen() {
           <Pressable
             style={({ pressed }) => [styles.signOutButton, pressed && { opacity: 0.7 }]}
             onPress={handleSignOut}
+            testID="sign-out-button"
           >
             <Ionicons name="log-out-outline" size={18} color={Colors.error} />
             <Text style={styles.signOutText}>Sign Out</Text>
@@ -457,12 +464,13 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 12,
-    paddingVertical: 4,
+    paddingVertical: 10,
+    minHeight: 48,
   },
   settingIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: "rgba(0,255,255,0.08)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -487,7 +495,8 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
     alignItems: "center" as const,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    minHeight: 44,
   },
   linkedAppName: {
     fontSize: 14,

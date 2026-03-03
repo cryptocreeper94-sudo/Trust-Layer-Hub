@@ -96,6 +96,7 @@ export default function LoginScreen() {
                 returnKeyType="next"
                 autoComplete="email"
                 textContentType="emailAddress"
+                testID="login-email-input"
               />
             </View>
           </View>
@@ -115,8 +116,9 @@ export default function LoginScreen() {
                 onSubmitEditing={handleLogin}
                 autoComplete="password"
                 textContentType="password"
+                testID="login-password-input"
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
+              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8} testID="login-toggle-password">
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
@@ -133,11 +135,12 @@ export default function LoginScreen() {
           loading={loading}
           disabled={loading}
           style={styles.loginButton}
+          testID="login-submit-button"
         />
 
         <View style={styles.registerRow}>
           <Text style={styles.registerText}>New to Trust Layer?</Text>
-          <Pressable onPress={() => router.push("/register")}>
+          <Pressable onPress={() => router.push("/register")} hitSlop={8} testID="login-create-account">
             <Text style={styles.registerLink}>Create Account</Text>
           </Pressable>
         </View>
@@ -145,6 +148,7 @@ export default function LoginScreen() {
         <Pressable
           style={styles.skipButton}
           onPress={() => router.replace("/(tabs)")}
+          testID="login-continue-guest"
         >
           <Text style={styles.skipText}>Continue as Guest</Text>
         </Pressable>

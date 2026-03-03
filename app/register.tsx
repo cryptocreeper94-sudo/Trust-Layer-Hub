@@ -125,6 +125,7 @@ export default function RegisterScreen() {
                 returnKeyType="next"
                 autoComplete="given-name"
                 textContentType="givenName"
+                testID="register-firstname-input"
               />
             </View>
           </View>
@@ -144,6 +145,7 @@ export default function RegisterScreen() {
                 returnKeyType="next"
                 autoComplete="email"
                 textContentType="emailAddress"
+                testID="register-email-input"
               />
             </View>
           </View>
@@ -162,6 +164,7 @@ export default function RegisterScreen() {
                 returnKeyType="next"
                 autoComplete="username"
                 textContentType="username"
+                testID="register-username-input"
               />
             </View>
           </View>
@@ -181,8 +184,9 @@ export default function RegisterScreen() {
                 onSubmitEditing={handleRegister}
                 autoComplete="new-password"
                 textContentType="newPassword"
+                testID="register-password-input"
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
+              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8} testID="register-toggle-password">
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={20}
@@ -207,6 +211,7 @@ export default function RegisterScreen() {
           loading={loading}
           disabled={loading}
           style={styles.registerButton}
+          testID="register-submit-button"
         />
 
         <View style={styles.legalRow}>

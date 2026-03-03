@@ -245,10 +245,12 @@ function BottomSheetModal({
   title: string;
   children: React.ReactNode;
 }) {
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 20) + 20;
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.modalContent, { paddingBottom: bottomPad }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.modalGrabber} />
           <Text style={styles.modalTitle}>{title}</Text>
           {children}
