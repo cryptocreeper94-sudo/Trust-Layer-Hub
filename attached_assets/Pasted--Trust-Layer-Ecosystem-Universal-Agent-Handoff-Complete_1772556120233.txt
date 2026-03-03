@@ -1,0 +1,277 @@
+# Trust Layer Ecosystem — Universal Agent Handoff
+> Complete canonical reference for any AI agent working on the Trust Layer ecosystem.
+> Covers: branding, all 32 apps, blockchain architecture, design system, tech stack, token economics, and active development roadmap.
+
+---
+
+## 1. Project Identity
+
+| Field | Value |
+|-------|-------|
+| Ecosystem Name | Trust Layer |
+| Parent Company | DarkWave Studios (legal entity — never user-facing branding) |
+| Founder | Jason |
+| Support Email | team@dwsc.io |
+| Launch Date | July 4, 2026 ("Independence Day for Trust") |
+| Tagline | The Coordinated Trust Layer |
+| Core Mission | Verified identity, accountability, and transparent audit trails for real business operations via a custom Layer 1 blockchain |
+
+---
+
+## 2. Branding Rules (Strict — Never Deviate)
+
+| Correct Name | Never Use |
+|--------------|-----------|
+| Trust Layer | DarkWave Chain, DWSC Chain, TL Chain |
+| DarkWave Studios | (only for legal/company/entity references, never product branding) |
+| The Arcade | DarkWave Games |
+| Academy | DarkWave Academy |
+| Chronicles | DarkWave Chronicles |
+| Signal Chat | ChronoChat |
+| Bomber | Trust Golf Bomber |
+| Signal (SIG) | DarkWave Coin, DWC (legacy — fully deprecated) |
+
+---
+
+## 3. Primary Domains
+
+| Domain | Purpose |
+|--------|---------|
+| dwsc.io | Main portal, ecosystem hub, API host |
+| dwtl.io | Trust Layer blockchain landing page |
+| darkwavegames.io | The Arcade gaming portal |
+| darkwavestudios.io | DarkWave Studios company site |
+| yourlegacy.io | Chronicles life simulation game |
+| tlid.io | Blockchain domain service (.tlid identity names) |
+| trustshield.tech | Enterprise security monitoring |
+| intothevoid.app | THE VOID premium membership identity |
+| trustgolf.app | Trust Golf companion app |
+| bomber.tlid.io | Bomber 3D long drive game (Vercel hosted) |
+| trustvault.replit.app | TrustVault multi-chain wallet |
+| trusthome.replit.app | TrustHome user dashboard |
+| verdara.replit.app | Verdara outdoor recreation super-app |
+
+---
+
+## 4. Complete Color System
+
+### 4.1 Global Theme (CSS Custom Properties — HSL)
+```
+--background:    230 35% 7%     /* #0d0f1a — Deep Space Blue */
+--foreground:    210 40% 98%    /* Near-white, slight blue tint */
+--primary:       180 100% 50%   /* #00ffff — Neon Cyan */
+--secondary:     270 70% 60%    /* #8b5cf6 — Electric Purple */
+--accent:        180 100% 50%   /* Cyan (matches primary) */
+--card:          230 35% 10%    /* Slightly lighter than background */
+--muted:         230 30% 15%    /* Subtle background elements */
+--border:        230 30% 18%    /* Low-contrast UI borders */
+--destructive:   0 62% 30%      /* Deep Red */
+--ring:          180 100% 50%   /* Cyan focus rings */
+```
+
+### 4.2 Hex Quick Reference
+| Purpose | Hex | Usage |
+|---------|-----|-------|
+| Deep Background | `#0d0f1a` | Page backgrounds |
+| Panel Background | `#0a0a0f` | Cards, panels |
+| Primary Cyan | `#00e5ff` / `#06b6d4` | Buttons, links, highlights |
+| Secondary Purple | `#8b5cf6` / `#7c3aed` | Accents, gradients |
+| Accent Pink | `#ec4899` | Badges, alerts |
+| Accent Magenta | `#e040fb` | Special highlights |
+| Success Green | `#22c55e` | Status, confirmations |
+| Warning Amber | `#f59e0b` | Warnings |
+| Error Red | `#ef4444` | Errors, destructive |
+| Text Primary | `#f8fafc` | Main text |
+| Text Secondary | `rgba(255,255,255,0.6)` | Subdued text |
+| Text Muted | `rgba(255,255,255,0.4)` | Hints, placeholders |
+| Borders | `rgba(255,255,255,0.1)` | Panel borders |
+
+### 4.3 Domain-Specific Theme Accents
+| App Context | Theme Color | Primary Gradient |
+|-------------|-------------|------------------|
+| Trust Layer (default) | `#8B5CF6` | `from-purple-500 to-pink-500` |
+| DarkWave Studios | `#6366F1` | `from-indigo-500 to-purple-500` |
+| The Arcade | `#EC4899` | `from-pink-500 to-purple-500` |
+| Signal Chat | `#06B6D4` | `from-cyan-500 to-purple-500` |
+| Strike Agent | `#22C55E` | `from-emerald-500 to-cyan-500` |
+| TrustShield | `#06B6D4` | `from-cyan-500 to-purple-500` |
+
+---
+
+## 5. Typography
+
+| Role | Font Family | Tailwind Class | Usage |
+|------|-------------|---------------|-------|
+| Body / UI | Inter | `font-sans` | All body text, labels, form inputs |
+| Display / Headings | Space Grotesk | `font-display` | Page titles, hero headings, marketing text |
+| Tech / Monospace | Rajdhani | `font-tech` | Code snippets, blockchain hashes, data values |
+
+---
+
+## 6. Premium UI Protocol (Mandatory for All Pages)
+
+### 6.1 Dark Theme Only
+- No light mode exists. Every background is deep space dark.
+- Page backgrounds: `bg-slate-950` or `bg-[#0d0f1a]`
+- Card backgrounds: `bg-slate-900/50` or `bg-[rgba(12,18,36,0.65)]`
+
+### 6.2 Glassmorphism Standard
+```css
+/* Standard GlassCard */
+background: rgba(12, 18, 36, 0.65);
+backdrop-filter: blur(40px);        /* Tailwind: backdrop-blur-2xl */
+border: 1px solid rgba(255,255,255,0.08);
+
+/* Utility class available */
+.glass-panel {
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(24px);      /* Tailwind: backdrop-blur-xl */
+  border: 1px solid rgba(255,255,255,0.1);
+}
+```
+
+### 6.3 Glow Effects
+```css
+/* Text glow */
+text-shadow: 0 0 20px hsl(180 100% 50% / 0.5);
+
+/* Border glow */
+box-shadow: 0 0 10px hsl(180 100% 50% / 0.3);
+
+/* Card hover glow (Tailwind) */
+hover:shadow-[0_0_40px_rgba(0,255,255,0.15)]
+hover:border-cyan-500/30
+```
+
+### 6.4 Animation Standards (Framer Motion)
+```tsx
+// Page/section entry — fade-in-slide-up
+initial={{ opacity: 0, y: 20 }}
+whileInView={{ opacity: 1, y: 0 }}
+viewport={{ once: true, margin: "-50px" }}
+transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+
+// Card hover — spring lift
+whileHover={{ scale: 1.02, y: -4 }}
+transition={{ type: "spring", stiffness: 400, damping: 25 }}
+
+// Staggered children
+container: { show: { transition: { staggerChildren: 0.1 } } }
+item: { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }
+
+// Modal entry/exit
+initial={{ opacity: 0, scale: 0.95 }}
+animate={{ opacity: 1, scale: 1 }}
+exit={{ opacity: 0, scale: 0.95 }}
+```
+
+### 6.5 Spacing Conventions
+| Element | Spacing |
+|---------|---------|
+| Page padding | `pt-20 pb-12` or `py-16` |
+| Section gap | `space-y-12` or `gap-8` |
+| Card inner padding | `p-6` (minimum `p-4`) |
+| Grid gap | `gap-4` |
+| Container | `container mx-auto px-4 sm:px-6 lg:px-8` |
+| Section headings | `mb-8` |
+| Mobile touch targets | `min-h-[44px]` minimum |
+
+### 6.6 Layout Grid
+```
+Desktop:   grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+Cards:     gap-4
+Container: max-w-7xl mx-auto
+```
+
+### 6.7 Component Standards
+Every interactive card must use:
+- `<GlassCard glow>` wrapper component
+- `motion.div` for all animations
+- `data-testid` attribute on all interactive and data-display elements
+- Gradient text for headlines: `bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent`
+- `<Badge>` for status indicators
+- Icon + text pattern for list items
+
+---
+
+## 7. Tech Stack
+
+### 7.1 Frontend
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| React | 18 | UI framework |
+| TypeScript | 5.x | Type safety |
+| Vite | 6.x | Build tool + HMR |
+| Wouter | latest | Client-side routing (NOT react-router) |
+| TanStack Query | 5.x | Server state management + caching |
+| Tailwind CSS | v4 | Styling (CSS-first config via `@theme` in index.css, no tailwind.config file) |
+| Framer Motion | 11.x | Animations and transitions |
+| Monaco Editor | latest | Studio IDE code editor |
+| Recharts | latest | Charts and data visualization |
+| Swiper | latest | Touch-friendly carousels |
+
+### 7.2 Backend
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| Node.js | 20.x | Runtime |
+| Express.js | 4.x | HTTP server |
+| TypeScript | 5.x | Type safety |
+| Drizzle ORM | latest | Type-safe database queries |
+| PostgreSQL | latest | Primary relational database |
+| OpenAI GPT-4o | latest | AI features (Studio IDE, Chronicles, Book Author Agent) |
+| Stripe | latest | Payment processing (fully configured) |
+| Resend | latest | Transactional email |
+
+### 7.3 Blockchain Core (Rust)
+| Technology | Purpose |
+|-----------|---------|
+| Custom BFT-PoA consensus | Proof-of-Authority block production at 400ms intervals |
+| Ed25519 signatures | Transaction signing and validator identity |
+| SHA-256 / Merkle trees | Block integrity and state verification |
+| Sled DB | Embedded persistent ledger storage |
+| Axum | RPC server for blockchain API |
+| WDWC.sol (Solidity) | Wrapped token ERC-20 contract for Ethereum bridge |
+| Anchor (Solana) | Wrapped token program for Solana bridge |
+
+### 7.4 Security Layer
+| Feature | Implementation |
+|---------|---------------|
+| Data encryption | AES-256-GCM |
+| API signatures | HMAC-SHA256 |
+| HTTP headers | Helmet.js (CSP, X-Frame-Options, etc.) |
+| Authentication | Custom email/password + WebAuthn passkeys + PIN |
+| Rate limiting | 10+ distinct rate limit categories |
+| SQL injection prevention | Parameterized queries via Drizzle ORM |
+
+---
+
+## 8. Authentication System
+- Pure local auth — no Firebase dependency (fully removed)
+- Email/password registration with Resend email verification
+- Twilio SMS verification (optional)
+- WebAuthn/Passkeys for passwordless login
+- PIN authentication
+- Session-based with Bearer token support for cross-domain access
+- Trust Layer SSO for ecosystem apps (OAuth-like flow with JWT)
+
+---
+
+## 9. Token Economics
+
+### 9.1 Native Asset: Signal (SIG)
+| Property | Value |
+|----------|-------|
+| Total Supply | 1,000,000,000 SIG |
+| Decimals | 18 |
+| Presale Price | $0.001 per SIG |
+| Launch Price | $0.01 per SIG (10x from presale) |
+| Utility | Gas fees, staking, governance, in-app purchases |
+
+### 9.2 Supply Allocation
+| Category | Percentage | Amount |
+|----------|-----------|--------|
+| Treasury Reserve | 50% | 500,000,000 |
+| Staking Rewards | 15% | 150,000,000 |
+| Development & Team | 15% | 150,000,000 |
+| Ecosystem Growth | 10% | 100,000,000 |
+| Community Rewards | 10% | 100,000,000 |
