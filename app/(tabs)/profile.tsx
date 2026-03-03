@@ -8,6 +8,7 @@ import {
   Platform,
   Switch,
   Alert,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -214,8 +215,20 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
 
-        <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
-        <Text style={styles.copyright}>2026 DarkWave Studios</Text>
+        <View style={styles.footerSection}>
+          <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
+          <Pressable onPress={() => Linking.openURL("https://darkwavestudios.io")}>
+            <Text style={styles.footerLink}>DarkWave Studios LLC</Text>
+          </Pressable>
+          <Text style={styles.copyright}>&copy; 2026 DarkWave Studios LLC. All rights reserved.</Text>
+          <Pressable
+            style={styles.shieldRow}
+            onPress={() => Linking.openURL("https://trustshield.tech")}
+          >
+            <Ionicons name="shield-checkmark" size={12} color={Colors.success} />
+            <Text style={styles.shieldText}>Protected by TrustShield.tech</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -408,18 +421,40 @@ const styles = StyleSheet.create({
     color: Colors.error,
     fontFamily: "Inter_600SemiBold",
   },
+  footerSection: {
+    alignItems: "center" as const,
+    marginTop: 24,
+    gap: 6,
+  },
   footer: {
     fontSize: 12,
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
     textAlign: "center" as const,
-    marginTop: 16,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontFamily: "Inter_500Medium",
+    textAlign: "center" as const,
+    textDecorationLine: "underline" as const,
   },
   copyright: {
     fontSize: 11,
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
     textAlign: "center" as const,
+  },
+  shieldRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
     marginTop: 2,
+  },
+  shieldText: {
+    fontSize: 11,
+    color: Colors.success,
+    fontFamily: "Inter_500Medium",
+    textDecorationLine: "underline" as const,
   },
 });
