@@ -291,6 +291,22 @@ export default function HomeScreen() {
           <CountdownTimer />
         </View>
       </ScrollView>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.aiFloatingButton,
+          { bottom: 100 + (Platform.OS === "web" ? 34 : 0) },
+          pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+        ]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push("/ai-agent");
+        }}
+      >
+        <View style={styles.aiFloatingInner}>
+          <Ionicons name="sparkles" size={24} color={Colors.primary} />
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -547,5 +563,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
+  },
+  aiFloatingButton: {
+    position: "absolute" as const,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    zIndex: 100,
+  },
+  aiFloatingInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(0,255,255,0.12)",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,255,255,0.3)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
 });

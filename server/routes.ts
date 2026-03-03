@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "node:http";
+import { registerAIRoutes } from "./ai-agent";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  registerAIRoutes(app);
 
   const httpServer = createServer(app);
 

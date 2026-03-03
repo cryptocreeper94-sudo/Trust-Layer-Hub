@@ -62,6 +62,7 @@ lib/
 server/
   index.ts                 # Express server
   routes.ts                # API routes
+  ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
 ```
 
 ## API Integration
@@ -75,6 +76,7 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Presale: GET /api/presale/stats, /api/presale/tiers (public)
 - Subscriptions: GET /api/subscription/status, /api/subscription/plans
 - Chat: WebSocket wss://{url}/ws/chat with separate JWT auth (/api/chat/auth/login)
+- AI Agent: POST /api/ai/chat (OpenAI streaming), POST /api/ai/tts (ElevenLabs TTS), GET /api/ai/voices
 - SSO: Apps launched with ?auth_token={sessionToken}
 
 ## Key Features
@@ -89,6 +91,7 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Signal Chat with WebSocket support, channels, typing indicators, DMs
 - Profile with live membership data, subscription status, settings, linked apps, real sign out
 - App detail modal with SSO token passing for ecosystem app launches
+- AI Agent: Chat screen with OpenAI streaming, ElevenLabs voice playback (web), floating sparkles button on home screen
 
 ## Launch Date
 August 23, 2026 (CST) - displayed in countdown timer
