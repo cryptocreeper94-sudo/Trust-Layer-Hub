@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   apiPost,
   apiGet,
@@ -32,6 +33,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   authStep: AuthStep;
   phoneHint: string;
+  isNewRegistration: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string, firstName?: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
@@ -42,6 +44,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   clearAuthStep: () => void;
+  clearNewRegistration: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -51,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authStep, setAuthStep] = useState<AuthStep>("idle");
   const [phoneHint, setPhoneHint] = useState("");
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
 
   useEffect(() => {
     checkSession();
@@ -101,6 +105,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await setSessionToken(data.sessionToken);
     setUser(data.user);
+
+    const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+    if (!hasSeenOnboarding) {
+      setIsNewRegistration(true);
+    }
 
     if (data.requiresEmailVerification) {
       setAuthStep("email_verify");
@@ -172,6 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthStep("idle");
   }
 
+  function clearNewRegistration() {
+    setIsNewRegistration(false);
+  }
+
   const value = useMemo(
     () => ({
       user,
@@ -179,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user && authStep === "idle",
       authStep,
       phoneHint,
+      isNewRegistration,
       login,
       register,
       verifyEmail,
@@ -189,8 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refreshUser,
       clearAuthStep,
+      clearNewRegistration,
     }),
-    [user, isLoading, authStep, phoneHint]
+    [user, isLoading, authStep, phoneHint, isNewRegistration]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

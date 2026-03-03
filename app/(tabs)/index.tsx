@@ -23,6 +23,9 @@ import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
 import { useAuth } from "@/lib/auth-context";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { useWorldNews } from "@/hooks/useWorldNews";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useActivityFeed } from "@/hooks/useActivityFeed";
+import { EmptyState } from "@/components/EmptyState";
 
 function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
@@ -198,6 +201,10 @@ export default function HomeScreen() {
   const { data: dwcBag } = useDwcBag();
   const { data: transactions } = useTransactions();
   const { data: worldNews } = useWorldNews();
+  const { data: leaderboardData } = useLeaderboard();
+  const topThree = leaderboardData?.topAffiliates?.slice(0, 3) || [];
+  const { data: activityData } = useActivityFeed();
+  const feedEvents = activityData?.events || [];
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
   const contentWidth = isDesktop ? Math.min(width, 720) : width;
@@ -361,6 +368,103 @@ export default function HomeScreen() {
               <Ionicons name="receipt-outline" size={24} color={Colors.textMuted} />
               <Text style={styles.emptyText}>No recent activity</Text>
             </View>
+          )}
+        </GlassCard>
+
+        <View style={styles.sectionHeader}>
+          <GradientText text="Ecosystem Activity" style={styles.sectionTitle} />
+          <Pressable onPress={() => router.push("/leaderboard")} hitSlop={8} testID="home-view-leaderboard">
+            <Text style={styles.viewAllText}>View All</Text>
+          </Pressable>
+        </View>
+        <GlassCard>
+          {feedEvents.length > 0 ? (
+            feedEvents.slice(0, 5).map((event, i) => (
+              <React.Fragment key={`feed-${i}`}>
+                <View style={styles.feedEventRow}>
+                  <View style={styles.feedEventIcon}>
+                    <Ionicons
+                      name={
+                        event.category === "auth-register" ? "person-add" :
+                        event.category === "wallet-send" ? "arrow-up" :
+                        event.category === "wallet-swap" ? "swap-horizontal" :
+                        event.category === "staking-stake" ? "lock-closed" :
+                        event.category === "staking-unstake" ? "lock-open" :
+                        event.category === "stripe-connect" ? "card" :
+                        event.category === "purchase" ? "cart" :
+                        "pulse" as any
+                      }
+                      size={16}
+                      color={
+                        event.category === "auth-register" ? Colors.success :
+                        event.category.startsWith("staking") ? Colors.primary :
+                        Colors.secondary
+                      }
+                    />
+                  </View>
+                  <View style={styles.feedEventInfo}>
+                    <Text style={styles.feedEventText} numberOfLines={1}>
+                      <Text style={styles.feedEventUser}>{event.user}</Text>{" "}
+                      {event.description}
+                    </Text>
+                    <Text style={styles.feedEventTime}>{event.timeAgo}</Text>
+                  </View>
+                </View>
+                {i < Math.min(feedEvents.length, 5) - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))
+          ) : (
+            <EmptyState icon="pulse-outline" title="No ecosystem activity yet" subtitle="Activity will appear here as users interact with the platform" />
+          )}
+        </GlassCard>
+
+        <View style={styles.sectionHeader}>
+          <Ionicons name="people" size={18} color={Colors.primary} />
+          <GradientText text="Community" style={styles.sectionTitle} />
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/leaderboard");
+            }}
+            testID="home-community-view-all"
+          >
+            <Text style={styles.seeAll}>View All</Text>
+          </Pressable>
+        </View>
+        <GlassCard>
+          {topThree.length > 0 ? (
+            topThree.map((entry, i) => {
+              const rankColor = entry.rank === 1 ? "#FFD700" : entry.rank === 2 ? "#C0C0C0" : "#CD7F32";
+              return (
+                <React.Fragment key={entry.rank}>
+                  <Pressable
+                    style={({ pressed }) => [styles.communityItem, pressed && { opacity: 0.7 }]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push({ pathname: "/user-profile", params: { username: entry.username } });
+                    }}
+                    testID={`home-community-${entry.rank}`}
+                  >
+                    <View style={styles.communityRank}>
+                      <Ionicons name="trophy" size={16} color={rankColor} />
+                    </View>
+                    <View style={styles.communityAvatar}>
+                      <Text style={styles.communityAvatarText}>
+                        {entry.username.slice(0, 2).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.communityInfo}>
+                      <Text style={styles.communityUsername} numberOfLines={1}>{entry.username}</Text>
+                      <Text style={styles.communityTier}>{entry.tier}</Text>
+                    </View>
+                    <Text style={styles.communityScore}>{entry.convertedReferrals}</Text>
+                  </Pressable>
+                  {i < topThree.length - 1 && <View style={styles.divider} />}
+                </React.Fragment>
+              );
+            })
+          ) : (
+            <EmptyState icon="people-outline" title="No community data yet" subtitle="Join the affiliate program to appear here" />
           )}
         </GlassCard>
 
@@ -715,6 +819,86 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
+  },
+  viewAllText: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontFamily: "Inter_500Medium",
+  },
+  feedEventRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    paddingVertical: 8,
+  },
+  feedEventIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  feedEventInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  feedEventText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+  },
+  feedEventUser: {
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  feedEventTime: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+  },
+  communityItem: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    paddingVertical: 8,
+  },
+  communityRank: {
+    width: 28,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  communityAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,255,255,0.1)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  communityAvatarText: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontFamily: "Inter_700Bold",
+  },
+  communityInfo: {
+    flex: 1,
+  },
+  communityUsername: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  communityTier: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    marginTop: 1,
+  },
+  communityScore: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_700Bold",
   },
   aiFloatingButton: {
     position: "absolute" as const,

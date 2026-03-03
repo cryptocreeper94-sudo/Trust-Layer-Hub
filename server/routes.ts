@@ -10,6 +10,10 @@ import { registerNewsRoutes } from "./news";
 import { registerStakingRoutes } from "./staking";
 import { registerAffiliateRoutes } from "./affiliate";
 import { registerStripeRoutes } from "./stripe-business";
+import { registerLeaderboardRoutes } from "./leaderboard";
+import { registerActivityFeedRoutes } from "./activity-feed";
+import { registerPublicProfileRoutes } from "./public-profiles";
+import { registerChatPersistenceRoutes } from "./chat-persistence";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
@@ -22,6 +26,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerStakingRoutes(app);
   registerAffiliateRoutes(app);
   registerStripeRoutes(app);
+  registerLeaderboardRoutes(app);
+  registerActivityFeedRoutes(app);
+  registerPublicProfileRoutes(app);
+  registerChatPersistenceRoutes(app);
 
   const httpServer = createServer(app);
 

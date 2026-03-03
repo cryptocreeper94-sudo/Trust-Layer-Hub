@@ -9,6 +9,7 @@ import {
   Platform,
   FlatList,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,11 +18,78 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { EmptyState } from "@/components/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/lib/auth-context";
 import { MOCK_CHANNELS, MOCK_MESSAGES } from "@/constants/mock-data";
 
 type ViewMode = "channels" | "messages";
+
+function ConnectionBadge({ state }: { state: string }) {
+  let color = Colors.textMuted;
+  let label = "Offline";
+  let iconName: "cloud-offline" | "cloud-done" | "sync" = "cloud-offline";
+
+  if (state === "connected") {
+    color = Colors.success;
+    label = "Connected";
+    iconName = "cloud-done";
+  } else if (state === "connecting") {
+    color = Colors.warning;
+    label = "Connecting...";
+    iconName = "sync";
+  } else if (state === "reconnecting") {
+    color = Colors.warning;
+    label = "Reconnecting...";
+    iconName = "sync";
+  }
+
+  return (
+    <View style={badgeStyles.container} testID="connection-badge">
+      <View style={[badgeStyles.dot, { backgroundColor: color }]} />
+      <Ionicons name={iconName} size={12} color={color} />
+      <Text style={[badgeStyles.text, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+const badgeStyles = StyleSheet.create({
+  container: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignSelf: "center" as const,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  text: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+  },
+});
+
+function DeliveryIndicator({ status }: { status?: string }) {
+  if (!status) return null;
+
+  if (status === "sending") {
+    return <Ionicons name="time-outline" size={12} color={Colors.textMuted} />;
+  }
+  if (status === "sent") {
+    return <Ionicons name="checkmark" size={12} color={Colors.textTertiary} />;
+  }
+  if (status === "delivered") {
+    return <Ionicons name="checkmark-done" size={12} color={Colors.primary} />;
+  }
+  return null;
+}
 
 function ChannelItem({
   channel,
@@ -38,6 +106,7 @@ function ChannelItem({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
       }}
+      testID={`channel-${channel.id}`}
     >
       <View style={styles.channelIcon}>
         <Ionicons
@@ -64,7 +133,7 @@ function ChannelItem({
   );
 }
 
-function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?: string; senderInitials?: string; content?: string; text?: string; timestamp: string; isMe?: boolean } }) {
+function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?: string; senderInitials?: string; content?: string; text?: string; timestamp: string; isMe?: boolean; status?: string } }) {
   const isMe = msg.isMe === true;
   const displayName = msg.username || msg.sender || "Unknown";
   const initials = msg.senderInitials || displayName.slice(0, 2).toUpperCase();
@@ -74,7 +143,7 @@ function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?:
     : msg.timestamp;
 
   return (
-    <View style={[styles.messageRow, isMe && styles.messageRowMe]}>
+    <View style={[styles.messageRow, isMe && styles.messageRowMe]} testID={`message-${msg.id}`}>
       {!isMe && (
         <View style={styles.msgAvatar}>
           <Text style={styles.msgAvatarText}>{initials}</Text>
@@ -83,7 +152,10 @@ function MessageBubble({ msg }: { msg: { id: string; username?: string; sender?:
       <View style={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleOther]}>
         {!isMe && <Text style={styles.msgSender}>{displayName}</Text>}
         <Text style={styles.msgText}>{content}</Text>
-        <Text style={styles.msgTime}>{timeStr}</Text>
+        <View style={styles.msgFooter}>
+          <Text style={styles.msgTime}>{timeStr}</Text>
+          {isMe && <DeliveryIndicator status={msg.status} />}
+        </View>
       </View>
     </View>
   );
@@ -173,7 +245,7 @@ export default function ChatScreen() {
       <View style={styles.container}>
         <BackgroundGlow />
         <View style={[styles.msgHeader, { paddingTop: insets.top + webTopInset + 8, maxWidth: isDesktop ? 720 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
-          <Pressable onPress={handleBack} style={styles.backButton}>
+          <Pressable onPress={handleBack} style={styles.backButton} testID="chat-back-button">
             <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </Pressable>
           <View style={styles.msgHeaderInfo}>
@@ -185,13 +257,31 @@ export default function ChatScreen() {
           <View style={{ width: 44 }} />
         </View>
 
-        <FlatList
-          data={displayMessages}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => <MessageBubble msg={item} />}
-          contentContainerStyle={[styles.messagesList, { maxWidth: isDesktop ? 720 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
-          showsVerticalScrollIndicator={false}
-        />
+        <ConnectionBadge state={chat.connectionState} />
+
+        {chat.isLoadingHistory ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading messages...</Text>
+          </View>
+        ) : displayMessages.length === 0 ? (
+          <View style={styles.emptyMessagesContainer}>
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="No messages yet"
+              subtitle="Be the first to start a conversation in this channel"
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={displayMessages}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => <MessageBubble msg={item} />}
+            contentContainerStyle={[styles.messagesList, { maxWidth: isDesktop ? 720 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
+            showsVerticalScrollIndicator={false}
+            testID="messages-list"
+          />
+        )}
 
         {chat.typingUsers.length > 0 && (
           <View style={styles.typingBar}>
@@ -214,11 +304,13 @@ export default function ChatScreen() {
               }}
               returnKeyType="send"
               onSubmitEditing={handleSend}
+              testID="chat-input"
             />
             <Pressable
               onPress={handleSend}
               style={({ pressed }) => [styles.sendButton, pressed && { opacity: 0.7 }]}
               disabled={!inputText.trim()}
+              testID="chat-send-button"
             >
               <Ionicons
                 name="send"
@@ -252,12 +344,7 @@ export default function ChatScreen() {
         <GradientText text="Signal Chat" style={styles.screenTitle} />
         <Text style={styles.subtitle}>Encrypted messaging with blockchain-verified identities</Text>
 
-        {isLiveChat && (
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveIndicatorDot} />
-            <Text style={styles.liveIndicatorText}>Connected</Text>
-          </View>
-        )}
+        <ConnectionBadge state={chat.connectionState} />
 
         <View style={styles.sectionLabel}>
           <Ionicons name="megaphone" size={14} color={Colors.primary} />
@@ -320,23 +407,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     marginBottom: 8,
-  },
-  liveIndicator: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: 6,
-  },
-  liveIndicatorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.success,
-  },
-  liveIndicatorText: {
-    fontSize: 12,
-    color: Colors.success,
-    fontFamily: "Inter_500Medium",
   },
   sectionLabel: {
     flexDirection: "row" as const,
@@ -502,11 +572,17 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     lineHeight: 20,
   },
+  msgFooter: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "flex-end" as const,
+    gap: 4,
+    marginTop: 4,
+  },
   msgTime: {
     fontSize: 10,
     color: Colors.textTertiary,
     fontFamily: "Inter_400Regular",
-    marginTop: 4,
     textAlign: "right" as const,
   },
   typingBar: {
@@ -548,6 +624,22 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+  },
+  emptyMessagesContainer: {
+    flex: 1,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },

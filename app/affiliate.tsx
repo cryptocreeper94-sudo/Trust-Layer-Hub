@@ -21,6 +21,7 @@ import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { useAffiliateDashboard, useRequestPayout } from "@/hooks/useAffiliate";
 import { useAuth } from "@/lib/auth-context";
+import QRCode from "react-native-qrcode-svg";
 
 const TIER_COLORS: Record<string, string> = {
   Base: Colors.textSecondary,
@@ -173,6 +174,17 @@ export default function AffiliateScreen() {
             Affiliate ID: <Text style={styles.hashValue}>{dashboard?.uniqueHash || "—"}</Text>
           </Text>
           <Text style={styles.hashNote}>This ID is recognized across all 32+ ecosystem apps</Text>
+          {referralLink ? (
+            <View style={styles.qrCenter}>
+              <QRCode
+                value={referralLink}
+                size={160}
+                backgroundColor="transparent"
+                color={Colors.primary}
+              />
+              <Text style={styles.qrHint}>Scan to join via your referral</Text>
+            </View>
+          ) : null}
         </GlassCard>
 
         {stats.pendingEarnings > 0 && (
@@ -314,6 +326,8 @@ const styles = StyleSheet.create({
   tierRowRight: { alignItems: "flex-end" as const },
   tierRowRate: { fontSize: 15, color: Colors.textPrimary, fontFamily: "Inter_600SemiBold" },
   tierRowReq: { fontSize: 11, color: Colors.textTertiary, fontFamily: "Inter_400Regular" },
+  qrCenter: { alignItems: "center" as const, marginTop: 16, gap: 8 },
+  qrHint: { fontSize: 11, color: Colors.textTertiary, fontFamily: "Inter_400Regular" },
   divider: { height: 1, backgroundColor: Colors.border, marginVertical: 4 },
   howItWorksItem: { flexDirection: "row" as const, gap: 12, paddingVertical: 8, alignItems: "flex-start" as const },
   stepCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,255,255,0.12)", alignItems: "center" as const, justifyContent: "center" as const },

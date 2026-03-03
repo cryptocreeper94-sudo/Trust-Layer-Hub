@@ -2,16 +2,19 @@ import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 interface GlassCardProps {
   children: React.ReactNode;
   glow?: boolean;
   style?: ViewStyle;
   innerStyle?: ViewStyle;
+  animate?: boolean;
+  delay?: number;
 }
 
-export function GlassCard({ children, glow = false, style, innerStyle }: GlassCardProps) {
-  return (
+export function GlassCard({ children, glow = false, style, innerStyle, animate = true, delay = 0 }: GlassCardProps) {
+  const content = (
     <View style={[styles.wrapper, style]}>
       {glow && (
         <LinearGradient
@@ -27,6 +30,14 @@ export function GlassCard({ children, glow = false, style, innerStyle }: GlassCa
         </View>
       </BlurView>
     </View>
+  );
+
+  if (!animate) return content;
+
+  return (
+    <Animated.View entering={FadeInDown.duration(400).delay(delay)}>
+      {content}
+    </Animated.View>
   );
 }
 

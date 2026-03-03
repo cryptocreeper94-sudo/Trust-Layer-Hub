@@ -22,6 +22,7 @@ import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { SHELL_TIERS } from "@/constants/mock-data";
+import QRCode from "react-native-qrcode-svg";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { usePlaidAccounts, useUnlinkAccount, useCreateLinkToken, useExchangePlaidToken } from "@/hooks/usePlaidAccounts";
 import { useExternalWallets, useConnectWallet, useDisconnectWallet, getExternalWalletsTotalUsd } from "@/hooks/useExternalWallets";
@@ -343,8 +344,13 @@ function ReceiveModal({ visible, onClose }: { visible: boolean; onClose: () => v
   return (
     <BottomSheetModal visible={visible} onClose={onClose} title="Receive">
       <View style={styles.receiveCenter}>
-        <View style={styles.qrPlaceholder}>
-          <Ionicons name="qr-code" size={80} color={Colors.primary} />
+        <View style={styles.qrContainer}>
+          <QRCode
+            value={receiveInfo?.tlidAddress || "guest.tlid"}
+            size={180}
+            backgroundColor="transparent"
+            color={Colors.primary}
+          />
         </View>
         <Text style={styles.receiveLabel}>Trust Layer ID</Text>
         <Pressable
@@ -1830,9 +1836,9 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     gap: 12,
   },
-  qrPlaceholder: {
-    width: 160,
-    height: 160,
+  qrContainer: {
+    width: 200,
+    height: 200,
     borderRadius: 20,
     backgroundColor: "rgba(0,255,255,0.05)",
     borderWidth: 1,

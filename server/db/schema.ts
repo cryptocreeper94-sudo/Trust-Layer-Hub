@@ -141,6 +141,22 @@ export const affiliateCommissions = pgTable("affiliate_commissions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const chatChannels = pgTable("chat_channels", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  icon: text("icon").default("chatbubbles"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  channelId: integer("channel_id").notNull().references(() => chatChannels.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const stripeConnections = pgTable("stripe_connections", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),

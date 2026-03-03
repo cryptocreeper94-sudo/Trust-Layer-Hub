@@ -262,6 +262,42 @@ export function registerHallmarkRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/hallmarks/timeline", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+
+      const timelineRaw = await db.execute(
+        sql`(
+          SELECT 'hallmark' as type, th_id as identifier, app_name as category,
+                 product_name as detail, data_hash, created_at
+          FROM hallmarks WHERE user_id = ${user.id}
+        ) UNION ALL (
+          SELECT 'stamp' as type, category as identifier, category,
+                 NULL as detail, data_hash, created_at
+          FROM trust_stamps WHERE user_id = ${user.id}
+        )
+        ORDER BY created_at DESC
+        LIMIT 20`
+      );
+
+      const rows = (timelineRaw as any).rows || timelineRaw || [];
+
+      const timeline = rows.map((r: any) => ({
+        type: r.type,
+        identifier: r.identifier,
+        category: r.category,
+        detail: r.detail,
+        dataHash: r.data_hash,
+        createdAt: r.created_at,
+      }));
+
+      res.json({ timeline });
+    } catch (error: any) {
+      console.error("Hallmark timeline error:", error?.message);
+      res.json({ timeline: [] });
+    }
+  });
+
   app.get("/api/trust-stamps/:userId", authenticateToken, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;

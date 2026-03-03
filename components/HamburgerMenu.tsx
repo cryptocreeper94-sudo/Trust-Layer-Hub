@@ -80,6 +80,7 @@ export function HamburgerMenu({ visible, onClose }: HamburgerMenuProps) {
       route: "/multisig",
       condition: isMultisig,
     },
+    { icon: "podium", label: "Leaderboard", route: "/leaderboard" },
     { icon: "scan", label: "Guardian Scanner" },
     { icon: "ribbon", label: "Hallmark" },
     { icon: "code-slash", label: "Developer Portal", externalUrl: "https://developers.tlid.io" },

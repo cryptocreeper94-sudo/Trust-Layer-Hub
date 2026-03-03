@@ -67,7 +67,13 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(email.trim(), username.trim(), password, firstName.trim());
-      router.replace("/verify");
+      const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+      const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+      if (!hasSeenOnboarding) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/verify");
+      }
     } catch (err: any) {
       const msg = err?.message || "Registration failed. Please try again.";
       if (msg.includes("409") || msg.includes("exists") || msg.includes("already")) {

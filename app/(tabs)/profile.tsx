@@ -24,6 +24,8 @@ import { GradientButton } from "@/components/GradientButton";
 import { useAuth } from "@/lib/auth-context";
 import { useMembership, useSubscriptionStatus } from "@/hooks/useMembership";
 import { MOCK_USER } from "@/constants/mock-data";
+import { useHallmarkTimeline } from "@/hooks/useHallmarkTimeline";
+import { EmptyState } from "@/components/EmptyState";
 
 function SettingRow({
   icon,
@@ -100,6 +102,8 @@ export default function ProfileScreen() {
   const { data: subscription } = useSubscriptionStatus();
   const [notifications, setNotifications] = useState(true);
   const [biometrics, setBiometrics] = useState(false);
+  const { data: timelineData } = useHallmarkTimeline();
+  const timeline = timelineData?.timeline || [];
 
   const displayName = user?.displayName || user?.username || MOCK_USER.displayName;
   const username = user?.username || MOCK_USER.username;
@@ -298,6 +302,52 @@ export default function ProfileScreen() {
           <LinkedAppItem name="TradeWorks AI" connected={false} />
           <View style={styles.divider} />
           <LinkedAppItem name="Signal Chat" connected />
+        </GlassCard>
+
+        <View style={styles.sectionHeader}>
+          <GradientText text="Trust Timeline" style={styles.sectionTitle} />
+          <Pressable onPress={() => router.push("/hallmark-detail")} hitSlop={8}>
+            <Text style={styles.viewAllLink}>View All</Text>
+          </Pressable>
+        </View>
+        <GlassCard>
+          {timeline.length > 0 ? (
+            <View style={styles.timelineContainer}>
+              {timeline.slice(0, 5).map((entry, i) => {
+                const isLast = i === Math.min(timeline.length, 5) - 1;
+                const entryDate = new Date(entry.createdAt);
+                const timeStr = entryDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                const iconName =
+                  entry.type === "hallmark" ? "shield-checkmark" :
+                  entry.category === "auth-register" ? "person-add" :
+                  entry.category === "wallet-send" ? "arrow-up" :
+                  entry.category === "staking-stake" ? "lock-closed" :
+                  entry.category === "stripe-connect" ? "card" :
+                  "checkmark-circle";
+                return (
+                  <View key={`tl-${i}`} style={styles.timelineRow}>
+                    <View style={styles.timelineDotCol}>
+                      <View style={[styles.timelineDot, entry.type === "hallmark" && styles.timelineDotHallmark]} />
+                      {!isLast && <View style={styles.timelineLine} />}
+                    </View>
+                    <View style={styles.timelineContent}>
+                      <View style={styles.timelineIconRow}>
+                        <Ionicons name={iconName as any} size={14} color={entry.type === "hallmark" ? Colors.primary : Colors.secondary} />
+                        <Text style={styles.timelineCategory}>
+                          {entry.type === "hallmark" ? entry.identifier : entry.category.replace(/-/g, " ")}
+                        </Text>
+                        <Text style={styles.timelineDate}>{timeStr}</Text>
+                      </View>
+                      {entry.detail ? <Text style={styles.timelineDetail} numberOfLines={1}>{entry.detail}</Text> : null}
+                      <Text style={styles.timelineHash}>{entry.dataHash.slice(0, 12)}...</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <EmptyState icon="time-outline" title="No trust records yet" subtitle="Your hallmarks and trust stamps will appear here" />
+          )}
         </GlassCard>
 
         {isAuthenticated && (
@@ -649,5 +699,72 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontWeight: "700" as const,
     letterSpacing: 0.5,
+  },
+  viewAllLink: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontFamily: "Inter_500Medium",
+  },
+  timelineContainer: {
+    gap: 0,
+  },
+  timelineRow: {
+    flexDirection: "row" as const,
+    gap: 12,
+  },
+  timelineDotCol: {
+    alignItems: "center" as const,
+    width: 16,
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.secondary,
+    marginTop: 3,
+  },
+  timelineDotHallmark: {
+    backgroundColor: Colors.primary,
+    borderWidth: 2,
+    borderColor: "rgba(0,255,255,0.3)",
+  },
+  timelineLine: {
+    flex: 1,
+    width: 2,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    marginVertical: 2,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: 14,
+  },
+  timelineIconRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  timelineCategory: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "capitalize" as const,
+  },
+  timelineDate: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+  },
+  timelineDetail: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
+  },
+  timelineHash: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
   },
 });

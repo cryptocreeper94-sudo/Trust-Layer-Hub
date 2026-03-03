@@ -1,19 +1,20 @@
 # Trust Layer Hub
 
 ## Overview
-Native mobile app serving as the front door to a 32-app blockchain ecosystem. Built with React Native + Expo (SDK 54) using Expo Router for file-based routing. Features real authentication, live API integration with mock data fallbacks, SSO for ecosystem app launches, WebSocket-ready Signal Chat, unified financial wallet (Plaid bank accounts, WalletConnect/Phantom crypto wallets, multi-sig), and AI agent with ElevenLabs voice.
+Native mobile app serving as the front door to a 32-app blockchain ecosystem. Built with React Native + Expo (SDK 54) using Expo Router for file-based routing. Features real authentication, live API integration with mock data fallbacks, SSO for ecosystem app launches, WebSocket-ready Signal Chat with persistence, unified financial wallet (Plaid bank accounts, WalletConnect/Phantom crypto wallets, multi-sig), AI agent with ElevenLabs voice, leaderboard, activity feed, onboarding walkthrough, hallmark timeline, and QR codes.
 
 ## Tech Stack
 - **Framework**: React Native 0.81 + Expo SDK 54
 - **Navigation**: Expo Router (file-based routing with tabs)
 - **Styling**: React Native StyleSheet (dark theme only)
-- **Animations**: React Native Reanimated 3
+- **Animations**: React Native Reanimated 3 (FadeInDown on GlassCards)
 - **Icons**: @expo/vector-icons (Ionicons)
 - **State**: TanStack Query v5 + React Context (auth) + local state
-- **Storage**: expo-secure-store (tokens), AsyncStorage (preferences)
+- **Storage**: expo-secure-store (tokens), AsyncStorage (preferences, onboarding)
 - **UI Effects**: expo-blur (glassmorphism), expo-linear-gradient, @react-native-masked-view/masked-view (gradient text)
+- **QR Codes**: react-native-qrcode-svg + react-native-svg
 - **Auth**: Email/password with bcrypt hashing, Resend email verification, Twilio SMS 2FA
-- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions)
+- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions, chat_channels, chat_messages)
 - **Email**: Resend (Replit Connectors SDK) for verification + password reset emails
 - **SMS**: Twilio for 2FA codes
 - **Banking**: Plaid (sandbox mode) for bank account linking and transaction data
@@ -22,12 +23,13 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 
 ## Architecture
 - **Theme**: Dark only (#0c1224 base, cyan/purple accents)
-- **GlassCard**: Core reusable component with BlurView + LinearGradient glow
+- **GlassCard**: Core reusable component with BlurView + LinearGradient glow + FadeInDown entry animation
+- **EmptyState**: Reusable empty state component (icon + title + subtitle) for consistent empty UI across screens
 - **Tab Navigation**: 5 tabs — Home, Explore, Wallet, Chat, Profile
-- **Hamburger Menu**: Slide-in left overlay with navigation to Multi-Sig, Guardian, Hallmark, Settings, Support
+- **Hamburger Menu**: Slide-in left overlay with navigation to Multi-Sig, Guardian, Hallmark, Leaderboard, Settings, Support
 - **Liquid Glass**: NativeTabs support for iOS 26+, BlurView fallback for older
 - **API Layer**: lib/api.ts handles auth tokens, GET/POST requests, SSO URL building
-- **Auth Context**: lib/auth-context.tsx provides login/register/logout/auto-session
+- **Auth Context**: lib/auth-context.tsx provides login/register/logout/auto-session + isNewRegistration flag for onboarding
 - **Data Hooks**: hooks/ directory with live API queries that fall back to mock data
 
 ## Project Structure
@@ -41,18 +43,22 @@ app/
   terms.tsx                # Terms of Service (modal)
   privacy.tsx              # Privacy Policy (modal)
   multisig.tsx             # Multi-Sig vault screen (hidden, multi-sig users only)
+  leaderboard.tsx          # Leaderboard screen (Top Affiliates, Top Stakers, Most Active)
+  user-profile.tsx         # Public trust profile screen (view other users)
+  onboarding.tsx           # 4-step onboarding walkthrough (shown after first registration)
   (tabs)/
     _layout.tsx            # Tab navigator (5 tabs) + hamburger menu
-    index.tsx              # Home Dashboard (photorealistic news cards, world news carousel)
+    index.tsx              # Home Dashboard (news, world news, ecosystem activity, community, countdown)
     explore.tsx            # App Directory (32 apps)
-    wallet.tsx             # Unified Financial Wallet
-    chat.tsx               # Signal Chat
-    profile.tsx            # User Profile
+    wallet.tsx             # Unified Financial Wallet (with QR code receive)
+    chat.tsx               # Signal Chat (persistent, with connection status)
+    profile.tsx            # User Profile (with trust timeline)
   app-detail.tsx           # App detail modal with SSO
   ai-agent.tsx             # AI Agent chat modal
   hallmark-detail.tsx      # Genesis hallmark detail screen (TH-00000001)
+  affiliate.tsx            # Affiliate program screen (with QR code)
 components/
-  GlassCard.tsx            # Glassmorphism card
+  GlassCard.tsx            # Glassmorphism card with FadeInDown animation
   GradientText.tsx         # Gradient text with MaskedView
   GradientButton.tsx       # Gradient action button
   Skeleton.tsx             # Loading skeleton
@@ -60,7 +66,8 @@ components/
   CountdownTimer.tsx       # Launch countdown
   ErrorBoundary.tsx        # Error boundary
   ErrorFallback.tsx        # Error fallback UI
-  HamburgerMenu.tsx        # Slide-in navigation menu (includes Developer Portal link)
+  HamburgerMenu.tsx        # Slide-in navigation menu (includes Leaderboard + Developer Portal)
+  EmptyState.tsx           # Reusable empty state (icon + title + subtitle)
 constants/
   colors.ts                # Theme colors
   ecosystem-apps.ts        # 32 ecosystem app definitions
@@ -69,7 +76,7 @@ hooks/
   useBalance.ts            # SIG/Shell/DWC balance + transactions (live + fallback)
   useMembership.ts         # Membership, subscriptions, VOID stats, presale
   useEcosystemApps.ts      # Ecosystem apps directory (live + fallback)
-  useChat.ts               # WebSocket chat with channels, typing, presence
+  useChat.ts               # WebSocket chat with channels, typing, presence, persistence, reconnection
   usePlaidAccounts.ts      # Plaid linked bank accounts CRUD
   useExternalWallets.ts    # WalletConnect/Phantom wallet connections
   useMultisig.ts           # Multi-sig vault, pending txs, approve/reject
@@ -78,9 +85,13 @@ hooks/
   useWalletActions.ts      # Send, receive, swap token mutations
   useAffiliate.ts          # Affiliate dashboard, link, payout request
   useStripeBusiness.ts     # Stripe status, dashboard, connect/disconnect
+  useLeaderboard.ts        # Leaderboard data (top affiliates, stakers, most active)
+  useActivityFeed.ts       # Ecosystem activity feed (anonymized events)
+  usePublicProfile.ts      # Public user profile lookup by username
+  useHallmarkTimeline.ts   # User's hallmarks + trust stamps timeline
 lib/
   api.ts                   # API client with Bearer auth, SecureStore, SSO
-  auth-context.tsx         # Auth provider (login, register, logout, session check)
+  auth-context.tsx         # Auth provider (login, register, logout, session check, onboarding flag)
   query-client.ts          # TanStack Query setup
 public/
   manifest.json            # PWA web app manifest
@@ -89,10 +100,10 @@ web/
   index.html               # Custom Expo web HTML template with PWA meta tags
 server/
   index.ts                 # Express server (serves public/ + static-build/)
-  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news + staking + affiliate + stripe)
+  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news + staking + affiliate + stripe + leaderboard + activity + profiles + chat)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
-  hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing)
+  hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing, timeline)
   plaid.ts                 # Plaid integration (link token, exchange, accounts, transactions)
   wallets.ts               # External wallet connections (WalletConnect, Phantom)
   multisig.ts              # Multi-sig vault management (approve, reject, history)
@@ -100,8 +111,12 @@ server/
   staking.ts               # Staking endpoints (stake/unstake/info) + send/receive/swap
   affiliate.ts             # Affiliate program (dashboard, link, tracking, payouts)
   stripe-business.ts       # Stripe business dashboard (balance, payments, payouts, connect/disconnect)
+  leaderboard.ts           # Leaderboard API (top affiliates, stakers, most active)
+  activity-feed.ts         # Ecosystem activity feed (anonymized events from trust stamps)
+  public-profiles.ts       # Public user profile lookup (no private data exposed)
+  chat-persistence.ts      # Chat channel/message persistence (CRUD for channels + messages)
   db/
-    schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions, affiliate_referrals, affiliate_commissions, stripe_connections)
+    schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions, affiliate_referrals, affiliate_commissions, stripe_connections, chat_channels, chat_messages)
     index.ts               # Database connection (Neon + Drizzle)
   services/
     resend.ts              # Resend email service (verification, password reset)
@@ -121,8 +136,9 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Presale: GET /api/presale/stats, /api/presale/tiers (public)
 - Subscriptions: GET /api/subscription/status, /api/subscription/plans
 - Chat: WebSocket wss://trusthub.tlid.io/ws/chat with separate auth (POST /api/chat/auth/login)
+- Chat Persistence: GET /api/chat/channels (auth), GET /api/chat/messages/:channelId (auth), POST /api/chat/messages (auth)
 - AI/Voice: POST /api/ai/chat (OpenAI streaming), POST /api/voice/tts (ElevenLabs TTS), GET /api/voice/voices
-- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth), GET /api/hallmark/genesis (public)
+- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth), GET /api/hallmark/genesis (public), GET /api/hallmarks/timeline (auth)
 - Plaid: POST /api/plaid/create-link-token (auth), POST /api/plaid/exchange-token (auth), GET /api/plaid/accounts (auth), GET /api/plaid/transactions/:accountId (auth), DELETE /api/plaid/accounts/:id (auth)
 - Wallets: POST /api/wallets/connect (auth), GET /api/wallets (auth), DELETE /api/wallets/:id (auth), GET /api/wallets/:id/balances (auth)
 - Multi-Sig: GET /api/multisig/vault (auth), GET /api/multisig/pending (auth), POST /api/multisig/approve/:txId (auth), POST /api/multisig/reject/:txId (auth), GET /api/multisig/history (auth)
@@ -131,6 +147,9 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Wallet Actions: POST /api/wallet/send (auth), GET /api/wallet/receive (auth), POST /api/wallet/swap (auth)
 - Affiliate: GET /api/affiliate/dashboard (auth), GET /api/affiliate/link (auth), POST /api/affiliate/track (public), POST /api/affiliate/request-payout (auth)
 - Stripe: GET /api/stripe/status (auth), GET /api/stripe/dashboard (auth), POST /api/stripe/connect (auth), DELETE /api/stripe/disconnect (auth)
+- Leaderboard: GET /api/leaderboard (public)
+- Activity Feed: GET /api/activity/feed (public)
+- Public Profiles: GET /api/users/:username/public (public)
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
@@ -138,11 +157,18 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - SMS 2FA via Twilio (6-digit code on login when phone is configured)
 - Twilio-compliant SMS opt-in screen with consent checkbox and legal language
 - Terms of Service and Privacy Policy screens (linked from login, register, profile, SMS opt-in)
+- Onboarding walkthrough: 4-step guided tour shown after first registration (Welcome, Wallet, Affiliate, Ecosystem)
 - Hallmark System: TH-XXXXXXXX numbered blockchain audit trail with SHA-256 hashing
   - Genesis Hallmark TH-00000001: auto-created on server startup, clickable badge in profile footer opens detail screen
   - Tier 1 Hallmarks: formal records for registration, purchases, certifications (with QR/verification)
   - Tier 2 Trust Stamps: automatic audit trail for logins, profile updates, balance changes
   - Blockchain stamps on: stake, unstake, send, swap, Stripe connect/disconnect, affiliate payout requests
+  - Trust Timeline: visual timeline of hallmarks + stamps on profile screen
+- Leaderboard: Top affiliates (by referrals), top stakers (by actions), most active (by stamps)
+- Community section on home: top 3 affiliates preview with "View All" link to full leaderboard
+- Ecosystem Activity Feed: anonymized recent events on home dashboard
+- Public Trust Profiles: view any user's public trust stats by username
+- QR Codes: real QR codes on wallet receive modal (TLID address) and affiliate screen (referral link)
 - Unified Financial Wallet:
   - Trust Layer native wallet (SIG, Shells, stSIG)
   - Plaid bank account linking (sandbox mode, one-time link, persistent access token)
@@ -152,7 +178,7 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
   - Unified transaction history with filter tabs (All/Trust Layer/Banks/Crypto)
   - Shell purchase tiers (via Apple IAP/Google Play in production)
   - Identity section with Hallmark status and Trust Layer ID badge
-- Hamburger menu with slide-in navigation overlay
+- Hamburger menu with slide-in navigation overlay (includes Leaderboard link)
 - Multi-Sig vault screen (hidden, accessible only to multi-sig users)
   - Vault overview with threshold display and co-signer list
   - Pending transaction approval/rejection
@@ -170,16 +196,19 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Expandable token list per connected wallet
 - Pull-to-refresh on wallet screen (invalidates all wallet queries)
 - Payment methods section: Apple Pay, Google Pay (coming soon), Add Card placeholder
-- Affiliate program: unique hash-based referral ID (cross-platform), tiered commissions (Base 10% → Diamond 20%), referral tracking, SIG payouts
+- Affiliate program: unique hash-based referral ID (cross-platform), tiered commissions (Base 10% → Diamond 20%), referral tracking, SIG payouts, QR code
 - Stripe business dashboard: connect Stripe account, view balance/payments/payouts, revenue stats
 - User role system: "user" vs "developer/admin" roles on each account
 - User uniqueHash generated on registration — used as affiliate ID across all 32+ ecosystem apps
-- Dashboard with live portfolio balance, quick actions, photorealistic news carousel, world news carousel, featured apps, activity feed, launch countdown
+- Dashboard with live portfolio balance, quick actions, photorealistic news carousel, world news carousel, ecosystem activity feed, community leaderboard preview, featured apps, activity feed, launch countdown
 - 32-app directory with search, category filtering, 2-column grid (3 columns on desktop 1024px+)
-- Signal Chat with WebSocket support, channels, typing indicators, DMs
-- Profile with live membership data, subscription status, settings, linked apps, real sign out
+- Signal Chat with WebSocket support, channels, typing indicators, DMs, message persistence, reconnection with exponential backoff, connection status display, delivery indicators
+- Profile with live membership data, subscription status, settings, linked apps, trust timeline, real sign out
 - App detail modal with SSO token passing for ecosystem app launches
 - AI Agent: Chat screen with OpenAI streaming, ElevenLabs voice playback (web), floating sparkles button on home screen
+- GlassCard entry animations (FadeInDown via Reanimated)
+- Consistent EmptyState component across all screens
+- Haptic feedback on all interactive elements
 
 ## Ecosystem Handoff
 See `HALLMARK_AFFILIATE_HANDOFF.md` for the complete cross-app specification covering:
