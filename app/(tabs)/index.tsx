@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   useWindowDimensions,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ import { MOCK_NEWS, FEATURED_APP_IDS } from "@/constants/mock-data";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
 import { useAuth } from "@/lib/auth-context";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
+import { useWorldNews } from "@/hooks/useWorldNews";
 
 function QuickAction({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
@@ -49,13 +51,55 @@ function NewsCard({ item }: { item: typeof MOCK_NEWS[0] }) {
   return (
     <View style={styles.newsCardWrapper}>
       <GlassCard>
-        <View style={styles.newsCategoryBadge}>
-          <Text style={[styles.newsCategoryText, { color: categoryColor }]}>
-            {item.category}
-          </Text>
+        {item.image && (
+          <View style={styles.newsImageContainer}>
+            <Image source={item.image} style={styles.newsImage} resizeMode="cover" />
+            <View style={styles.newsImageOverlay} />
+          </View>
+        )}
+        <View style={styles.newsCardBody}>
+          <View style={styles.newsCategoryBadge}>
+            <Text style={[styles.newsCategoryText, { color: categoryColor }]}>
+              {item.category}
+            </Text>
+          </View>
+          <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={styles.newsBody} numberOfLines={2}>{item.body}</Text>
         </View>
-        <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.newsBody} numberOfLines={3}>{item.body}</Text>
+      </GlassCard>
+    </View>
+  );
+}
+
+function WorldNewsCard({ item }: { item: { id: string; title: string; summary: string; category: string; source: string; imageUrl: string; publishedAt: string } }) {
+  const categoryColor =
+    item.category === "Finance" ? Colors.success :
+    item.category === "Technology" ? Colors.primary :
+    item.category === "Blockchain" ? Colors.secondary :
+    item.category === "Energy" ? "#f59e0b" :
+    item.category === "Science" ? "#8b5cf6" :
+    Colors.textSecondary;
+
+  const timeAgo = getTimeAgo(item.publishedAt);
+
+  return (
+    <View style={styles.worldNewsCardWrapper}>
+      <GlassCard>
+        {item.imageUrl ? (
+          <View style={styles.worldNewsImageContainer}>
+            <Image source={{ uri: item.imageUrl }} style={styles.worldNewsImage} resizeMode="cover" />
+            <View style={styles.newsImageOverlay} />
+          </View>
+        ) : null}
+        <View style={styles.worldNewsBody}>
+          <View style={styles.worldNewsSourceRow}>
+            <View style={[styles.worldNewsCategoryDot, { backgroundColor: categoryColor }]} />
+            <Text style={styles.worldNewsSource}>{item.source}</Text>
+            <Text style={styles.worldNewsTime}>{timeAgo}</Text>
+          </View>
+          <Text style={styles.worldNewsTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={styles.worldNewsSummary} numberOfLines={2}>{item.summary}</Text>
+        </View>
       </GlassCard>
     </View>
   );
@@ -118,6 +162,18 @@ function ActivityItem({ tx }: { tx: { id: string; type: string; amount: number; 
   );
 }
 
+function getTimeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `${diffDays}d ago`;
+}
+
 function getCSTGreeting(): string {
   const now = new Date();
   const cstOffset = -6;
@@ -140,6 +196,7 @@ export default function HomeScreen() {
   const { data: shells } = useShellBalance();
   const { data: dwcBag } = useDwcBag();
   const { data: transactions } = useTransactions();
+  const { data: worldNews } = useWorldNews();
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
 
@@ -242,11 +299,27 @@ export default function HomeScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContent}
-          snapToInterval={268}
+          snapToInterval={288}
           decelerationRate="fast"
         >
           {MOCK_NEWS.map((item) => (
             <NewsCard key={item.id} item={item} />
+          ))}
+        </ScrollView>
+
+        <View style={styles.sectionHeader}>
+          <Ionicons name="globe" size={18} color={Colors.primary} />
+          <GradientText text="World News" style={styles.sectionTitle} />
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContent}
+          snapToInterval={308}
+          decelerationRate="fast"
+        >
+          {(worldNews || []).map((item) => (
+            <WorldNewsCard key={item.id} item={item} />
           ))}
         </ScrollView>
 
@@ -429,11 +502,13 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     marginTop: 12,
     marginBottom: 8,
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700" as const,
     fontFamily: "Inter_700Bold",
+    flex: 1,
   },
   seeAll: {
     fontSize: 13,
@@ -445,10 +520,29 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   newsCardWrapper: {
-    width: 256,
+    width: 276,
+  },
+  newsImageContainer: {
+    height: 120,
+    borderRadius: 10,
+    overflow: "hidden" as const,
+    marginBottom: 10,
+    marginHorizontal: -16,
+    marginTop: -16,
+  },
+  newsImage: {
+    width: "100%",
+    height: "100%",
+  },
+  newsImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(12,18,36,0.25)",
+  },
+  newsCardBody: {
+    gap: 4,
   },
   newsCategoryBadge: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
   newsCategoryText: {
     fontSize: 11,
@@ -460,13 +554,67 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textPrimary,
     fontFamily: "Inter_600SemiBold",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   newsBody: {
     fontSize: 12,
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     lineHeight: 18,
+  },
+  worldNewsCardWrapper: {
+    width: 296,
+  },
+  worldNewsImageContainer: {
+    height: 130,
+    borderRadius: 10,
+    overflow: "hidden" as const,
+    marginBottom: 10,
+    marginHorizontal: -16,
+    marginTop: -16,
+  },
+  worldNewsImage: {
+    width: "100%",
+    height: "100%",
+  },
+  worldNewsBody: {
+    gap: 4,
+  },
+  worldNewsSourceRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginBottom: 4,
+  },
+  worldNewsCategoryDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  worldNewsSource: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  worldNewsTime: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+  },
+  worldNewsTitle: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+    lineHeight: 20,
+  },
+  worldNewsSummary: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 17,
   },
   featuredAppWrapper: {
     width: 156,

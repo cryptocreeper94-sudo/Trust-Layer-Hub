@@ -1,7 +1,7 @@
 # Trust Layer Hub
 
 ## Overview
-Native mobile app serving as the front door to a 32-app blockchain ecosystem. Built with React Native + Expo (SDK 54) using Expo Router for file-based routing. Features real authentication, live API integration with mock data fallbacks, SSO for ecosystem app launches, and WebSocket-ready Signal Chat.
+Native mobile app serving as the front door to a 32-app blockchain ecosystem. Built with React Native + Expo (SDK 54) using Expo Router for file-based routing. Features real authentication, live API integration with mock data fallbacks, SSO for ecosystem app launches, WebSocket-ready Signal Chat, unified financial wallet (Plaid bank accounts, WalletConnect/Phantom crypto wallets, multi-sig), and AI agent with ElevenLabs voice.
 
 ## Tech Stack
 - **Framework**: React Native 0.81 + Expo SDK 54
@@ -13,15 +13,18 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 - **Storage**: expo-secure-store (tokens), AsyncStorage (preferences)
 - **UI Effects**: expo-blur (glassmorphism), expo-linear-gradient, @react-native-masked-view/masked-view (gradient text)
 - **Auth**: Email/password with bcrypt hashing, Resend email verification, Twilio SMS 2FA
-- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter tables)
+- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions)
 - **Email**: Resend (Replit Connectors SDK) for verification + password reset emails
 - **SMS**: Twilio for 2FA codes
+- **Banking**: Plaid (sandbox mode) for bank account linking and transaction data
+- **Crypto Wallets**: WalletConnect (Ethereum), Phantom (Solana) external wallet connections
 - **PWA**: Service worker (stale-while-revalidate), web manifest, offline support, Add to Home Screen
 
 ## Architecture
 - **Theme**: Dark only (#0c1224 base, cyan/purple accents)
 - **GlassCard**: Core reusable component with BlurView + LinearGradient glow
 - **Tab Navigation**: 5 tabs — Home, Explore, Wallet, Chat, Profile
+- **Hamburger Menu**: Slide-in left overlay with navigation to Multi-Sig, Guardian, Hallmark, Settings, Support
 - **Liquid Glass**: NativeTabs support for iOS 26+, BlurView fallback for older
 - **API Layer**: lib/api.ts handles auth tokens, GET/POST requests, SSO URL building
 - **Auth Context**: lib/auth-context.tsx provides login/register/logout/auto-session
@@ -37,11 +40,12 @@ app/
   sms-optin.tsx            # Twilio-compliant SMS opt-in with consent checkbox
   terms.tsx                # Terms of Service (modal)
   privacy.tsx              # Privacy Policy (modal)
+  multisig.tsx             # Multi-Sig vault screen (hidden, multi-sig users only)
   (tabs)/
-    _layout.tsx            # Tab navigator (5 tabs)
-    index.tsx              # Home Dashboard
+    _layout.tsx            # Tab navigator (5 tabs) + hamburger menu
+    index.tsx              # Home Dashboard (photorealistic news cards, world news carousel)
     explore.tsx            # App Directory (32 apps)
-    wallet.tsx             # Wallet & Balances
+    wallet.tsx             # Unified Financial Wallet
     chat.tsx               # Signal Chat
     profile.tsx            # User Profile
   app-detail.tsx           # App detail modal with SSO
@@ -55,6 +59,7 @@ components/
   CountdownTimer.tsx       # Launch countdown
   ErrorBoundary.tsx        # Error boundary
   ErrorFallback.tsx        # Error fallback UI
+  HamburgerMenu.tsx        # Slide-in navigation menu (includes Developer Portal link)
 constants/
   colors.ts                # Theme colors
   ecosystem-apps.ts        # 32 ecosystem app definitions
@@ -64,6 +69,10 @@ hooks/
   useMembership.ts         # Membership, subscriptions, VOID stats, presale
   useEcosystemApps.ts      # Ecosystem apps directory (live + fallback)
   useChat.ts               # WebSocket chat with channels, typing, presence
+  usePlaidAccounts.ts      # Plaid linked bank accounts CRUD
+  useExternalWallets.ts    # WalletConnect/Phantom wallet connections
+  useMultisig.ts           # Multi-sig vault, pending txs, approve/reject
+  useWorldNews.ts          # World news feed (API + fallback)
 lib/
   api.ts                   # API client with Bearer auth, SecureStore, SSO
   auth-context.tsx         # Auth provider (login, register, logout, session check)
@@ -75,12 +84,16 @@ web/
   index.html               # Custom Expo web HTML template with PWA meta tags
 server/
   index.ts                 # Express server (serves public/ + static-build/)
-  routes.ts                # API routes (auth + AI + hallmark)
+  routes.ts                # API routes (auth + AI + hallmark + plaid + wallets + multisig + news)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
   hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing)
+  plaid.ts                 # Plaid integration (link token, exchange, accounts, transactions)
+  wallets.ts               # External wallet connections (WalletConnect, Phantom)
+  multisig.ts              # Multi-sig vault management (approve, reject, history)
+  news.ts                  # World news feed API (curated national/world stories)
   db/
-    schema.ts              # Drizzle schema (users, verification_codes, sessions, hallmarks, trust_stamps, trusthub_counter)
+    schema.ts              # Drizzle schema (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter, linked_accounts, external_wallets, multisig_vaults, multisig_transactions)
     index.ts               # Database connection (Neon + Drizzle)
   services/
     resend.ts              # Resend email service (verification, password reset)
@@ -102,6 +115,10 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Chat: WebSocket wss://trusthub.tlid.io/ws/chat with separate auth (POST /api/chat/auth/login)
 - AI/Voice: POST /api/ai/chat (OpenAI streaming), POST /api/voice/tts (ElevenLabs TTS), GET /api/voice/voices
 - Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/:hallmarkId/verify (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth)
+- Plaid: POST /api/plaid/create-link-token (auth), POST /api/plaid/exchange-token (auth), GET /api/plaid/accounts (auth), GET /api/plaid/transactions/:accountId (auth), DELETE /api/plaid/accounts/:id (auth)
+- Wallets: POST /api/wallets/connect (auth), GET /api/wallets (auth), DELETE /api/wallets/:id (auth), GET /api/wallets/:id/balances (auth)
+- Multi-Sig: GET /api/multisig/vault (auth), GET /api/multisig/pending (auth), POST /api/multisig/approve/:txId (auth), POST /api/multisig/reject/:txId (auth), GET /api/multisig/history (auth)
+- News: GET /api/news/world (public, curated world news feed)
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
@@ -112,13 +129,29 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Hallmark System: TH-XXXXXXXX numbered blockchain audit trail with SHA-256 hashing
   - Tier 1 Hallmarks: formal records for registration, purchases, certifications (with QR/verification)
   - Tier 2 Trust Stamps: automatic audit trail for logins, profile updates, balance changes
+- Unified Financial Wallet:
+  - Trust Layer native wallet (SIG, Shells, stSIG)
+  - Plaid bank account linking (sandbox mode, one-time link, persistent access token)
+  - WalletConnect external wallet connections (Ethereum)
+  - Phantom Solana wallet connections (deeplink)
+  - Portfolio overview with net worth breakdown (crypto/bank/external)
+  - Unified transaction history with filter tabs (All/Trust Layer/Banks/Crypto)
+  - Shell purchase tiers (via Apple IAP/Google Play in production)
+  - Identity section with Hallmark status and Trust Layer ID badge
+- Hamburger menu with slide-in navigation overlay
+- Multi-Sig vault screen (hidden, accessible only to multi-sig users)
+  - Vault overview with threshold display and co-signer list
+  - Pending transaction approval/rejection
+  - Transaction history
 - Registration captures First Name for personalized greeting
 - CST time-of-day greeting on home screen (Good morning/afternoon/evening, {firstName})
 - Desktop-responsive layout: content centered with max-width on web (720px content, 960px explore, 480px auth)
 - Desktop breakpoint: 768px — below that uses mobile full-width layout
-- Dashboard with live portfolio balance, quick actions, news carousel, featured apps, activity feed, launch countdown
+- Photorealistic AI-generated images on news cards and ecosystem highlight cards
+- World News carousel on home screen showing curated national/world news stories with stock photography, source attribution, and time-ago display
+- Developer Portal link in hamburger menu (external link to developers.tlid.io)
+- Dashboard with live portfolio balance, quick actions, photorealistic news carousel, world news carousel, featured apps, activity feed, launch countdown
 - 32-app directory with search, category filtering, 2-column grid (3 columns on desktop 1024px+)
-- Wallet with live SIG/Shell balances, Shell purchase tiers, portfolio breakdown, transaction history
 - Signal Chat with WebSocket support, channels, typing indicators, DMs
 - Profile with live membership data, subscription status, settings, linked apps, real sign out
 - App detail modal with SSO token passing for ecosystem app launches

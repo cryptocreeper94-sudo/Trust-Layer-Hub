@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
+import { HamburgerMenu } from "@/components/HamburgerMenu";
 
 function NativeTabLayout() {
   return (
@@ -34,14 +35,34 @@ function NativeTabLayout() {
   );
 }
 
-function ClassicTabLayout() {
+function ClassicTabLayout({ onMenuOpen }: { onMenuOpen: () => void }) {
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: Colors.background,
+          borderBottomWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: Colors.textPrimary,
+        headerTitleStyle: {
+          fontFamily: "Inter_600SemiBold",
+          fontSize: 17,
+        },
+        headerLeft: () => (
+          <Pressable
+            onPress={onMenuOpen}
+            style={{ marginLeft: 16 }}
+            testID="hamburger-button"
+          >
+            <Ionicons name="menu" size={26} color={Colors.textPrimary} />
+          </Pressable>
+        ),
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.tabInactive,
         tabBarStyle: {
@@ -113,9 +134,48 @@ function ClassicTabLayout() {
   );
 }
 
+function FloatingMenuButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        position: "absolute" as const,
+        top: 58,
+        left: 16,
+        zIndex: 100,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: "rgba(12,18,36,0.7)",
+        borderWidth: 1,
+        borderColor: "rgba(0,255,255,0.15)",
+        alignItems: "center" as const,
+        justifyContent: "center" as const,
+      }}
+      testID="hamburger-button"
+    >
+      <Ionicons name="menu" size={22} color={Colors.textPrimary} />
+    </Pressable>
+  );
+}
+
 export default function TabLayout() {
+  const [menuVisible, setMenuVisible] = useState(false);
+
   if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
+    return (
+      <View style={{ flex: 1 }}>
+        <NativeTabLayout />
+        <FloatingMenuButton onPress={() => setMenuVisible(true)} />
+        <HamburgerMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      </View>
+    );
   }
-  return <ClassicTabLayout />;
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ClassicTabLayout onMenuOpen={() => setMenuVisible(true)} />
+      <HamburgerMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+    </View>
+  );
 }

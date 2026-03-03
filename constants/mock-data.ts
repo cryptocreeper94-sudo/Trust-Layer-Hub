@@ -82,6 +82,7 @@ export const MOCK_NEWS = [
     title: "Guardian Scanner Reaches 1M Scans",
     body: "The Guardian Security Scanner has completed over 1 million AI agent verifications across 13+ chains, marking a major milestone for the Trust Layer ecosystem.",
     category: "Milestone",
+    image: require("@/assets/images/news-hero-4.png"),
     createdAt: "2026-03-03T08:00:00Z",
   },
   {
@@ -89,6 +90,7 @@ export const MOCK_NEWS = [
     title: "ORBIT Staffing OS Enterprise Launch",
     body: "ORBIT Staffing OS is now available for enterprise clients. Blockchain-verified employment records and payroll management for organizations of all sizes.",
     category: "Launch",
+    image: require("@/assets/images/news-hero-1.png"),
     createdAt: "2026-03-02T12:00:00Z",
   },
   {
@@ -96,6 +98,7 @@ export const MOCK_NEWS = [
     title: "Shell Presale: 65% Sold",
     body: "The Trust Layer Shell presale has reached 65% sold. Early adopters are securing their positions before the August 23, 2026 launch.",
     category: "Presale",
+    image: require("@/assets/images/news-hero-3.png"),
     createdAt: "2026-03-01T10:00:00Z",
   },
   {
@@ -103,6 +106,7 @@ export const MOCK_NEWS = [
     title: "TradeWorks AI v2.0 Released",
     body: "TradeWorks AI version 2.0 introduces advanced prediction models, portfolio optimization, and real-time market sentiment analysis.",
     category: "Update",
+    image: require("@/assets/images/news-hero-2.png"),
     createdAt: "2026-02-28T14:00:00Z",
   },
   {
@@ -110,6 +114,7 @@ export const MOCK_NEWS = [
     title: "Trust Golf Expands to 50+ Courses",
     body: "Trust Golf now features over 50 premium golf courses with AI swing analysis, scoring, and exclusive tee time deals.",
     category: "Update",
+    image: require("@/assets/images/news-hero-5.png"),
     createdAt: "2026-02-27T09:00:00Z",
   },
 ];

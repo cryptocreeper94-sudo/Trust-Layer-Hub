@@ -20,6 +20,7 @@ interface User {
   emailVerified?: boolean;
   phoneVerified?: boolean;
   twoFactorEnabled?: boolean;
+  isMultisig?: boolean;
   [key: string]: unknown;
 }
 
