@@ -181,6 +181,14 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - App detail modal with SSO token passing for ecosystem app launches
 - AI Agent: Chat screen with OpenAI streaming, ElevenLabs voice playback (web), floating sparkles button on home screen
 
+## Ecosystem Handoff
+See `HALLMARK_AFFILIATE_HANDOFF.md` for the complete cross-app specification covering:
+- Hallmark system (prefixes, genesis marks, hashing, trust stamps, verification)
+- Affiliate program (uniqueHash, commission tiers, referral tracking, payout rules)
+- Implementation checklist for all 32 ecosystem apps
+- Standardized trust stamp categories
+- Database schema requirements
+
 ## Launch Date
 August 23, 2026 (CST) - displayed in countdown timer
 
