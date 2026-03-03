@@ -209,6 +209,17 @@ export default function RegisterScreen() {
           style={styles.registerButton}
         />
 
+        <View style={styles.legalRow}>
+          <Text style={styles.legalText}>By creating an account, you agree to our </Text>
+          <Pressable onPress={() => router.push("/terms")}>
+            <Text style={styles.legalLink}>Terms of Service</Text>
+          </Pressable>
+          <Text style={styles.legalText}> and </Text>
+          <Pressable onPress={() => router.push("/privacy")}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.loginRow}>
           <Text style={styles.loginText}>Already have an account?</Text>
           <Pressable onPress={() => router.back()}>
@@ -332,5 +343,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.primary,
     fontFamily: "Inter_600SemiBold",
+  },
+  legalRow: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  legalText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+  },
+  legalLink: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontFamily: "Inter_500Medium",
   },
 });

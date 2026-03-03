@@ -6,6 +6,7 @@ import { users, verificationCodes, sessions } from "./db/schema";
 import { eq, and, gt } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "./services/resend";
 import { sendSMS2FACode, isTwilioConfigured } from "./services/twilio";
+import { generateTrustHubHallmark, createTrustStamp } from "./hallmark";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -143,6 +144,20 @@ export function registerAuthRoutes(app: Express): void {
         expiresAt: sessionExpiresAt,
       });
 
+      generateTrustHubHallmark({
+        userId: newUser.id,
+        appId: "trusthub",
+        appName: "Trust Hub",
+        productName: "User Registration",
+        releaseType: "verification",
+        metadata: {
+          userId: newUser.id,
+          emailHash: crypto.createHash("sha256").update(newUser.email).digest("hex"),
+          username: newUser.username,
+          registeredAt: new Date().toISOString(),
+        },
+      }).catch((err) => console.error("Hallmark error:", err?.message));
+
       res.status(201).json({
         user: {
           id: newUser.id.toString(),
@@ -263,6 +278,16 @@ export function registerAuthRoutes(app: Express): void {
         token,
         expiresAt: sessionExpiresAt,
       });
+
+      createTrustStamp({
+        userId: user.id,
+        category: "trusthub-login",
+        data: {
+          userId: user.id,
+          emailHash: crypto.createHash("sha256").update(user.email).digest("hex"),
+          timestamp: new Date().toISOString(),
+        },
+      }).catch((err) => console.error("Trust stamp error:", err?.message));
 
       res.json({
         user: {
@@ -563,6 +588,16 @@ export function registerAuthRoutes(app: Express): void {
         .update(users)
         .set({ phone: cleaned, updatedAt: new Date() })
         .where(eq(users.id, user.id));
+
+      createTrustStamp({
+        userId: user.id,
+        category: "trusthub-profile-update",
+        data: {
+          userId: user.id,
+          fieldsChanged: ["phone"],
+          timestamp: new Date().toISOString(),
+        },
+      }).catch((err) => console.error("Trust stamp error:", err?.message));
 
       if (isTwilioConfigured()) {
         const code = generateCode();

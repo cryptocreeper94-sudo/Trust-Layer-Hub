@@ -148,6 +148,16 @@ export default function LoginScreen() {
         >
           <Text style={styles.skipText}>Continue as Guest</Text>
         </Pressable>
+
+        <View style={styles.legalRow}>
+          <Pressable onPress={() => router.push("/terms")}>
+            <Text style={styles.legalLink}>Terms of Service</Text>
+          </Pressable>
+          <Text style={styles.legalDot}>{"\u00B7"}</Text>
+          <Pressable onPress={() => router.push("/privacy")}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -259,5 +269,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     fontFamily: "Inter_400Regular",
+  },
+  legalRow: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+  },
+  legalDot: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
 });

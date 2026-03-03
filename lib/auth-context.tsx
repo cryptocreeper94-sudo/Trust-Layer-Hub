@@ -36,6 +36,8 @@ interface AuthContextValue {
   verifyEmail: (code: string) => Promise<void>;
   verify2FA: (code: string) => Promise<void>;
   resendCode: (type: "email_verify" | "sms_2fa") => Promise<void>;
+  updatePhone: (phone: string) => Promise<void>;
+  verifyPhone: (code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   clearAuthStep: () => void;
@@ -129,6 +131,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiPost("/api/auth/resend-code", { type }, true);
   }
 
+  async function updatePhone(phone: string) {
+    const data = await apiPost<{ success: boolean; requiresVerification?: boolean }>(
+      "/api/auth/update-phone",
+      { phone },
+      true
+    );
+    if (data.requiresVerification) {
+      setAuthStep("sms_2fa");
+      setPhoneHint(phone.slice(0, 4) + "****" + phone.slice(-2));
+    }
+  }
+
+  async function verifyPhone(code: string) {
+    await apiPost("/api/auth/verify-phone", { code }, true);
+    await refreshUser();
+    setAuthStep("idle");
+  }
+
   async function logout() {
     try {
       await apiPost("/api/auth/logout", undefined, true);
@@ -163,6 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifyEmail,
       verify2FA,
       resendCode,
+      updatePhone,
+      verifyPhone,
       logout,
       refreshUser,
       clearAuthStep,

@@ -40,6 +40,21 @@ function RootLayoutNav() {
             headerShown: false,
           }}
         />
+        <Stack.Screen name="sms-optin" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="terms"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="privacy"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
       </Stack>
     </>
   );

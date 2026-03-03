@@ -244,6 +244,13 @@ export default function ProfileScreen() {
             onToggle={setBiometrics}
           />
           <View style={styles.divider} />
+          <SettingRow
+            icon="chatbubble-ellipses"
+            label="SMS Security (2FA)"
+            value={user?.twoFactorEnabled ? "Enabled" : "Set Up"}
+            onPress={() => router.push("/sms-optin")}
+          />
+          <View style={styles.divider} />
           <SettingRow icon="lock-closed" label="Security PIN" value="Set" onPress={() => {}} />
           <View style={styles.divider} />
           <SettingRow icon="language" label="Language" value="English" onPress={() => {}} />
@@ -277,6 +284,15 @@ export default function ProfileScreen() {
         )}
 
         <View style={styles.footerSection}>
+          <View style={styles.legalRow}>
+            <Pressable onPress={() => router.push("/terms")}>
+              <Text style={styles.footerLink}>Terms of Service</Text>
+            </Pressable>
+            <Text style={styles.legalDot}>{"\u00B7"}</Text>
+            <Pressable onPress={() => router.push("/privacy")}>
+              <Text style={styles.footerLink}>Privacy Policy</Text>
+            </Pressable>
+          </View>
           <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
           <Pressable onPress={() => Linking.openURL("https://darkwavestudios.io")}>
             <Text style={styles.footerLink}>DarkWave Studios LLC</Text>
@@ -541,5 +557,16 @@ const styles = StyleSheet.create({
     color: Colors.success,
     fontFamily: "Inter_500Medium",
     textDecorationLine: "underline" as const,
+  },
+  legalRow: {
+    flexDirection: "row" as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginBottom: 8,
+  },
+  legalDot: {
+    fontSize: 12,
+    color: Colors.textMuted,
   },
 });

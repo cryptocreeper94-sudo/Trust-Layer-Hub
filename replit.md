@@ -13,7 +13,7 @@ Native mobile app serving as the front door to a 32-app blockchain ecosystem. Bu
 - **Storage**: expo-secure-store (tokens), AsyncStorage (preferences)
 - **UI Effects**: expo-blur (glassmorphism), expo-linear-gradient, @react-native-masked-view/masked-view (gradient text)
 - **Auth**: Email/password with bcrypt hashing, Resend email verification, Twilio SMS 2FA
-- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes tables)
+- **Database**: PostgreSQL with Drizzle ORM (users, sessions, verification_codes, hallmarks, trust_stamps, trusthub_counter tables)
 - **Email**: Resend (Replit Connectors SDK) for verification + password reset emails
 - **SMS**: Twilio for 2FA codes
 
@@ -33,6 +33,9 @@ app/
   login.tsx                # Login screen
   register.tsx             # Registration screen (password strength rules)
   verify.tsx               # Email verification + SMS 2FA code entry
+  sms-optin.tsx            # Twilio-compliant SMS opt-in with consent checkbox
+  terms.tsx                # Terms of Service (modal)
+  privacy.tsx              # Privacy Policy (modal)
   (tabs)/
     _layout.tsx            # Tab navigator (5 tabs)
     index.tsx              # Home Dashboard
@@ -65,11 +68,12 @@ lib/
   query-client.ts          # TanStack Query setup
 server/
   index.ts                 # Express server
-  routes.ts                # API routes (auth + AI)
+  routes.ts                # API routes (auth + AI + hallmark)
   auth.ts                  # Auth routes (register, login, verify-email, verify-2fa, etc.)
   ai-agent.ts              # AI Agent endpoints (chat streaming, TTS, voices)
+  hallmark.ts              # Hallmark System (TH-XXXXXXXX hallmarks, trust stamps, blockchain hashing)
   db/
-    schema.ts              # Drizzle schema (users, verification_codes, sessions)
+    schema.ts              # Drizzle schema (users, verification_codes, sessions, hallmarks, trust_stamps, trusthub_counter)
     index.ts               # Database connection (Neon + Drizzle)
   services/
     resend.ts              # Resend email service (verification, password reset)
@@ -88,12 +92,18 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Subscriptions: GET /api/subscription/status, /api/subscription/plans
 - Chat: WebSocket wss://{url}/ws/chat with separate JWT auth (/api/chat/auth/login)
 - AI Agent: POST /api/ai/chat (OpenAI streaming), POST /api/ai/tts (ElevenLabs TTS), GET /api/ai/voices
+- Hallmark: POST /api/hallmark/generate (auth), GET /api/hallmark/verify/:hallmarkId (public), POST /api/trust-stamp (auth), GET /api/trust-stamps/:userId (auth)
 - SSO: Apps launched with ?auth_token={sessionToken}
 
 ## Key Features
 - Full auth system: email/password registration with password strength rules (8 char min, 1 uppercase, 1 special char)
 - Email verification via Resend (6-digit code, Trust Layer branded email)
 - SMS 2FA via Twilio (6-digit code on login when phone is configured)
+- Twilio-compliant SMS opt-in screen with consent checkbox and legal language
+- Terms of Service and Privacy Policy screens (linked from login, register, profile, SMS opt-in)
+- Hallmark System: TH-XXXXXXXX numbered blockchain audit trail with SHA-256 hashing
+  - Tier 1 Hallmarks: formal records for registration, purchases, certifications (with QR/verification)
+  - Tier 2 Trust Stamps: automatic audit trail for logins, profile updates, balance changes
 - Registration captures First Name for personalized greeting
 - CST time-of-day greeting on home screen (Good morning/afternoon/evening, {firstName})
 - Desktop-responsive layout: content centered with max-width on web (720px content, 960px explore, 480px auth)
