@@ -30,6 +30,7 @@ import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useActivityFeed } from "@/hooks/useActivityFeed";
 import { EmptyState } from "@/components/EmptyState";
 import { Carousel } from "@/components/Carousel";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
@@ -278,6 +279,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <BackgroundGlow />
+      <WelcomeModal />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[

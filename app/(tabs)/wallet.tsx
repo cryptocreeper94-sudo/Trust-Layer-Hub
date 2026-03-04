@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
@@ -26,7 +27,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { usePlaidAccounts, useUnlinkAccount, useCreateLinkToken, useExchangePlaidToken } from "@/hooks/usePlaidAccounts";
 import { useExternalWallets, useConnectWallet, useDisconnectWallet, getExternalWalletsTotalUsd } from "@/hooks/useExternalWallets";
-import { useStakingInfo, useStake, useUnstake } from "@/hooks/useStaking";
+import { useStakingInfo, useStake, useUnstake, useClaimRewards, useLiquidStake, useLiquidUnstake } from "@/hooks/useStaking";
 import { useSendTokens, useReceiveInfo, useSwapTokens } from "@/hooks/useWalletActions";
 import { useAuth } from "@/lib/auth-context";
 import { queryClient } from "@/lib/query-client";
@@ -386,16 +387,20 @@ function SwapModal({ visible, onClose }: { visible: boolean; onClose: () => void
   const [amount, setAmount] = useState("");
   const swapMutation = useSwapTokens();
 
+  const SWAP_FEE_RATE = 0.003;
   const rates: Record<string, Record<string, number>> = {
-    SIG: { Shells: 1000, stSIG: 1 },
+    SIG: { Shells: 1000, stSIG: 1, USDC: 0.01, USDT: 0.01 },
     Shells: { SIG: 0.001, stSIG: 0.001 },
     stSIG: { SIG: 1, Shells: 1000 },
+    USDC: { SIG: 100 },
+    USDT: { SIG: 100 },
   };
   const rate = rates[fromAsset]?.[toAsset] || 0;
   const numAmount = parseFloat(amount) || 0;
-  const outputPreview = numAmount * rate;
+  const fee = numAmount * SWAP_FEE_RATE;
+  const outputPreview = (numAmount - fee) * rate;
 
-  const assets = ["SIG", "Shells", "stSIG"];
+  const assets = ["SIG", "Shells", "stSIG", "USDC", "USDT"];
 
   const handleSwap = () => {
     if (!numAmount || numAmount <= 0) {
@@ -426,7 +431,8 @@ function SwapModal({ visible, onClose }: { visible: boolean; onClose: () => void
             style={[styles.assetChip, fromAsset === a && styles.assetChipActive]}
             onPress={() => {
               setFromAsset(a);
-              if (a === toAsset) setToAsset(assets.find((x) => x !== a) || "SIG");
+              const availableTo = assets.filter((x) => x !== a && rates[a]?.[x]);
+              if (!rates[a]?.[toAsset]) setToAsset(availableTo[0] || "SIG");
             }}
           >
             <Text style={[styles.assetChipText, fromAsset === a && styles.assetChipTextActive]}>{a}</Text>
@@ -457,7 +463,7 @@ function SwapModal({ visible, onClose }: { visible: boolean; onClose: () => void
       </View>
       <Text style={styles.inputLabel}>To</Text>
       <View style={styles.assetPicker}>
-        {assets.filter((a) => a !== fromAsset).map((a) => (
+        {assets.filter((a) => a !== fromAsset && rates[fromAsset]?.[a]).map((a) => (
           <Pressable
             key={a}
             style={[styles.assetChip, toAsset === a && styles.assetChipActive]}
@@ -469,8 +475,12 @@ function SwapModal({ visible, onClose }: { visible: boolean; onClose: () => void
       </View>
       <View style={styles.swapPreview}>
         <Text style={styles.swapRate}>1 {fromAsset} = {rate.toLocaleString()} {toAsset}</Text>
+        <Text style={styles.swapFeeText}>DEX Fee: 0.3% (30 bps)</Text>
         {numAmount > 0 && (
-          <Text style={styles.swapOutput}>You receive: {outputPreview.toLocaleString()} {toAsset}</Text>
+          <>
+            <Text style={styles.swapOutput}>You receive: ~{outputPreview.toLocaleString(undefined, { maximumFractionDigits: 6 })} {toAsset}</Text>
+            <Text style={styles.swapFeeAmount}>Fee: {fee.toFixed(6)} {fromAsset}</Text>
+          </>
         )}
       </View>
       <GradientButton
@@ -485,6 +495,7 @@ function SwapModal({ visible, onClose }: { visible: boolean; onClose: () => void
 function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClose: () => void; initialMode?: "stake" | "unstake" }) {
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<"stake" | "unstake">(initialMode || "stake");
+  const [selectedPoolId, setSelectedPoolId] = useState("liquid-flex");
   const prevInitialMode = React.useRef(initialMode);
   React.useEffect(() => {
     if (initialMode && initialMode !== prevInitialMode.current) {
@@ -496,8 +507,10 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
   const stakeMutation = useStake();
   const unstakeMutation = useUnstake();
 
+  const pools = stakingInfo?.pools || [];
+  const selectedPool = pools.find(p => p.id === selectedPoolId) || pools[0];
   const numAmount = parseFloat(amount) || 0;
-  const apy = stakingInfo?.apy || 0;
+  const apy = selectedPool ? (selectedPool.baseApy + (selectedPool.boostApy || 0)) : 10;
   const monthlyReward = (numAmount * apy / 100 / 12);
   const yearlyReward = (numAmount * apy / 100);
 
@@ -506,10 +519,14 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
       Alert.alert("Invalid Amount", "Please enter a valid amount.");
       return;
     }
+    if (mode === "stake" && selectedPool && numAmount < selectedPool.minStake) {
+      Alert.alert("Below Minimum", `Minimum stake for ${selectedPool.name} is ${selectedPool.minStake.toLocaleString()} SIG`);
+      return;
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     if (mode === "stake") {
-      stakeMutation.mutate(numAmount, {
+      stakeMutation.mutate({ amount: numAmount, poolId: selectedPoolId }, {
         onSuccess: (data) => {
           Alert.alert("Staked", data.message || `Staked ${numAmount} SIG`);
           setAmount("");
@@ -518,13 +535,13 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
         onError: () => Alert.alert("Error", "Staking failed."),
       });
     } else {
-      unstakeMutation.mutate(numAmount, {
+      unstakeMutation.mutate({ amount: numAmount, poolId: selectedPoolId }, {
         onSuccess: (data) => {
-          Alert.alert("Unstaking Initiated", data.message || `Unstaking ${numAmount} stSIG. ${data.cooldownDays}-day cooldown applies.`);
+          Alert.alert("Unstaking Initiated", data.message || `Unstaking ${numAmount} stSIG`);
           setAmount("");
           onClose();
         },
-        onError: () => Alert.alert("Error", "Unstaking failed."),
+        onError: (err: any) => Alert.alert("Error", err?.message || "Unstaking failed."),
       });
     }
   };
@@ -545,9 +562,27 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
           <Text style={[styles.stakeModeTabText, mode === "unstake" && styles.stakeModeTabTextActive]}>Unstake</Text>
         </Pressable>
       </View>
+      {mode === "stake" && pools.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.poolScroller}>
+          {pools.map((pool) => (
+            <Pressable
+              key={pool.id}
+              style={[styles.poolChip, selectedPoolId === pool.id && styles.poolChipActive]}
+              onPress={() => { setSelectedPoolId(pool.id); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+              testID={`pool-${pool.id}`}
+            >
+              <Text style={[styles.poolChipName, selectedPoolId === pool.id && styles.poolChipNameActive]}>{pool.name}</Text>
+              <Text style={[styles.poolChipApy, selectedPoolId === pool.id && styles.poolChipApyActive]}>{pool.baseApy}% APY</Text>
+              {pool.lockDays > 0 && (
+                <Text style={styles.poolChipLock}>{pool.lockDays}d lock</Text>
+              )}
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
       <TextInput
         style={styles.modalInput}
-        placeholder={mode === "stake" ? "SIG amount to stake" : "stSIG amount to unstake"}
+        placeholder={mode === "stake" ? `Min ${selectedPool?.minStake?.toLocaleString() || 100} SIG` : "stSIG amount to unstake"}
         placeholderTextColor={Colors.textMuted}
         value={amount}
         onChangeText={setAmount}
@@ -559,8 +594,13 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
           <View style={[styles.apyBadge]}>
             <Text style={styles.apyBadgeText}>{apy}% APY</Text>
           </View>
-          <Text style={styles.stakeInfoLabel}>7-day cooldown on unstake</Text>
+          <Text style={styles.stakeInfoLabel}>
+            {selectedPool?.lockDays ? `${selectedPool.lockDays}-day lock period` : "No lock period"}
+          </Text>
         </View>
+        {selectedPool?.boostApy ? (
+          <Text style={styles.boostText}>+{selectedPool.boostApy}% boost available via Staking Quests</Text>
+        ) : null}
         {numAmount > 0 && (
           <View style={styles.rewardPreview}>
             <View style={styles.rewardItem}>
@@ -791,10 +831,37 @@ export default function WalletScreen() {
     { key: "crypto", label: "Crypto" },
   ];
 
-  const stakingApy = stakingInfo?.apy || 0;
+  const stakingApy = stakingInfo?.apy || 10;
   const totalStaked = stakingInfo?.totalStaked || stSigBalance;
   const rewardsEarned = stakingInfo?.rewardsEarned || 0;
   const stakedRatio = sigBalance + stSigBalance > 0 ? stSigBalance / (sigBalance + stSigBalance) : 0;
+  const activeStakes = stakingInfo?.activeStakes || [];
+  const claimRewards = useClaimRewards();
+  const liquidStakeMutation = useLiquidStake();
+  const liquidUnstakeMutation = useLiquidUnstake();
+  const [showLiquidModal, setShowLiquidModal] = useState(false);
+  const [liquidMode, setLiquidMode] = useState<"mint" | "redeem">("mint");
+  const [liquidAmount, setLiquidAmount] = useState("");
+
+  const handleLiquidConfirm = () => {
+    const num = parseFloat(liquidAmount);
+    if (!num || num <= 0) {
+      Alert.alert("Invalid Amount", "Please enter a valid amount.");
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (liquidMode === "mint") {
+      liquidStakeMutation.mutate({ amount: num }, {
+        onSuccess: (data) => { Alert.alert("stSIG Minted", data.message); setLiquidAmount(""); setShowLiquidModal(false); },
+        onError: () => Alert.alert("Error", "Failed to mint stSIG"),
+      });
+    } else {
+      liquidUnstakeMutation.mutate({ amount: num }, {
+        onSuccess: (data) => { Alert.alert("SIG Redeemed", data.message); setLiquidAmount(""); setShowLiquidModal(false); },
+        onError: () => Alert.alert("Error", "Failed to redeem stSIG"),
+      });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -931,39 +998,101 @@ export default function WalletScreen() {
 
         <View style={styles.sectionHeader}>
           <Ionicons name="trending-up" size={18} color="#f59e0b" />
-          <GradientText text="Staking" style={styles.sectionTitle} />
+          <GradientText text="Staking Pools" style={styles.sectionTitle} />
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.poolCarousel} contentContainerStyle={styles.poolCarouselContent}>
+          {(stakingInfo?.pools || []).map((pool, i) => {
+            const isTopTier = pool.baseApy >= 24;
+            return (
+              <Pressable
+                key={pool.id}
+                onPress={() => { setStakeInitialMode("stake"); setShowStakeModal(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+                testID={`pool-card-${pool.id}`}
+              >
+                <GlassCard glow={isTopTier} animate delay={i * 80} style={styles.poolCard}>
+                  <View style={styles.poolCardHeader}>
+                    <View style={[styles.poolTierDot, { backgroundColor: isTopTier ? Colors.primary : pool.baseApy >= 14 ? Colors.secondary : "rgba(255,255,255,0.2)" }]} />
+                    <Text style={styles.poolCardName}>{pool.name}</Text>
+                  </View>
+                  <Text style={[styles.poolCardApy, isTopTier && { color: Colors.primary }]}>{pool.baseApy + (pool.boostApy || 0)}%</Text>
+                  <Text style={styles.poolCardApyLabel}>TOTAL APY</Text>
+                  {pool.boostApy > 0 && (
+                    <View style={styles.poolBoostPill}>
+                      <Ionicons name="flash" size={10} color={Colors.secondary} />
+                      <Text style={styles.poolBoostText}>+{pool.boostApy}% boost</Text>
+                    </View>
+                  )}
+                  <View style={styles.poolCardDivider} />
+                  <View style={styles.poolDetailRow}>
+                    <Ionicons name={pool.lockDays > 0 ? "lock-closed" : "flash-outline"} size={11} color={Colors.textTertiary} />
+                    <Text style={styles.poolDetailText}>{pool.lockDays > 0 ? `${pool.lockDays}-day lock` : "No lock"}</Text>
+                  </View>
+                  <View style={styles.poolDetailRow}>
+                    <Ionicons name="diamond-outline" size={11} color={Colors.textTertiary} />
+                    <Text style={styles.poolDetailText}>Min {pool.minStake.toLocaleString()} SIG</Text>
+                  </View>
+                </GlassCard>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
         <GlassCard>
-          <View style={styles.stakingHeader}>
-            <View style={styles.apyBadge}>
-              <Text style={styles.apyBadgeText}>{stakingApy}% APY</Text>
-            </View>
-            <Text style={styles.stakingSubtext}>7-day cooldown on unstake</Text>
-          </View>
           <View style={styles.stakingStats}>
             <View style={styles.stakingStat}>
-              <Text style={styles.stakingStatLabel}>Total Staked</Text>
-              <Text style={styles.stakingStatValue}>{totalStaked.toLocaleString()} stSIG</Text>
+              <Text style={styles.stakingStatLabel}>TOTAL STAKED</Text>
+              <Text style={styles.stakingStatValue}>{totalStaked.toLocaleString()}</Text>
+              <Text style={styles.stakingStatUnit}>stSIG</Text>
             </View>
             <View style={styles.stakingStatDivider} />
             <View style={styles.stakingStat}>
-              <Text style={styles.stakingStatLabel}>Rewards Earned</Text>
-              <Text style={[styles.stakingStatValue, { color: Colors.success }]}>+{rewardsEarned.toLocaleString()} SIG</Text>
+              <Text style={styles.stakingStatLabel}>REWARDS</Text>
+              <Text style={[styles.stakingStatValue, { color: Colors.success }]}>+{rewardsEarned.toLocaleString()}</Text>
+              <Text style={[styles.stakingStatUnit, { color: Colors.success }]}>SIG earned</Text>
             </View>
           </View>
+          {activeStakes.length > 0 && (
+            <View style={styles.activeStakesContainer}>
+              <Text style={styles.activeStakesTitle}>ACTIVE POSITIONS</Text>
+              {activeStakes.map((stake) => (
+                <View key={stake.poolId} style={styles.activeStakeRow}>
+                  <View style={styles.activeStakeLeft}>
+                    <View style={styles.activeStakeNameRow}>
+                      <View style={[styles.activeStakeDot, { backgroundColor: stake.apy >= 24 ? Colors.primary : Colors.secondary }]} />
+                      <Text style={styles.activeStakePool}>{stake.poolName}</Text>
+                    </View>
+                    <Text style={styles.activeStakeAmount}>{stake.amount.toLocaleString()} stSIG @ {stake.apy}% APY</Text>
+                  </View>
+                  <View style={styles.activeStakeRight}>
+                    <Text style={styles.activeStakeRewards}>+{stake.rewards.toFixed(4)}</Text>
+                    {stake.isLocked ? (
+                      <View style={styles.lockedBadge}>
+                        <Ionicons name="lock-closed" size={9} color={Colors.warning} />
+                        <Text style={styles.lockedBadgeText}>LOCKED</Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.lockedBadge, { backgroundColor: "rgba(16,185,129,0.1)", borderColor: "rgba(16,185,129,0.2)" }]}>
+                        <Text style={[styles.lockedBadgeText, { color: Colors.success }]}>FLEX</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
           <View style={styles.stakingProgressContainer}>
             <View style={styles.stakingProgressBg}>
-              <View style={[styles.stakingProgressFill, { width: `${Math.min(stakedRatio * 100, 100)}%` }]} />
+              <LinearGradient
+                colors={[Colors.primary, Colors.secondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.stakingProgressFill, { width: `${Math.min(stakedRatio * 100, 100)}%` }]}
+              />
             </View>
             <Text style={styles.stakingProgressLabel}>
-              {(stakedRatio * 100).toFixed(1)}% of SIG staked
+              {(stakedRatio * 100).toFixed(1)}% of portfolio staked
             </Text>
           </View>
-          {stakingInfo?.monthlyRewardEstimate ? (
-            <Text style={styles.stakingRewardProjection}>
-              Est. 30-day reward: +{stakingInfo.monthlyRewardEstimate.toFixed(2)} SIG
-            </Text>
-          ) : null}
           {stakingInfo?.cooldownActive && (
             <View style={styles.cooldownBanner}>
               <Ionicons name="time-outline" size={14} color={Colors.warning} />
@@ -973,20 +1102,67 @@ export default function WalletScreen() {
           <View style={styles.stakingActions}>
             <Pressable
               style={styles.stakingActionBtn}
-              onPress={() => { setStakeInitialMode("stake"); setShowStakeModal(true); }}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setStakeInitialMode("stake"); setShowStakeModal(true); }}
               testID="stake-more-button"
             >
-              <Ionicons name="lock-closed" size={16} color={Colors.primary} />
-              <Text style={[styles.stakingActionText, { color: Colors.primary }]}>Stake More</Text>
+              <LinearGradient colors={["rgba(0,255,255,0.12)", "rgba(0,255,255,0.04)"]} style={styles.actionBtnGradient}>
+                <Ionicons name="lock-closed" size={16} color={Colors.primary} />
+                <Text style={[styles.stakingActionText, { color: Colors.primary }]}>Stake</Text>
+              </LinearGradient>
             </Pressable>
             <Pressable
               style={styles.stakingActionBtn}
-              onPress={() => { setStakeInitialMode("unstake"); setShowStakeModal(true); }}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setStakeInitialMode("unstake"); setShowStakeModal(true); }}
               testID="unstake-button"
             >
-              <Ionicons name="lock-open" size={16} color={Colors.secondary} />
-              <Text style={[styles.stakingActionText, { color: Colors.secondary }]}>Unstake</Text>
+              <LinearGradient colors={["rgba(147,51,234,0.12)", "rgba(147,51,234,0.04)"]} style={styles.actionBtnGradient}>
+                <Ionicons name="lock-open" size={16} color={Colors.secondary} />
+                <Text style={[styles.stakingActionText, { color: Colors.secondary }]}>Unstake</Text>
+              </LinearGradient>
             </Pressable>
+            {rewardsEarned > 0 && (
+              <Pressable
+                style={styles.stakingActionBtn}
+                onPress={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  claimRewards.mutate(undefined, {
+                    onSuccess: (data) => Alert.alert("Rewards Claimed", data.message),
+                    onError: () => Alert.alert("Error", "Failed to claim rewards"),
+                  });
+                }}
+                testID="claim-rewards-button"
+              >
+                <LinearGradient colors={["rgba(16,185,129,0.12)", "rgba(16,185,129,0.04)"]} style={styles.actionBtnGradient}>
+                  <Ionicons name="gift" size={16} color={Colors.success} />
+                  <Text style={[styles.stakingActionText, { color: Colors.success }]}>Claim</Text>
+                </LinearGradient>
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.liquidStakingSection}>
+            <Text style={styles.liquidSectionLabel}>LIQUID STAKING</Text>
+            <View style={styles.stakingActions}>
+              <Pressable
+                style={styles.stakingActionBtn}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setLiquidMode("mint"); setShowLiquidModal(true); }}
+                testID="liquid-mint-button"
+              >
+                <LinearGradient colors={["rgba(0,255,255,0.12)", "rgba(147,51,234,0.08)"]} style={styles.actionBtnGradient}>
+                  <Ionicons name="flash" size={16} color={Colors.primary} />
+                  <Text style={[styles.stakingActionText, { color: Colors.primary }]}>Mint stSIG</Text>
+                </LinearGradient>
+              </Pressable>
+              <Pressable
+                style={styles.stakingActionBtn}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setLiquidMode("redeem"); setShowLiquidModal(true); }}
+                testID="liquid-redeem-button"
+              >
+                <LinearGradient colors={["rgba(245,158,11,0.12)", "rgba(245,158,11,0.04)"]} style={styles.actionBtnGradient}>
+                  <Ionicons name="swap-horizontal" size={16} color="#f59e0b" />
+                  <Text style={[styles.stakingActionText, { color: "#f59e0b" }]}>Redeem SIG</Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
           </View>
         </GlassCard>
 
@@ -1205,6 +1381,55 @@ export default function WalletScreen() {
       <ReceiveModal visible={showReceiveModal} onClose={() => setShowReceiveModal(false)} />
       <SwapModal visible={showSwapModal} onClose={() => setShowSwapModal(false)} />
       <StakeModal visible={showStakeModal} onClose={() => setShowStakeModal(false)} initialMode={stakeInitialMode} />
+      <BottomSheetModal visible={showLiquidModal} onClose={() => setShowLiquidModal(false)} title={liquidMode === "mint" ? "Mint stSIG" : "Redeem SIG"}>
+        <View style={styles.liquidModalContent}>
+          <View style={styles.liquidModeRow}>
+            <Pressable
+              style={[styles.liquidModeTab, liquidMode === "mint" && styles.liquidModeTabActive]}
+              onPress={() => { setLiquidMode("mint"); setLiquidAmount(""); }}
+              testID="liquid-mode-mint"
+            >
+              <Text style={[styles.liquidModeTabText, liquidMode === "mint" && styles.liquidModeTabTextActive]}>Mint stSIG</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.liquidModeTab, liquidMode === "redeem" && styles.liquidModeTabActive]}
+              onPress={() => { setLiquidMode("redeem"); setLiquidAmount(""); }}
+              testID="liquid-mode-redeem"
+            >
+              <Text style={[styles.liquidModeTabText, liquidMode === "redeem" && styles.liquidModeTabTextActive]}>Redeem SIG</Text>
+            </Pressable>
+          </View>
+          <View style={styles.liquidRateRow}>
+            <Ionicons name="swap-horizontal" size={14} color={Colors.textTertiary} />
+            <Text style={styles.liquidRateText}>1 SIG = 1 stSIG (1:1 exchange rate)</Text>
+          </View>
+          <TextInput
+            style={styles.stakeInput}
+            value={liquidAmount}
+            onChangeText={setLiquidAmount}
+            keyboardType="numeric"
+            placeholder={liquidMode === "mint" ? "SIG amount to convert" : "stSIG amount to redeem"}
+            placeholderTextColor={Colors.textMuted}
+            testID="liquid-amount-input"
+          />
+          {parseFloat(liquidAmount) > 0 && (
+            <View style={styles.liquidPreviewRow}>
+              <Text style={styles.liquidPreviewLabel}>You will receive:</Text>
+              <Text style={styles.liquidPreviewValue}>{parseFloat(liquidAmount).toLocaleString()} {liquidMode === "mint" ? "stSIG" : "SIG"}</Text>
+            </View>
+          )}
+          <Pressable onPress={handleLiquidConfirm} testID="liquid-confirm-button">
+            <LinearGradient
+              colors={[Colors.primary, Colors.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.confirmBtn}
+            >
+              <Text style={styles.confirmBtnText}>{liquidMode === "mint" ? "Mint stSIG" : "Redeem SIG"}</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      </BottomSheetModal>
       <ConnectWalletModal
         visible={showWalletModal}
         onClose={() => setShowWalletModal(false)}
@@ -1471,50 +1696,54 @@ const styles = StyleSheet.create({
   },
   stakingStats: {
     flexDirection: "row" as const,
-    marginBottom: 12,
+    marginBottom: 14,
+    paddingVertical: 4,
   },
   stakingStat: {
     flex: 1,
     alignItems: "center" as const,
-    gap: 2,
+    gap: 3,
   },
   stakingStatLabel: {
-    fontSize: 11,
+    fontSize: 9,
     color: Colors.textTertiary,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
   },
   stakingStatValue: {
-    fontSize: 15,
+    fontSize: 20,
     color: Colors.textPrimary,
     fontFamily: "Inter_700Bold",
     fontWeight: "700" as const,
+    letterSpacing: -0.3,
   },
   stakingStatDivider: {
     width: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: "rgba(255,255,255,0.06)",
     alignSelf: "stretch" as const,
-    marginHorizontal: 8,
+    marginHorizontal: 12,
   },
   stakingProgressContainer: {
-    gap: 4,
+    gap: 6,
     marginBottom: 8,
   },
   stakingProgressBg: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.06)",
     overflow: "hidden" as const,
   },
   stakingProgressFill: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#f59e0b",
   },
   stakingProgressLabel: {
     fontSize: 10,
     color: Colors.textTertiary,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Inter_500Medium",
     textAlign: "right" as const,
+    letterSpacing: 0.2,
   },
   stakingRewardProjection: {
     fontSize: 12,
@@ -1525,26 +1754,101 @@ const styles = StyleSheet.create({
   },
   stakingActions: {
     flexDirection: "row" as const,
-    gap: 12,
+    gap: 10,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: 10,
+    borderTopColor: "rgba(255,255,255,0.06)",
+    paddingTop: 14,
+    marginTop: 4,
   },
   stakingActionBtn: {
     flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderRadius: 12,
+    overflow: "hidden" as const,
   },
   stakingActionText: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.2,
+  },
+  liquidStakingSection: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.06)",
+    paddingTop: 14,
+    marginTop: 4,
+  },
+  liquidSectionLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.textTertiary,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1.2,
+    marginBottom: 10,
+  },
+  liquidModalContent: {
+    gap: 16,
+  },
+  liquidModeRow: {
+    flexDirection: "row" as const,
+    gap: 8,
+  },
+  liquidModeTab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+    alignItems: "center" as const,
+  },
+  liquidModeTabActive: {
+    backgroundColor: "rgba(0,255,255,0.08)",
+    borderColor: "rgba(0,255,255,0.2)",
+  },
+  liquidModeTabText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: Colors.textTertiary,
+  },
+  liquidModeTabTextActive: {
+    color: Colors.primary,
+  },
+  liquidRateRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  liquidRateText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textSecondary,
+  },
+  liquidPreviewRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.1)",
+  },
+  liquidPreviewLabel: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textSecondary,
+  },
+  liquidPreviewValue: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    color: Colors.primary,
   },
   tiersRow: {
     gap: 12,
@@ -1786,15 +2090,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   modalInput: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
     color: Colors.textPrimary,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.3,
   },
   assetPicker: {
     flexDirection: "row" as const,
@@ -1803,20 +2108,21 @@ const styles = StyleSheet.create({
   },
   assetChip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingVertical: 9,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.04)",
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: "rgba(255,255,255,0.08)",
   },
   assetChipActive: {
     backgroundColor: "rgba(0,255,255,0.1)",
-    borderColor: Colors.primary,
+    borderColor: "rgba(0,255,255,0.3)",
   },
   assetChipText: {
     fontSize: 13,
     color: Colors.textTertiary,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.3,
   },
   assetChipTextActive: {
     color: Colors.primary,
@@ -1829,9 +2135,9 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 20,
-    backgroundColor: "rgba(0,255,255,0.05)",
-    borderWidth: 1,
-    borderColor: "rgba(0,255,255,0.15)",
+    backgroundColor: "rgba(0,255,255,0.04)",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,255,255,0.12)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
     marginBottom: 8,
@@ -1875,35 +2181,40 @@ const styles = StyleSheet.create({
   },
   swapArrowContainer: {
     alignItems: "center" as const,
-    marginVertical: 4,
+    marginVertical: 6,
   },
   swapArrowButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,255,255,0.1)",
-    borderWidth: 1,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,255,255,0.08)",
+    borderWidth: 1.5,
     borderColor: "rgba(0,255,255,0.2)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   swapPreview: {
     alignItems: "center" as const,
-    gap: 4,
-    marginVertical: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    gap: 6,
+    marginVertical: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
   },
   swapRate: {
     fontSize: 13,
     color: Colors.textSecondary,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.2,
   },
   swapOutput: {
-    fontSize: 16,
+    fontSize: 18,
     color: Colors.success,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
   },
   stakeModeTabs: {
     flexDirection: "row" as const,
@@ -2034,5 +2345,239 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     fontFamily: "Inter_400Regular",
     marginTop: 2,
+  },
+  swapFeeText: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.2,
+  },
+  swapFeeAmount: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontFamily: "Inter_500Medium",
+  },
+  poolScroller: {
+    marginBottom: 12,
+  },
+  poolChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    marginRight: 8,
+    alignItems: "center" as const,
+    minWidth: 100,
+  },
+  poolChipActive: {
+    backgroundColor: "rgba(0,255,255,0.08)",
+    borderColor: "rgba(0,255,255,0.3)",
+  },
+  poolChipName: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_500Medium",
+    marginBottom: 2,
+  },
+  poolChipNameActive: {
+    color: Colors.primary,
+  },
+  poolChipApy: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+  },
+  poolChipApyActive: {
+    color: Colors.primary,
+  },
+  poolChipLock: {
+    fontSize: 9,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
+  },
+  boostText: {
+    fontSize: 10,
+    color: Colors.secondary,
+    fontFamily: "Inter_400Regular",
+    marginBottom: 8,
+  },
+  poolCarousel: {
+    marginHorizontal: -16,
+    marginBottom: 16,
+  },
+  poolCarouselContent: {
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  poolCard: {
+    width: 150,
+  },
+  poolCardHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginBottom: 10,
+  },
+  poolTierDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  poolCardName: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.8,
+    flex: 1,
+  },
+  poolCardApy: {
+    fontSize: 28,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    letterSpacing: -0.5,
+  },
+  poolCardApyLabel: {
+    fontSize: 9,
+    color: Colors.textMuted,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 1.2,
+    marginBottom: 6,
+  },
+  poolBoostPill: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: "rgba(147,51,234,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(147,51,234,0.2)",
+    alignSelf: "flex-start" as const,
+    marginBottom: 6,
+  },
+  poolBoostText: {
+    fontSize: 10,
+    color: Colors.secondary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  poolCardDivider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    marginVertical: 8,
+  },
+  poolDetailRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 5,
+    marginBottom: 3,
+  },
+  poolDetailText: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+  },
+  stakingStatUnit: {
+    fontSize: 10,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  activeStakesContainer: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.06)",
+    paddingTop: 12,
+  },
+  activeStakesTitle: {
+    fontSize: 10,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  activeStakeRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.02)",
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.04)",
+  },
+  activeStakeLeft: {
+    flex: 1,
+  },
+  activeStakeNameRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginBottom: 3,
+  },
+  activeStakeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  activeStakePool: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  activeStakeAmount: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    paddingLeft: 12,
+  },
+  activeStakeRight: {
+    alignItems: "flex-end" as const,
+    gap: 4,
+  },
+  activeStakeRewards: {
+    fontSize: 13,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    color: Colors.success,
+  },
+  lockedBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: "rgba(245,158,11,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(245,158,11,0.15)",
+  },
+  lockedBadgeText: {
+    fontSize: 9,
+    color: Colors.warning,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+  },
+  actionBtnGradient: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
   },
 });

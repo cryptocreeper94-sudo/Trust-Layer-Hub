@@ -11,6 +11,8 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
@@ -87,11 +89,20 @@ export default function UserProfileScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.avatarSection}>
-            <View style={styles.avatarRing}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {getInitials(profile.username)}
-                </Text>
+            <View style={styles.avatarOuter}>
+              <LinearGradient
+                colors={[Colors.primary, Colors.secondary, Colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarGradientRing}
+              />
+              <View style={styles.avatarRing}>
+                <View style={styles.avatar}>
+                  <View style={styles.avatarGlow} />
+                  <Text style={styles.avatarText}>
+                    {getInitials(profile.username)}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -101,6 +112,12 @@ export default function UserProfileScreen() {
             />
 
             <View style={styles.tlidBadge} testID="user-profile-tlid">
+              <LinearGradient
+                colors={["rgba(0,255,255,0.12)", "rgba(147,51,234,0.08)"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
               <MaterialCommunityIcons
                 name="shield-check"
                 size={14}
@@ -212,23 +229,45 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     marginBottom: 28,
   },
-  avatarRing: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 2,
-    borderColor: Colors.primary,
+  avatarOuter: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     marginBottom: 16,
   },
-  avatar: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: "rgba(0,255,255,0.12)",
+  avatarGradientRing: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 52,
+    opacity: 0.6,
+  },
+  avatarRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.background,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "rgba(0,255,255,0.08)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  avatarGlow: {
+    position: "absolute" as const,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(0,255,255,0.06)",
   },
   avatarText: {
     fontSize: 32,
@@ -243,12 +282,14 @@ const styles = StyleSheet.create({
   tlidBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    backgroundColor: "rgba(0,255,255,0.08)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    overflow: "hidden" as const,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 20,
     gap: 6,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.15)",
   },
   tlidText: {
     fontSize: 12,
@@ -303,10 +344,12 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   tierIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -326,9 +369,11 @@ const styles = StyleSheet.create({
   referralBadge: {
     alignItems: "center" as const,
     backgroundColor: "rgba(0,255,255,0.06)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.12)",
   },
   referralCount: {
     fontSize: 20,

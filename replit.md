@@ -77,6 +77,32 @@ Three-tier tabbed news system on the home dashboard:
 - Frontend: `hooks/useLatestNews.ts` (useNationalNews, useLocalNews), `hooks/useWorldNews.ts`
 - API endpoints: `GET /api/news/national`, `GET /api/news/world`, `GET /api/news/local?zip=XXXXX`, `GET /api/news/zip-lookup?zip=XXXXX`
 
+## DeFi Suite (Aligned with dwtl.io)
+Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
+- **5 Staking Pools**: Liquid Flex (10% APY, no lock, min 100 SIG), Core Guard 45 (14%, 45d, 500), Core Guard 90 (18%, 90d, 1000), Core Guard 180 (24%, 180d, 2500), Founders Forge (30%, 365d, 5000)
+- **Boost APY**: +2% to +8% via Staking Quests
+- **Liquid Staking**: SIG → stSIG at 1:1 exchange rate; stSIG usable in other DeFi
+- **DEX Swap**: 0.3% fee (30 bps), constant product formula. Pairs: SIG/Shells, SIG/stSIG, SIG/USDC, SIG/USDT
+- **Tokenomics**: SIG = $0.01 (presale), Shells = $0.001, 1B total supply
+- **Allocation**: Treasury 50%, Staking Rewards 15%, Dev/Team 15%, Ecosystem Growth 10%, Community Rewards 10%
+- **Endpoints**: GET /api/staking/pools, GET /api/staking/stats, POST /api/staking/stake, POST /api/staking/unstake, POST /api/staking/claim, POST /api/liquid-staking/stake, POST /api/liquid-staking/unstake, POST /api/wallet/swap
+- **Backend**: `server/staking.ts`
+- **Hooks**: `hooks/useStaking.ts` (useStakingInfo, useStakingPools, useStakingStats, useStake, useUnstake, useClaimRewards, useLiquidStake, useLiquidUnstake)
+- **Liquid Staking UI**: Wallet tab has Mint stSIG / Redeem SIG buttons wired to `/api/liquid-staking/stake` and `/api/liquid-staking/unstake`
+- **Boost APY**: All reward calculations use `baseApy + boostApy` (total APY), not just baseApy
+
+## Welcome Modal
+- `components/WelcomeModal.tsx`: First-visit popup explaining the Trust Layer ecosystem
+- Shows 5 key features (wallet, bank/Stripe connections, affiliate program, 32-app ecosystem, trust stamps)
+- Network stats: 200K+ TPS, 400ms blocks, 32 apps
+- CTA: Create Account or Explore as Guest
+- Persisted via AsyncStorage (`hasSeenWelcome_v1`)
+- Rendered on home screen (`app/(tabs)/index.tsx`)
+
+## Hamburger Menu
+- `components/HamburgerMenu.tsx`: Slide-in navigation
+- Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
+
 ## Mock Data Audit (Completed)
 All fake/placeholder data has been removed from the app:
 - `constants/mock-data.ts` — stripped to only `SHELL_TIERS` (real pricing) and `FEATURED_APP_IDS`

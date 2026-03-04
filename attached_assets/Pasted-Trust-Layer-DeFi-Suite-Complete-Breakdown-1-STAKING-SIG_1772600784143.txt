@@ -1,0 +1,105 @@
+Trust Layer DeFi Suite — Complete Breakdown
+1. STAKING (SIG → stSIG)
+5 staking pools with tiered APY:
+
+Pool	Lock Period	Base APY	Boost APY	Min Stake
+Liquid Flex	0 days (flexible)	10%	+2%	100 SIG
+Core Guard 45	45 days	14%	+3%	500 SIG
+Core Guard 90	90 days	18%	+4%	1,000 SIG
+Core Guard 180	180 days	24%	+5%	2,500 SIG
+Founders Forge	365 days	30%	+8%	5,000 SIG
+Additional +1% APY boosts available through Staking Quests (Diamond Hands, Whale Watcher, etc.)
+
+Liquid Staking: Stake SIG, receive stSIG at 1:1 exchange rate. stSIG can be used in other DeFi activities while still earning rewards.
+
+Endpoints:
+
+GET /api/staking/pools — list pools
+GET /api/staking/stats — TVL and average APY
+POST /api/staking/stake — stake SIG into a pool
+POST /api/staking/unstake — withdraw (respects lock periods)
+POST /api/staking/claim — claim accumulated rewards
+POST /api/liquid-staking/stake — mint stSIG
+POST /api/liquid-staking/unstake — burn stSIG to redeem SIG
+Backend: server/staking-engine.ts
+
+2. DEX / TOKEN SWAP
+Fee structure:
+
+Native DEX: 0.3% (30 bps) constant product formula
+Jupiter (Solana routing): 0.25% (25 bps)
+1inch (EVM routing): Dynamic based on gas + routing
+Supported pairs: SIG/USDC, SIG/USDT, SIG/wETH, SIG/wSOL
+
+Endpoints:
+
+POST /api/swap/execute — execute a swap
+Backend: Mock rate system in server/routes.ts, real routing via Jupiter (Solana) and 1inch (EVM)
+
+3. LIQUIDITY POOLS
+Constant product formula (AMM-style). Users add liquidity and receive LP tokens.
+
+Endpoint:
+
+POST /api/liquidity/add — add liquidity to a pool
+4. CROSS-CHAIN BRIDGE
+Mechanism: Lock & Mint / Burn & Release (custodial MVP)
+
+Supported chains:
+
+Chain	Network	Fee
+Ethereum	Sepolia	~0.001 ETH
+Solana	Devnet	~0.001 SOL
+Polygon	Amoy	~0.001 MATIC
+Arbitrum	Sepolia	~0.001 ETH
+Base	Sepolia	~0.001 ETH
+SIG locks on Trust Layer → wSIG mints on target chain (and vice versa)
+
+Backend: server/bridge-engine.ts
+
+5. NFT / AI NFT GENERATOR
+Prompt-based AI generation with style presets (Cyberpunk, Abstract, Pixel Art, etc.)
+Rarity tiers: Common, Rare, Epic, Legendary
+Minting fee: 50 SIG + ~0.1 SIG gas
+6. TESTNET FAUCET
+Distributes testnet SIG to users with cooldown period.
+
+Endpoint: POST /api/faucet/claim
+
+7. TOKEN LAUNCHPAD
+Create new tokens with configurable auto-liquidity and LP locking (30-365 days).
+
+Endpoint: POST /api/launchpad/create
+
+8. TRUST HUB CONNECTION
+Yes, this app is connected to Trust Hub. Here's the integration:
+
+SSO Token Exchange:
+
+POST /api/auth/exchange-token — Hub sends its session token, gets back a 1-hour ecosystem token
+Response: { ecosystemToken, expiresIn: 3600, userId, email, displayName }
+Trust Stamps on Staking:
+Every staking action (stake, unstake, claim) creates a trust stamp that feeds into the user's audit trail — the Hub can read these via:
+
+GET /api/trust-stamps/:userId
+GET /api/trust-stamps/my
+Hallmark Verification:
+
+GET /api/hallmark/:hallmarkId/verify — public verification
+Handoff docs:
+
+docs/TRUST-LAYER-TO-HUB-HANDOFF.md — our spec to Hub
+attached_assets/TRUST-LAYER-HANDOFF_*.md — Hub's spec to us
+9. TOKENOMICS REFERENCE
+SIG — Native asset, 1B total supply
+SIG price (presale): $0.01
+Shells — Pre-launch utility (1 Shell = $0.001, converts to SIG)
+Echoes — In-game only (1 Echo = $0.0001, 10 Echoes = 1 Shell)
+Allocation: Treasury 50%, Staking Rewards 15%, Dev/Team 15%, Ecosystem Growth 10%, Community Rewards 10%
+That's the complete DeFi suite. The staking system is fully connected to Trust Hub through SSO and trust stamps — every staking action gets stamped to the audit trail. The other agent can call any of those endpoints through the Hub's SSO token exchange flow.
+
+
+Scroll to latest
+
+Make, test, iterate…
+

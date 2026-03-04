@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
@@ -88,10 +89,18 @@ function LeaderboardItem({
       }}
       testID={`leaderboard-item-${rank}`}
     >
-      <View style={styles.rankBadge}>
+      {isTopThree && (
+        <LinearGradient
+          colors={[`${rankColor}15`, "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+      <View style={[styles.rankBadge, isTopThree && styles.rankBadgeTop]}>
         <Ionicons
           name={getRankIcon(rank)}
-          size={isTopThree ? 20 : 8}
+          size={isTopThree ? 22 : 8}
           color={rankColor}
         />
         {!isTopThree && (
@@ -101,15 +110,23 @@ function LeaderboardItem({
         )}
       </View>
 
-      <View style={[styles.avatar, isTopThree && { borderColor: rankColor, borderWidth: 2 }]}>
-        <Text style={styles.avatarText}>{getInitials(username)}</Text>
+      <View style={styles.avatarWrap}>
+        {isTopThree && (
+          <LinearGradient
+            colors={[rankColor, `${rankColor}40`]}
+            style={styles.avatarGradientRing}
+          />
+        )}
+        <View style={[styles.avatar, isTopThree && { borderColor: rankColor, borderWidth: 2 }]}>
+          <Text style={[styles.avatarText, isTopThree && { color: rankColor }]}>{getInitials(username)}</Text>
+        </View>
       </View>
 
       <View style={styles.userInfo}>
         <View style={styles.usernameRow}>
           <Text style={styles.username} numberOfLines={1}>{username}</Text>
           {tier && (
-            <View style={[styles.tierBadge, { borderColor: getTierColor(tier) }]}>
+            <View style={[styles.tierBadge, { borderColor: getTierColor(tier), backgroundColor: `${getTierColor(tier)}10` }]}>
               <Text style={[styles.tierText, { color: getTierColor(tier) }]}>
                 {tier}
               </Text>
@@ -120,7 +137,7 @@ function LeaderboardItem({
       </View>
 
       <View style={styles.scoreContainer}>
-        <Text style={styles.scoreValue}>{rightValue}</Text>
+        <Text style={[styles.scoreValue, isTopThree && { color: rankColor }]}>{rightValue}</Text>
         <Text style={styles.scoreLabel}>{rightLabel}</Text>
       </View>
     </Pressable>
@@ -300,16 +317,16 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.04)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
   },
   tabActive: {
-    backgroundColor: "rgba(0,255,255,0.08)",
-    borderColor: "rgba(0,255,255,0.2)",
+    backgroundColor: "rgba(0,255,255,0.1)",
+    borderColor: "rgba(0,255,255,0.25)",
   },
   tabLabel: {
     fontSize: 12,
@@ -329,13 +346,18 @@ const styles = StyleSheet.create({
   listItem: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderRadius: 14,
     gap: 12,
+    overflow: "hidden" as const,
+    borderWidth: 1,
+    borderColor: "transparent",
+    marginBottom: 4,
   },
   listItemHighlighted: {
-    backgroundColor: "rgba(255,255,255,0.02)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderColor: "rgba(255,255,255,0.06)",
   },
   listItemPressed: {
     backgroundColor: "rgba(0,255,255,0.04)",
@@ -345,16 +367,38 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
+  rankBadgeTop: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
   rankNumber: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
     marginTop: 2,
   },
+  avatarWrap: {
+    position: "relative" as const,
+    width: 44,
+    height: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  avatarGradientRing: {
+    position: "absolute" as const,
+    top: -1,
+    left: -1,
+    right: -1,
+    bottom: -1,
+    borderRadius: 23,
+    opacity: 0.5,
+  },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0,255,255,0.1)",
+    backgroundColor: "rgba(0,255,255,0.08)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -378,16 +422,17 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tierBadge: {
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   tierText: {
     fontSize: 9,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
     textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   memberSince: {
     fontSize: 11,

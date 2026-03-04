@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
@@ -28,41 +29,56 @@ function ConnectionBadge({ state }: { state: string }) {
   let color = Colors.textMuted;
   let label = "Offline";
   let iconName: "cloud-offline" | "cloud-done" | "sync" = "cloud-offline";
+  let bgColors: readonly [string, string] = ["rgba(255,255,255,0.04)", "rgba(255,255,255,0.02)"];
 
   if (state === "connected") {
     color = Colors.success;
     label = "Connected";
     iconName = "cloud-done";
+    bgColors = ["rgba(16,185,129,0.1)", "rgba(16,185,129,0.04)"];
   } else if (state === "connecting") {
     color = Colors.warning;
     label = "Connecting...";
     iconName = "sync";
+    bgColors = ["rgba(245,158,11,0.1)", "rgba(245,158,11,0.04)"];
   } else if (state === "reconnecting") {
     color = Colors.warning;
     label = "Reconnecting...";
     iconName = "sync";
+    bgColors = ["rgba(245,158,11,0.1)", "rgba(245,158,11,0.04)"];
   }
 
   return (
-    <View style={badgeStyles.container} testID="connection-badge">
-      <View style={[badgeStyles.dot, { backgroundColor: color }]} />
-      <Ionicons name={iconName} size={12} color={color} />
-      <Text style={[badgeStyles.text, { color }]}>{label}</Text>
+    <View style={badgeStyles.wrapper} testID="connection-badge">
+      <LinearGradient
+        colors={bgColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={badgeStyles.container}
+      >
+        <View style={[badgeStyles.dot, { backgroundColor: color }]} />
+        <Ionicons name={iconName} size={12} color={color} />
+        <Text style={[badgeStyles.text, { color }]}>{label}</Text>
+      </LinearGradient>
     </View>
   );
 }
 
 const badgeStyles = StyleSheet.create({
+  wrapper: {
+    alignSelf: "center" as const,
+    borderRadius: 14,
+    overflow: "hidden" as const,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.06)",
+  },
   container: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    alignSelf: "center" as const,
+    gap: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
   },
   dot: {
     width: 6,
@@ -71,7 +87,8 @@ const badgeStyles = StyleSheet.create({
   },
   text: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.3,
   },
 });
 
@@ -427,10 +444,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   channelIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "rgba(0,255,255,0.08)",
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.1)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -482,12 +501,20 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     gap: 6,
-    marginTop: 8,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "rgba(16,185,129,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(16,185,129,0.1)",
+    alignSelf: "center" as const,
   },
   encryptionText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.success,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.3,
   },
   msgHeader: {
     flexDirection: "row" as const,
@@ -547,17 +574,20 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   msgBubble: {
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 12,
     maxWidth: "100%" as any,
+    borderWidth: 1,
   },
   msgBubbleMe: {
-    backgroundColor: "rgba(0,255,255,0.12)",
+    backgroundColor: "rgba(0,255,255,0.1)",
     borderBottomRightRadius: 4,
+    borderColor: "rgba(0,255,255,0.15)",
   },
   msgBubbleOther: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderBottomLeftRadius: 4,
+    borderColor: "rgba(255,255,255,0.06)",
   },
   msgSender: {
     fontSize: 11,
@@ -596,21 +626,21 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.background,
+    borderTopColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(12,18,36,0.9)",
   },
   inputRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 8,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: "rgba(255,255,255,0.08)",
   },
   textInput: {
     flex: 1,
@@ -620,9 +650,9 @@ const styles = StyleSheet.create({
     minHeight: 36,
   },
   sendButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "rgba(0,255,255,0.1)",
     borderWidth: 1,
     borderColor: "rgba(0,255,255,0.2)",
