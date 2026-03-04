@@ -14,6 +14,7 @@ import { registerLeaderboardRoutes } from "./leaderboard";
 import { registerActivityFeedRoutes } from "./activity-feed";
 import { registerPublicProfileRoutes } from "./public-profiles";
 import { registerChatPersistenceRoutes } from "./chat-persistence";
+import { registerPulseRoutes } from "./pulse";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
@@ -30,6 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerActivityFeedRoutes(app);
   registerPublicProfileRoutes(app);
   registerChatPersistenceRoutes(app);
+  registerPulseRoutes(app);
 
   const httpServer = createServer(app);
 

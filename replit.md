@@ -99,6 +99,15 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - Persisted via AsyncStorage (`hasSeenWelcome_v1`)
 - Rendered on home screen (`app/(tabs)/index.tsx`)
 
+## Pulse Integration (Cross-App)
+- **Backend proxy**: `server/pulse.ts` fetches from `https://pulse.tlid.io/api/public/market-summary` and `/stats`
+- **60-second in-memory cache** with graceful fallback (serves cached data or empty state if Pulse is unavailable)
+- **Proxy endpoints**: `GET /api/pulse/summary`, `GET /api/pulse/stats`
+- **Frontend hook**: `hooks/usePulse.ts` (usePulseSummary, usePulseStats)
+- **Home widget**: "Market Pulse" glassmorphic card on home dashboard showing top 3 trading signals with direction, confidence bars, price, market sentiment, prediction accuracy badge, and total predictions count
+- **Deep link**: Tapping widget navigates to Pulse app detail (appId 13)
+- **Conditionally rendered**: Widget only shows when Pulse data is available
+
 ## Hamburger Menu
 - `components/HamburgerMenu.tsx`: Slide-in navigation
 - Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support

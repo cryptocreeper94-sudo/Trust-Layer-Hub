@@ -31,6 +31,8 @@ import { useActivityFeed } from "@/hooks/useActivityFeed";
 import { EmptyState } from "@/components/EmptyState";
 import { Carousel } from "@/components/Carousel";
 import { WelcomeModal } from "@/components/WelcomeModal";
+import { usePulseSummary } from "@/hooks/usePulse";
+import { LinearGradient } from "expo-linear-gradient";
 
 function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
@@ -234,6 +236,7 @@ export default function HomeScreen() {
   const topThree = leaderboardData?.topAffiliates?.slice(0, 3) || [];
   const { data: activityData } = useActivityFeed();
   const feedEvents = activityData?.events || [];
+  const { data: pulseData } = usePulseSummary();
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
   const contentWidth = isDesktop ? Math.min(width, 720) : width;
@@ -363,6 +366,91 @@ export default function HomeScreen() {
           <QuickAction icon="scan" label="Scan" onPress={() => {}} testID="home-quick-scan" />
           <QuickAction icon="git-compare" label="Bridge" onPress={() => {}} testID="home-quick-bridge" />
         </View>
+
+        {(pulseData?.available || pulseData?.topSignals?.length > 0) && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="pulse" size={18} color="#f59e0b" />
+              <GradientText text="Market Pulse" style={styles.sectionTitle} />
+            </View>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push({ pathname: "/app-detail", params: { appId: "13" } });
+              }}
+              testID="pulse-widget"
+            >
+              <GlassCard glow delay={150}>
+                <View style={styles.pulseHeader}>
+                  <View style={styles.pulseSentimentRow}>
+                    <View style={[
+                      styles.pulseSentimentDot,
+                      { backgroundColor: pulseData?.marketSentiment === "bullish" ? Colors.success : pulseData?.marketSentiment === "bearish" ? "#ef4444" : Colors.textTertiary },
+                    ]} />
+                    <Text style={[
+                      styles.pulseSentimentText,
+                      { color: pulseData?.marketSentiment === "bullish" ? Colors.success : pulseData?.marketSentiment === "bearish" ? "#ef4444" : Colors.textSecondary },
+                    ]}>
+                      {(pulseData?.marketSentiment || "neutral").toUpperCase()}
+                    </Text>
+                    {pulseData?.sentimentScore != null && (
+                      <Text style={styles.pulseSentimentScore}>{pulseData.sentimentScore}%</Text>
+                    )}
+                  </View>
+                  <View style={styles.pulseAccuracyBadge}>
+                    <Ionicons name="checkmark-circle" size={12} color={Colors.primary} />
+                    <Text style={styles.pulseAccuracyText}>{pulseData?.predictionAccuracy?.toFixed(1) || "0"}%</Text>
+                  </View>
+                </View>
+
+                {(pulseData?.topSignals || []).slice(0, 3).map((signal: { asset: string; direction: string; confidence: number; price: number; change24h: number; timeframe: string }, idx: number) => (
+                  <View key={idx} style={styles.pulseSignalRow}>
+                    <View style={styles.pulseSignalLeft}>
+                      <View style={[
+                        styles.pulseDirectionIcon,
+                        { backgroundColor: signal.direction === "bullish" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)" },
+                      ]}>
+                        <Ionicons
+                          name={signal.direction === "bullish" ? "trending-up" : "trending-down"}
+                          size={14}
+                          color={signal.direction === "bullish" ? Colors.success : "#ef4444"}
+                        />
+                      </View>
+                      <View>
+                        <Text style={styles.pulseAssetName}>{signal.asset}</Text>
+                        <Text style={styles.pulseTimeframe}>{signal.timeframe}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.pulseSignalRight}>
+                      <Text style={styles.pulsePrice}>${signal.price?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+                      <View style={styles.pulseConfidenceRow}>
+                        <View style={styles.pulseConfidenceBg}>
+                          <LinearGradient
+                            colors={signal.direction === "bullish" ? ["rgba(16,185,129,0.6)", "rgba(16,185,129,0.2)"] : ["rgba(239,68,68,0.6)", "rgba(239,68,68,0.2)"]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[styles.pulseConfidenceFill, { width: `${Math.min(signal.confidence, 100)}%` }]}
+                          />
+                        </View>
+                        <Text style={styles.pulseConfidenceText}>{signal.confidence}%</Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+
+                <View style={styles.pulseFooter}>
+                  <Text style={styles.pulseFooterText}>
+                    {(pulseData?.totalPredictions || 0).toLocaleString()} predictions tracked
+                  </Text>
+                  <View style={styles.pulseViewAll}>
+                    <Text style={styles.pulseViewAllText}>Full Analysis</Text>
+                    <Ionicons name="open-outline" size={12} color={Colors.primary} />
+                  </View>
+                </View>
+              </GlassCard>
+            </Pressable>
+          </>
+        )}
 
         <View style={styles.sectionHeader}>
           <GradientText text="News" style={styles.sectionTitle} />
@@ -1239,5 +1327,135 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+  },
+  pulseHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 12,
+  },
+  pulseSentimentRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  pulseSentimentDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  pulseSentimentText: {
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    letterSpacing: 1,
+  },
+  pulseSentimentScore: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.textTertiary,
+    marginLeft: 2,
+  },
+  pulseAccuracyBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.12)",
+  },
+  pulseAccuracyText: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.primary,
+  },
+  pulseSignalRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.04)",
+  },
+  pulseSignalLeft: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  pulseDirectionIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.04)",
+  },
+  pulseAssetName: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.textPrimary,
+  },
+  pulseTimeframe: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textTertiary,
+  },
+  pulseSignalRight: {
+    alignItems: "flex-end" as const,
+    gap: 4,
+  },
+  pulsePrice: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.textPrimary,
+  },
+  pulseConfidenceRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  pulseConfidenceBg: {
+    width: 50,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    overflow: "hidden" as const,
+  },
+  pulseConfidenceFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  pulseConfidenceText: {
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.textTertiary,
+  },
+  pulseFooter: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.04)",
+    marginTop: 4,
+  },
+  pulseFooterText: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textMuted,
+  },
+  pulseViewAll: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+  },
+  pulseViewAllText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: Colors.primary,
   },
 });
