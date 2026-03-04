@@ -31,15 +31,15 @@ import { Carousel } from "@/components/Carousel";
 function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.quickAction, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [styles.quickAction, pressed && { opacity: 0.7, transform: [{ scale: 0.95 }] }]}
       testID={testID}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
       }}
     >
       <View style={styles.quickActionIcon}>
-        <Ionicons name={icon as any} size={22} color={Colors.primary} />
+        <Ionicons name={icon as any} size={20} color={Colors.primary} />
       </View>
       <Text style={styles.quickActionLabel}>{label}</Text>
     </Pressable>
@@ -247,34 +247,40 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.greeting}>{greeting},</Text>
-            <Text style={styles.username}>{firstName}</Text>
+            <GradientText text={firstName} style={styles.username} />
           </View>
           <Pressable
-            style={styles.trustIdBadge}
+            style={({ pressed }) => [styles.trustIdBadge, pressed && { opacity: 0.7 }]}
             onPress={() => {
               if (!isAuthenticated) {
                 router.push("/login");
               }
             }}
           >
-            <Ionicons name="shield-checkmark" size={14} color={Colors.primary} />
+            <View style={styles.trustIdIconWrap}>
+              <Ionicons name="shield-checkmark" size={12} color={Colors.primary} />
+            </View>
             <Text style={styles.trustIdText}>
               {isAuthenticated ? trustLayerId : "Sign In"}
             </Text>
           </Pressable>
         </View>
 
-        <GlassCard glow>
+        <GlassCard glow delay={100}>
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Portfolio Value</Text>
+            <View style={styles.balanceLiveDot} />
           </View>
           <Text style={styles.balanceValue}>
             ${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </Text>
           <View style={styles.balanceRow}>
             <View style={styles.balanceItem}>
+              <View style={styles.balanceTokenIcon}>
+                <Ionicons name="diamond-outline" size={14} color={Colors.primary} />
+              </View>
               <Text style={styles.balanceItemLabel}>SIG</Text>
               <Text style={styles.balanceItemValue}>
                 {sigBalance.toLocaleString()}
@@ -282,6 +288,9 @@ export default function HomeScreen() {
             </View>
             <View style={styles.balanceDivider} />
             <View style={styles.balanceItem}>
+              <View style={styles.balanceTokenIcon}>
+                <Ionicons name="ellipse-outline" size={14} color={Colors.secondary} />
+              </View>
               <Text style={styles.balanceItemLabel}>Shells</Text>
               <Text style={styles.balanceItemValue}>
                 {shellBalance.toLocaleString()}
@@ -289,6 +298,9 @@ export default function HomeScreen() {
             </View>
             <View style={styles.balanceDivider} />
             <View style={styles.balanceItem}>
+              <View style={styles.balanceTokenIcon}>
+                <Ionicons name="lock-closed-outline" size={14} color={Colors.success} />
+              </View>
               <Text style={styles.balanceItemLabel}>stSIG</Text>
               <Text style={styles.balanceItemValue}>
                 {stSigBalance.toLocaleString()}
@@ -496,95 +508,134 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
-    alignItems: "center" as const,
-    marginBottom: 16,
+    alignItems: "flex-start" as const,
+    marginBottom: 20,
+  },
+  headerLeft: {
+    flex: 1,
   },
   greeting: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
     fontFamily: "Inter_400Regular",
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
+    marginBottom: 2,
   },
   username: {
-    fontSize: 24,
-    color: Colors.textPrimary,
-    fontFamily: "Inter_700Bold",
+    fontSize: 28,
     fontWeight: "700" as const,
+    fontFamily: "Inter_700Bold",
   },
   trustIdBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 4,
-    backgroundColor: "rgba(0,255,255,0.08)",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: 6,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderWidth: 1,
-    borderColor: "rgba(0,255,255,0.15)",
+    borderColor: "rgba(0,255,255,0.12)",
+    marginTop: 4,
+  },
+  trustIdIconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,255,255,0.12)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   trustIdText: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.primary,
     fontFamily: "Inter_500Medium",
+    letterSpacing: 0.3,
   },
   balanceHeader: {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
     alignItems: "center" as const,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   balanceLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.8,
+    textTransform: "uppercase" as const,
+  },
+  balanceLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.success,
   },
   balanceValue: {
-    fontSize: 36,
+    fontSize: 38,
     color: Colors.textPrimary,
     fontFamily: "Inter_700Bold",
     fontWeight: "700" as const,
-    marginBottom: 16,
+    marginBottom: 20,
+    letterSpacing: -1,
   },
   balanceRow: {
     flexDirection: "row" as const,
     justifyContent: "space-around" as const,
     alignItems: "center" as const,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginHorizontal: -4,
   },
   balanceItem: {
     alignItems: "center" as const,
     flex: 1,
+    gap: 2,
+  },
+  balanceTokenIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    marginBottom: 4,
   },
   balanceItemLabel: {
-    fontSize: 11,
-    color: Colors.textTertiary,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 2,
+    fontSize: 10,
+    color: Colors.textMuted,
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
   },
   balanceItemValue: {
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.textPrimary,
     fontFamily: "Inter_600SemiBold",
   },
   balanceDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: Colors.border,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
   quickActionsRow: {
     flexDirection: "row" as const,
     justifyContent: "space-around" as const,
-    marginVertical: 12,
+    marginVertical: 16,
   },
   quickAction: {
     alignItems: "center" as const,
-    gap: 6,
+    gap: 8,
   },
   quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "rgba(0,255,255,0.08)",
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,255,255,0.06)",
     borderWidth: 1,
-    borderColor: "rgba(0,255,255,0.12)",
+    borderColor: "rgba(0,255,255,0.1)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
@@ -597,15 +648,16 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
     alignItems: "center" as const,
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 20,
+    marginBottom: 10,
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700" as const,
     fontFamily: "Inter_700Bold",
     flex: 1,
+    letterSpacing: 0.2,
   },
   seeAll: {
     fontSize: 13,

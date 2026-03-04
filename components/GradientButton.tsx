@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from "react-native";
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator, View, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
@@ -31,57 +31,74 @@ export function GradientButton({
 
   const handlePress = () => {
     if (disabled || loading) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
 
   return (
-    <LinearGradient
-      colors={gradientColors as unknown as readonly [string, string, ...string[]]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={[styles.gradient, small && styles.gradientSmall, style, disabled && styles.disabled]}
-    >
-      <Pressable
-        onPress={handlePress}
-        disabled={disabled || loading}
-        style={({ pressed }) => [
-          styles.pressable,
-          small && styles.pressableSmall,
-          pressed && styles.pressed,
-        ]}
-        android_ripple={{ color: "rgba(255,255,255,0.1)" }}
-        testID={testID}
+    <View style={[styles.shadowWrap, disabled && styles.disabled, style]}>
+      <LinearGradient
+        colors={gradientColors as unknown as readonly [string, string, ...string[]]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.gradient, small && styles.gradientSmall]}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={[styles.text, small && styles.textSmall, textStyle]}>{title}</Text>
-        )}
-      </Pressable>
-    </LinearGradient>
+        <Pressable
+          onPress={handlePress}
+          disabled={disabled || loading}
+          style={({ pressed }) => [
+            styles.pressable,
+            small && styles.pressableSmall,
+            pressed && styles.pressed,
+          ]}
+          android_ripple={{ color: "rgba(255,255,255,0.1)" }}
+          testID={testID}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={[styles.text, small && styles.textSmall, textStyle]}>{title}</Text>
+          )}
+        </Pressable>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  shadowWrap: {
+    borderRadius: 14,
+    ...(Platform.OS === "web" ? {
+      shadowColor: "rgba(6,182,212,0.3)",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 12,
+    } : {
+      shadowColor: "#06b6d4",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 8,
+    }),
+  },
   gradient: {
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: "hidden" as const,
   },
   gradientSmall: {
-    borderRadius: 8,
+    borderRadius: 10,
   },
   pressable: {
-    paddingVertical: 14,
+    paddingVertical: 15,
     paddingHorizontal: 24,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    minHeight: 48,
+    minHeight: 50,
   },
   pressableSmall: {
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 16,
-    minHeight: 36,
+    minHeight: 38,
   },
   pressed: {
     opacity: 0.85,
@@ -91,6 +108,7 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     fontSize: 16,
     fontFamily: "Inter_600SemiBold",
+    letterSpacing: 0.3,
   },
   textSmall: {
     fontSize: 13,

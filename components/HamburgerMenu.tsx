@@ -10,10 +10,12 @@ import {
   Linking,
 } from "react-native";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
+import { GradientText } from "@/components/GradientText";
 import { useAuth } from "@/lib/auth-context";
 
 const MENU_WIDTH = 300;
@@ -126,13 +128,22 @@ export function HamburgerMenu({ visible, onClose }: HamburgerMenuProps) {
         <BlurView intensity={60} tint="dark" style={styles.blurContainer}>
           <View style={[styles.menuContent, { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) + 16 }]}>
             <View style={styles.menuHeader}>
-              <Text style={styles.menuTitle}>Trust Layer</Text>
-              <Pressable onPress={onClose} testID="hamburger-close">
-                <Ionicons name="close" size={24} color={Colors.textSecondary} />
+              <GradientText text="Trust Layer" style={styles.menuTitle} />
+              <Pressable
+                onPress={onClose}
+                style={styles.closeBtn}
+                testID="hamburger-close"
+              >
+                <Ionicons name="close" size={20} color={Colors.textSecondary} />
               </Pressable>
             </View>
 
-            <View style={styles.divider} />
+            <LinearGradient
+              colors={["rgba(0,255,255,0.15)", "rgba(147,51,234,0.1)", "transparent"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.divider}
+            />
 
             {visibleItems.map((item, index) => (
               <Pressable
@@ -196,16 +207,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between" as const,
     marginBottom: 8,
   },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
   menuTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: "Inter_700Bold",
-    color: Colors.primary,
     letterSpacing: 0.5,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: 12,
+    marginVertical: 14,
   },
   menuItem: {
     flexDirection: "row" as const,
