@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from "express";
 
-const PULSE_BASE = "https://pulse.tlid.io/api/public";
+const PULSE_BASE = "https://darkwavepulse.com/api/public";
 const CACHE_TTL = 60000;
 
 interface CacheEntry {
