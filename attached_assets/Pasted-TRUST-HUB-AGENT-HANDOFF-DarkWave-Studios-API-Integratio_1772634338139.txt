@@ -1,0 +1,68 @@
+TRUST HUB AGENT HANDOFF — DarkWave Studios API Integration
+
+From: DarkWave Studios (darkwavestudios.io)
+To: Trust Layer Hub (trusthub.tlid.io)
+Date: March 4, 2026
+
+Status: All 4 public API endpoints are LIVE and ready for consumption.
+
+Endpoints Available:
+
+GET /api/ecosystem/catalog — Canonical 33-app ecosystem directory
+
+Returns: { success, totalApps: 33, totalLOC: "1,715,456", catalog: [...], generatedAt }
+Each app: { id, name, url, category, loc, pages, status }
+All URLs are canonical production domains (TLID.io subdomains where applicable)
+GET /api/ecosystem/stats — Ecosystem-wide aggregate statistics
+
+Returns registered app count, active/verified counts
+GET /api/announcements — Platform announcements
+
+Returns: { success, announcements: [{ id, title, body, type, priority, createdAt }] }
+Types: release, infrastructure, milestone
+GET /api/developer/docs — Developer documentation index
+
+Returns: { success, documentation: { overview, baseUrl, endpoints: [...], trustLayer: { sso, hallmarks, genesisHallmark, parentGenesis } } }
+Lists all 9 public API endpoints with methods, paths, descriptions, and auth requirements
+Canonical URL Registry (all 33 apps):
+
+App	URL
+Arbora	https://arbora.tlid.io
+Bomber	https://bomber.tlid.io
+Brew & Board Coffee	https://brewandboard.coffee
+Chronicles	https://yourlegacy.io
+DarkWave Academy	https://academy.tlid.io
+DarkWave Studio	https://studio.tlid.io
+GarageBot	https://garagebot.io
+Guardian Scanner	https://guardianscanner.tlid.io
+Guardian Screener	https://guardianscreener.tlid.io
+Guardian Shield	https://trustshield.tech
+Happy Eats	https://happyeats.app
+Lot Ops Pro	https://lotopspro.io
+Nashville Painting Professionals	https://nashpaintpros.io
+ORBIT Staffing OS	https://orbitstaffing.io
+Orby Commander	https://getorby.io
+PaintPros	https://paintpros.io
+Pulse	https://darkwavepulse.com
+Signal Chat	https://signalchat.tlid.io
+StrikeAgent	https://strikeagent.io
+The Arcade	https://darkwavegames.io
+THE VOID	https://intothevoid.app
+TL Driver Connect	https://tldriverconnect.com
+TLID.io	https://tlid.io
+TORQUE	https://torque.tlid.io
+TradeWorks AI	https://tradeworksai.io
+Trust Book	https://trustbook.tlid.io
+Trust Golf	https://trustgolf.app
+Trust Hub	https://trusthub.tlid.io
+Trust Layer	https://dwtl.io
+TrustHome	https://trusthome.tlid.io
+TrustVault	https://trustvault.tlid.io
+VedaSolus	https://vedasolus.io
+Verdara	https://verdara.tlid.io
+Hallmark Integration:
+
+DS genesis: DS-00000001 (available at /api/hallmark/genesis)
+Parent genesis: TH-00000001
+Verification: GET /api/hallmark/:id/verify
+No authentication required for any of these endpoints.
