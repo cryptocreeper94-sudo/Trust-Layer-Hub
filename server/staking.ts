@@ -32,16 +32,22 @@ const SWAP_PAIRS_FALLBACK: Record<string, Record<string, number>> = {
 };
 
 async function fetchDwtl(path: string, options?: RequestInit): Promise<any> {
-  const res = await fetch(DWTL_BASE + path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options?.headers || {}) },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`dwtl.io ${res.status}: ${text}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(DWTL_BASE + path, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...(options?.headers || {}) },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText);
+      throw new Error(`dwtl.io ${res.status}: ${text}`);
+    }
+    return await res.json();
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json();
 }
 
 async function fetchDwtlAuth(path: string, hubToken: string, body?: any): Promise<any> {
