@@ -100,7 +100,7 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - Rendered on home screen (`app/(tabs)/index.tsx`)
 
 ## Pulse Integration (Cross-App)
-- **Backend proxy**: `server/pulse.ts` fetches from `https://pulse.tlid.io/api/public/market-summary` and `/stats`
+- **Backend proxy**: `server/pulse.ts` fetches from `https://darkwavepulse.com/api/public/market-summary` and `/stats`
 - **60-second in-memory cache** with graceful fallback (serves cached data or empty state if Pulse is unavailable)
 - **Proxy endpoints**: `GET /api/pulse/summary`, `GET /api/pulse/stats`
 - **Frontend hook**: `hooks/usePulse.ts` (usePulseSummary, usePulseStats)
