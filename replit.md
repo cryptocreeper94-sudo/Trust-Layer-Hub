@@ -210,7 +210,14 @@ All screens try live Trust Layer API endpoints first and fall back to mock data:
 - Consistent EmptyState component across all screens
 - Haptic feedback on all interactive elements
 
-## Ecosystem Handoff
+## Ecosystem Interconnection
+All 33 apps (Hub + 32 ecosystem apps) are connected through the hallmark/affiliate blockchain hash format. Any identifier in the format `[PREFIX]-[8-DIGIT-PADDED]` (e.g., TH-00000001, TV-00000042, VO-00000003) is recognized as a Trust Layer ecosystem hallmark. The 2-character prefix identifies the originating app, and the 8-digit sequence identifies the specific record within that app.
+
+**Prefix Registry (all connected):**
+TH (Hub), TL (L1), TR (TrustHome), TV (TrustVault), TI (TLID.io), VO (THE VOID), SC (Signal Chat), DS (DarkWave Studio), GS (Guardian Shield), GN (Guardian Scanner), GR (Guardian Screener), TW (TradeWorks AI), SA (StrikeAgent), PU (Pulse), CH (Chronicles), AR (The Arcade), BO (Bomber), TG (Trust Golf), OR (ORBIT Staffing OS), OC (Orby Commander), GB (GarageBot), LO (Lot Ops Pro), TQ (TORQUE), DC (TL Driver Connect), VS (VedaSolus), VD (Verdara), AB (Arbora), PP (PaintPros), NP (Nashville Painting Professionals), TB (Trust Book), DA (DarkWave Academy), HE (Happy Eats), BB (Brew & Board Coffee)
+
+Every app's genesis hallmark (`[PREFIX]-00000001`) references `parentGenesis: "TH-00000001"` to maintain the provenance chain back to the Hub. The `uniqueHash` affiliate ID is universal across all apps — one ID, one referral link format, ecosystem-wide commission tracking.
+
 See `HALLMARK_AFFILIATE_HANDOFF.md` for the complete cross-app specification covering:
 - Hallmark system (prefixes, genesis marks, hashing, trust stamps, verification)
 - Affiliate program (uniqueHash, commission tiers, referral tracking, payout rules)
