@@ -14,6 +14,8 @@ interface GlassCardProps {
 }
 
 export function GlassCard({ children, glow = false, style, innerStyle, animate = true, delay = 0 }: GlassCardProps) {
+  const hasFlex = style && (style as any).flex;
+
   const content = (
     <View style={[styles.wrapper, style]}>
       {glow && (
@@ -24,8 +26,8 @@ export function GlassCard({ children, glow = false, style, innerStyle, animate =
           style={styles.glowBorder}
         />
       )}
-      <BlurView intensity={40} tint="dark" style={styles.card}>
-        <View style={[styles.cardInner, innerStyle]}>
+      <BlurView intensity={40} tint="dark" style={[styles.card, hasFlex && { flex: 1 }]}>
+        <View style={[styles.cardInner, hasFlex && { flex: 1 }, innerStyle]}>
           {children}
         </View>
       </BlurView>

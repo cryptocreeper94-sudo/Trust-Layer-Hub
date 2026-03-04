@@ -26,6 +26,7 @@ import { useWorldNews } from "@/hooks/useWorldNews";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useActivityFeed } from "@/hooks/useActivityFeed";
 import { EmptyState } from "@/components/EmptyState";
+import { Carousel } from "@/components/Carousel";
 
 function QuickAction({ icon, label, onPress, testID }: { icon: string; label: string; onPress: () => void; testID?: string }) {
   return (
@@ -54,7 +55,7 @@ function NewsCard({ item, cardWidth }: { item: typeof MOCK_NEWS[0]; cardWidth?: 
 
   return (
     <View style={[styles.newsCardWrapper, cardWidth ? { width: cardWidth } : undefined]}>
-      <GlassCard>
+      <GlassCard style={{ flex: 1 }} animate={false}>
         {item.image && (
           <View style={styles.newsImageContainer}>
             <Image source={item.image} style={styles.newsImage} resizeMode="cover" />
@@ -88,7 +89,7 @@ function WorldNewsCard({ item, cardWidth }: { item: { id: string; title: string;
 
   return (
     <View style={[styles.worldNewsCardWrapper, cardWidth ? { width: cardWidth } : undefined]}>
-      <GlassCard>
+      <GlassCard style={{ flex: 1 }} animate={false}>
         {item.imageUrl ? (
           <View style={styles.worldNewsImageContainer}>
             <Image source={{ uri: item.imageUrl }} style={styles.worldNewsImage} resizeMode="cover" />
@@ -118,7 +119,7 @@ function FeaturedAppCard({ app }: { app: typeof ECOSYSTEM_APPS[0] }) {
         router.push({ pathname: "/app-detail", params: { id: String(app.id) } });
       }}
     >
-      <GlassCard>
+      <GlassCard animate={false}>
         <View style={styles.featuredAppContent}>
           <View style={styles.featuredAppIcon}>
             <Ionicons name={app.icon as any} size={28} color={Colors.primary} />
@@ -306,33 +307,21 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <GradientText text="Latest News" style={styles.sectionTitle} />
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselContent}
-          snapToInterval={newsCardWidth + 12}
-          decelerationRate="fast"
-        >
+        <Carousel itemWidth={newsCardWidth} testID="news-carousel">
           {MOCK_NEWS.map((item) => (
             <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
           ))}
-        </ScrollView>
+        </Carousel>
 
         <View style={styles.sectionHeader}>
           <Ionicons name="globe" size={18} color={Colors.primary} />
           <GradientText text="World News" style={styles.sectionTitle} />
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselContent}
-          snapToInterval={worldNewsCardWidth + 12}
-          decelerationRate="fast"
-        >
+        <Carousel itemWidth={worldNewsCardWidth} testID="world-news-carousel">
           {(worldNews || []).map((item) => (
             <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
           ))}
-        </ScrollView>
+        </Carousel>
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
@@ -340,17 +329,11 @@ export default function HomeScreen() {
             <Text style={styles.seeAll}>See All</Text>
           </Pressable>
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carouselContent}
-          snapToInterval={168}
-          decelerationRate="fast"
-        >
+        <Carousel itemWidth={156} testID="featured-apps-carousel">
           {featuredApps.map((app) => (
             <FeaturedAppCard key={app.id} app={app} />
           ))}
-        </ScrollView>
+        </Carousel>
 
         <View style={styles.sectionHeader}>
           <GradientText text="Recent Activity" style={styles.sectionTitle} />
@@ -629,6 +612,7 @@ const styles = StyleSheet.create({
   },
   newsCardWrapper: {
     width: 276,
+    minHeight: 240,
   },
   newsImageContainer: {
     height: 120,
@@ -672,6 +656,7 @@ const styles = StyleSheet.create({
   },
   worldNewsCardWrapper: {
     width: 296,
+    minHeight: 250,
   },
   worldNewsImageContainer: {
     height: 130,
@@ -725,7 +710,8 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   featuredAppWrapper: {
-    width: 152,
+    width: 156,
+    minHeight: 160,
   },
   featuredAppContent: {
     alignItems: "center" as const,
