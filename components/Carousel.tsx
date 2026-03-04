@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -7,6 +7,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   LayoutChangeEvent,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -24,7 +25,13 @@ export function Carousel({ children, itemWidth, gap = 12, testID }: CarouselProp
   const [activeIndex, setActiveIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
   const itemCount = React.Children.count(children);
+
+  const sidePadding = containerWidth > 0 ? Math.max((containerWidth - itemWidth) / 2, 12) : 24;
   const snapInterval = itemWidth + gap;
+
+  const snapOffsets = useMemo(() => {
+    return Array.from({ length: itemCount }, (_, i) => i * snapInterval);
+  }, [itemCount, snapInterval]);
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
@@ -40,7 +47,9 @@ export function Carousel({ children, itemWidth, gap = 12, testID }: CarouselProp
     const clampedIndex = Math.max(0, Math.min(index, itemCount - 1));
     scrollRef.current?.scrollTo({ x: clampedIndex * snapInterval, animated: true });
     setActiveIndex(clampedIndex);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
   }, [snapInterval, itemCount]);
 
   const canGoLeft = activeIndex > 0;
@@ -48,43 +57,42 @@ export function Carousel({ children, itemWidth, gap = 12, testID }: CarouselProp
 
   return (
     <View onLayout={handleLayout} testID={testID}>
-      <View style={styles.carouselRow}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingLeft: sidePadding,
+          paddingRight: sidePadding,
+          gap,
+        }}
+        snapToOffsets={snapOffsets}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
+        {children}
+      </ScrollView>
+
+      <View style={styles.controlsRow}>
         <Pressable
           style={[styles.arrowBtn, !canGoLeft && styles.arrowDisabled]}
           onPress={() => canGoLeft && scrollTo(activeIndex - 1)}
           hitSlop={8}
           disabled={!canGoLeft}
+          testID={testID ? `${testID}-prev` : undefined}
         >
-          <Ionicons name="chevron-back" size={18} color={canGoLeft ? Colors.textPrimary : Colors.textMuted} />
+          <Ionicons name="chevron-back" size={16} color={canGoLeft ? Colors.textPrimary : Colors.textMuted} />
         </Pressable>
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.scrollContent, { gap }]}
-          snapToInterval={snapInterval}
-          decelerationRate="fast"
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
-          {children}
-        </ScrollView>
-        <Pressable
-          style={[styles.arrowBtn, !canGoRight && styles.arrowDisabled]}
-          onPress={() => canGoRight && scrollTo(activeIndex + 1)}
-          hitSlop={8}
-          disabled={!canGoRight}
-        >
-          <Ionicons name="chevron-forward" size={18} color={canGoRight ? Colors.textPrimary : Colors.textMuted} />
-        </Pressable>
-      </View>
-      {itemCount > 1 && (
+
         <View style={styles.dotsRow}>
-          {Array.from({ length: itemCount }).map((_, i) => (
+          {itemCount > 1 && Array.from({ length: itemCount }).map((_, i) => (
             <Pressable
               key={i}
               onPress={() => scrollTo(i)}
               hitSlop={6}
+              testID={testID ? `${testID}-dot-${i}` : undefined}
             >
               <View
                 style={[
@@ -95,37 +103,46 @@ export function Carousel({ children, itemWidth, gap = 12, testID }: CarouselProp
             </Pressable>
           ))}
         </View>
-      )}
+
+        <Pressable
+          style={[styles.arrowBtn, !canGoRight && styles.arrowDisabled]}
+          onPress={() => canGoRight && scrollTo(activeIndex + 1)}
+          hitSlop={8}
+          disabled={!canGoRight}
+          testID={testID ? `${testID}-next` : undefined}
+        >
+          <Ionicons name="chevron-forward" size={16} color={canGoRight ? Colors.textPrimary : Colors.textMuted} />
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  carouselRow: {
+  controlsRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 12,
+    marginTop: 10,
   },
   arrowBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
     backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   arrowDisabled: {
     opacity: 0.3,
   },
-  scrollContent: {
-    paddingRight: 4,
-    paddingLeft: 4,
-  },
   dotsRow: {
     flexDirection: "row" as const,
-    justifyContent: "center" as const,
     alignItems: "center" as const,
     gap: 6,
-    marginTop: 10,
   },
   dot: {
     width: 6,

@@ -110,10 +110,10 @@ function WorldNewsCard({ item, cardWidth }: { item: { id: string; title: string;
   );
 }
 
-function FeaturedAppCard({ app }: { app: typeof ECOSYSTEM_APPS[0] }) {
+function FeaturedAppCard({ app, cardWidth }: { app: typeof ECOSYSTEM_APPS[0]; cardWidth?: number }) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.featuredAppWrapper, pressed && { opacity: 0.8 }]}
+      style={({ pressed }) => [styles.featuredAppWrapper, cardWidth ? { width: cardWidth } : undefined, pressed && { opacity: 0.8 }]}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push({ pathname: "/app-detail", params: { id: String(app.id) } });
@@ -209,8 +209,8 @@ export default function HomeScreen() {
 
   const featuredApps = ECOSYSTEM_APPS.filter(a => FEATURED_APP_IDS.includes(a.id));
   const contentWidth = isDesktop ? Math.min(width, 720) : width;
-  const newsCardWidth = Math.round(contentWidth * 0.72);
-  const worldNewsCardWidth = Math.round(contentWidth * 0.76);
+  const newsCardWidth = Math.round(contentWidth * 0.82);
+  const worldNewsCardWidth = Math.round(contentWidth * 0.82);
 
   const firstName = user?.firstName || user?.displayName?.split(" ")[0] || user?.username || "Explorer";
   const trustLayerId = user?.trustLayerId || "guest.tlid";
@@ -307,21 +307,25 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <GradientText text="Latest News" style={styles.sectionTitle} />
         </View>
-        <Carousel itemWidth={newsCardWidth} testID="news-carousel">
-          {MOCK_NEWS.map((item) => (
-            <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
-          ))}
-        </Carousel>
+        <View style={styles.carouselBreakout}>
+          <Carousel itemWidth={newsCardWidth} testID="news-carousel">
+            {MOCK_NEWS.map((item) => (
+              <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
+            ))}
+          </Carousel>
+        </View>
 
         <View style={styles.sectionHeader}>
           <Ionicons name="globe" size={18} color={Colors.primary} />
           <GradientText text="World News" style={styles.sectionTitle} />
         </View>
-        <Carousel itemWidth={worldNewsCardWidth} testID="world-news-carousel">
-          {(worldNews || []).map((item) => (
-            <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
-          ))}
-        </Carousel>
+        <View style={styles.carouselBreakout}>
+          <Carousel itemWidth={worldNewsCardWidth} testID="world-news-carousel">
+            {(worldNews || []).map((item) => (
+              <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
+            ))}
+          </Carousel>
+        </View>
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
@@ -329,11 +333,13 @@ export default function HomeScreen() {
             <Text style={styles.seeAll}>See All</Text>
           </Pressable>
         </View>
-        <Carousel itemWidth={156} testID="featured-apps-carousel">
-          {featuredApps.map((app) => (
-            <FeaturedAppCard key={app.id} app={app} />
-          ))}
-        </Carousel>
+        <View style={styles.carouselBreakout}>
+          <Carousel itemWidth={Math.round(contentWidth * 0.42)} testID="featured-apps-carousel">
+            {featuredApps.map((app) => (
+              <FeaturedAppCard key={app.id} app={app} cardWidth={Math.round(contentWidth * 0.42)} />
+            ))}
+          </Carousel>
+        </View>
 
         <View style={styles.sectionHeader}>
           <GradientText text="Recent Activity" style={styles.sectionTitle} />
@@ -605,6 +611,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.primary,
     fontFamily: "Inter_500Medium",
+  },
+  carouselBreakout: {
+    marginHorizontal: -16,
   },
   carouselContent: {
     paddingRight: 16,
