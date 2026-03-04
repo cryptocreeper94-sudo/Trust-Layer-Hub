@@ -15,8 +15,10 @@ import { registerActivityFeedRoutes } from "./activity-feed";
 import { registerPublicProfileRoutes } from "./public-profiles";
 import { registerChatPersistenceRoutes } from "./chat-persistence";
 import { registerPulseRoutes } from "./pulse";
+import { registerBlockchainRoutes } from "./blockchain";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  registerBlockchainRoutes(app);
   registerAuthRoutes(app);
   registerAIRoutes(app);
   registerHallmarkRoutes(app);

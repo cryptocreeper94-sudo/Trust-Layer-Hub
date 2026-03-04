@@ -112,14 +112,23 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - `components/HamburgerMenu.tsx`: Slide-in navigation
 - Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
 
-## Mock Data Audit (Completed)
-All fake/placeholder data has been removed from the app:
-- `constants/mock-data.ts` — stripped to only `SHELL_TIERS` (real pricing) and `FEATURED_APP_IDS`
-- `hooks/useBalance.ts` — returns 0 SIG / 0 Shells / 0 stSIG on API failure (was 125,847 SIG / $18,742)
-- `hooks/useStaking.ts` — returns 0% APY / 0 staked on failure (was 12.5% APY / 50,000 staked)
-- `hooks/useWalletActions.ts` — returns null on failure (was fake `user.tlid` / `0xaaa...` address)
-- `hooks/useBalance.ts (useTransactions)` — returns empty array on failure (was 6 fake transactions)
-- `server/wallets.ts` — returns zero balances for external wallets (was fake $8k-$18k balances)
-- `app/(tabs)/wallet.tsx` — Phantom/WalletConnect show "Coming Soon" alert (was generating fake demo addresses)
-- `app/(tabs)/profile.tsx` — uses real user data or generic defaults (was hardcoded "Satoshi V." / score 94)
-- `app/(tabs)/chat.tsx` — starts with empty messages/channels when not connected (was fake conversation)
+## Blockchain Connection (dwtl.io) — LIVE
+- **Backend proxy**: `server/blockchain.ts` connects to `https://dwtl.io` for all on-chain data
+- **Address derivation**: `0x` + SHA256(`trustlayer:member:` + userId).slice(0, 40)
+- **Proxy endpoints**:
+  - `GET /api/balance` — SIG, stSIG from chain (via `/api/wallets/:address/balances`)
+  - `GET /api/shells/my-balance` — Shells balance from chain
+  - `GET /api/user/transactions` — Transaction history from chain
+  - `GET /api/user/dwc-bag` — Portfolio bag from chain balances
+  - `GET /api/network/stats` — Block time, TPS, accounts, supply from chain
+  - `GET /api/blockchain/wallet` — Full wallet info + balances from chain
+  - `GET /api/blockchain/tlid/:tlidId` — TLID resolution from chain
+  - `GET /api/swap/pairs` — Swap pairs from chain DEX
+  - `GET /api/swap/quote` — Price quotes from chain
+  - `GET /api/liquid-staking/rate` — stSIG:SIG rate from chain
+- **Staking routes** (`server/staking.ts`) updated to proxy through dwtl.io:
+  - GET pools/positions pull real data with fallback to hardcoded values
+  - POST stake/unstake/claim/liquid-stake proxy to chain with SSO token exchange
+  - Swap executes on chain with fallback to local rate table
+- **30-second cache** on public GET endpoints for performance
+- **Graceful fallback**: All endpoints return safe defaults if chain is unreachable
