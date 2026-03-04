@@ -65,3 +65,14 @@ Key architectural decisions include:
 - **QR Code Generation:**
     - **react-native-qrcode-svg**: For generating QR codes.
     - **react-native-svg**: Supporting SVG rendering for QR codes.
+- **News Feeds:**
+    - **fast-xml-parser**: RSS/XML parsing for real-time news feeds.
+
+## News Architecture
+Three-tier tabbed news system on the home dashboard:
+- **Local News**: Google News RSS search by city (resolved from user's zip code via Zippopotam.us API). Zip code stored in AsyncStorage.
+- **National News**: BBC Business, BBC Tech, NYT Business, NYT Tech, CryptoCompare. Interleaved by category for balanced coverage.
+- **World News**: NYT Homepage, BBC News, BBC Science, NYT World.
+- Backend: `server/news.ts` — RSS feed aggregation with 10-minute cache, deduplication, category mapping. No API keys required.
+- Frontend: `hooks/useLatestNews.ts` (useNationalNews, useLocalNews), `hooks/useWorldNews.ts`
+- API endpoints: `GET /api/news/national`, `GET /api/news/world`, `GET /api/news/local?zip=XXXXX`, `GET /api/news/zip-lookup?zip=XXXXX`

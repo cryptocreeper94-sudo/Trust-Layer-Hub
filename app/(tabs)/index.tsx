@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,9 @@ import {
   Platform,
   useWindowDimensions,
   Image,
+  TextInput,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -18,11 +20,12 @@ import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { CountdownTimer } from "@/components/CountdownTimer";
-import { MOCK_NEWS, FEATURED_APP_IDS } from "@/constants/mock-data";
+import { FEATURED_APP_IDS } from "@/constants/mock-data";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
 import { useAuth } from "@/lib/auth-context";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { useWorldNews } from "@/hooks/useWorldNews";
+import { useNationalNews, useLocalNews, type LatestNewsItem } from "@/hooks/useLatestNews";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useActivityFeed } from "@/hooks/useActivityFeed";
 import { EmptyState } from "@/components/EmptyState";
@@ -46,30 +49,46 @@ function QuickAction({ icon, label, onPress, testID }: { icon: string; label: st
   );
 }
 
-function NewsCard({ item, cardWidth }: { item: typeof MOCK_NEWS[0]; cardWidth?: number }) {
+function NewsCard({ item, cardWidth }: { item: LatestNewsItem; cardWidth?: number }) {
   const categoryColor =
-    item.category === "Milestone" ? Colors.primary :
-    item.category === "Launch" ? Colors.secondary :
-    item.category === "Presale" ? Colors.success :
+    item.category === "Blockchain" ? Colors.primary :
+    item.category === "DeFi" ? Colors.secondary :
+    item.category === "Bitcoin" ? "#f7931a" :
+    item.category === "Ethereum" ? "#627eea" :
+    item.category === "Markets" ? Colors.success :
+    item.category === "Regulation" ? Colors.warning :
+    item.category === "Finance" ? Colors.success :
+    item.category === "Technology" ? Colors.primary :
+    item.category === "Science" ? "#8b5cf6" :
+    item.category === "Local" ? "#f59e0b" :
+    item.category === "Politics" ? "#ef4444" :
+    item.category === "Entertainment" ? "#ec4899" :
+    item.category === "Sports" ? "#10b981" :
+    item.category === "Environment" ? "#22c55e" :
     Colors.textSecondary;
+
+  const hasImage = !!item.imageUrl && item.imageUrl.startsWith("http");
 
   return (
     <View style={[styles.newsCardWrapper, cardWidth ? { width: cardWidth } : undefined]}>
       <GlassCard style={{ flex: 1 }} animate={false}>
-        {item.image && (
+        {hasImage && (
           <View style={styles.newsImageContainer}>
-            <Image source={item.image} style={styles.newsImage} resizeMode="cover" />
+            <Image source={{ uri: item.imageUrl }} style={styles.newsImage} resizeMode="cover" />
             <View style={styles.newsImageOverlay} />
           </View>
         )}
         <View style={styles.newsCardBody}>
-          <View style={styles.newsCategoryBadge}>
-            <Text style={[styles.newsCategoryText, { color: categoryColor }]}>
-              {item.category}
-            </Text>
+          <View style={styles.newsCategoryRow}>
+            <View style={styles.newsCategoryBadge}>
+              <Text style={[styles.newsCategoryText, { color: categoryColor }]}>
+                {item.category}
+              </Text>
+            </View>
+            <Text style={styles.newsSource}>{item.source}</Text>
           </View>
           <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-          <Text style={styles.newsBody} numberOfLines={2}>{item.body}</Text>
+          <Text style={styles.newsBody} numberOfLines={2}>{item.summary}</Text>
         </View>
       </GlassCard>
     </View>
@@ -202,6 +221,14 @@ export default function HomeScreen() {
   const { data: dwcBag } = useDwcBag();
   const { data: transactions } = useTransactions();
   const { data: worldNews } = useWorldNews();
+  const { data: nationalNews } = useNationalNews();
+  const [newsTab, setNewsTab] = useState<"local" | "national" | "world">("national");
+  const [zipCode, setZipCode] = useState<string | null>(null);
+  const [zipInput, setZipInput] = useState("");
+  const [showZipInput, setShowZipInput] = useState(false);
+  const { data: localNewsData } = useLocalNews(zipCode);
+  const localNews = localNewsData?.news || [];
+  const localLocation = localNewsData?.location || null;
   const { data: leaderboardData } = useLeaderboard();
   const topThree = leaderboardData?.topAffiliates?.slice(0, 3) || [];
   const { data: activityData } = useActivityFeed();
@@ -228,6 +255,25 @@ export default function HomeScreen() {
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem("userZipCode").then((zip) => {
+      if (zip) {
+        setZipCode(zip);
+        setZipInput(zip);
+      }
+    });
+  }, []);
+
+  const handleSaveZip = useCallback(() => {
+    const cleaned = zipInput.trim();
+    if (/^\d{5}$/.test(cleaned)) {
+      setZipCode(cleaned);
+      setShowZipInput(false);
+      AsyncStorage.setItem("userZipCode", cleaned);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [zipInput]);
 
   return (
     <View style={styles.container}>
@@ -317,27 +363,133 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <GradientText text="Latest News" style={styles.sectionTitle} />
-        </View>
-        <View style={styles.carouselBreakout}>
-          <Carousel itemWidth={newsCardWidth} testID="news-carousel">
-            {MOCK_NEWS.map((item) => (
-              <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
-            ))}
-          </Carousel>
+          <GradientText text="News" style={styles.sectionTitle} />
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Ionicons name="globe" size={18} color={Colors.primary} />
-          <GradientText text="World News" style={styles.sectionTitle} />
+        <View style={styles.newsTabRow}>
+          {(["local", "national", "world"] as const).map((tab) => (
+            <Pressable
+              key={tab}
+              style={[styles.newsTabBtn, newsTab === tab && styles.newsTabActive]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setNewsTab(tab);
+              }}
+              testID={`news-tab-${tab}`}
+            >
+              <Ionicons
+                name={tab === "local" ? "location" : tab === "national" ? "flag" : "globe"}
+                size={14}
+                color={newsTab === tab ? Colors.primary : Colors.textTertiary}
+              />
+              <Text style={[styles.newsTabText, newsTab === tab && styles.newsTabTextActive]}>
+                {tab === "local" ? (localLocation ? localLocation.city : "Local") : tab === "national" ? "National" : "World"}
+              </Text>
+            </Pressable>
+          ))}
         </View>
-        <View style={styles.carouselBreakout}>
-          <Carousel itemWidth={worldNewsCardWidth} testID="world-news-carousel">
-            {(worldNews || []).map((item) => (
-              <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
-            ))}
-          </Carousel>
-        </View>
+
+        {newsTab === "local" && !zipCode && (
+          <GlassCard style={{ marginBottom: 12 }}>
+            <View style={styles.zipPrompt}>
+              <Ionicons name="location" size={24} color={Colors.primary} />
+              <Text style={styles.zipPromptTitle}>Set Your Location</Text>
+              <Text style={styles.zipPromptText}>Enter your zip code for local news</Text>
+              <View style={styles.zipInputRow}>
+                <TextInput
+                  style={styles.zipTextInput}
+                  placeholder="Enter zip code"
+                  placeholderTextColor={Colors.textTertiary}
+                  value={zipInput}
+                  onChangeText={setZipInput}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  testID="zip-code-input"
+                />
+                <Pressable
+                  style={[styles.zipSaveBtn, zipInput.length === 5 && styles.zipSaveBtnActive]}
+                  onPress={handleSaveZip}
+                  testID="zip-save-btn"
+                >
+                  <Text style={styles.zipSaveBtnText}>Save</Text>
+                </Pressable>
+              </View>
+            </View>
+          </GlassCard>
+        )}
+
+        {newsTab === "local" && zipCode && (
+          <View>
+            <View style={styles.localNewsHeader}>
+              <View style={styles.localLocationBadge}>
+                <Ionicons name="location" size={12} color={Colors.primary} />
+                <Text style={styles.localLocationText}>
+                  {localLocation ? `${localLocation.city}, ${localLocation.stateAbbr}` : zipCode}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  setShowZipInput(!showZipInput);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
+                testID="change-zip-btn"
+              >
+                <Text style={styles.changeZipText}>Change</Text>
+              </Pressable>
+            </View>
+            {showZipInput && (
+              <View style={styles.zipInputRow}>
+                <TextInput
+                  style={styles.zipTextInput}
+                  placeholder="New zip code"
+                  placeholderTextColor={Colors.textTertiary}
+                  value={zipInput}
+                  onChangeText={setZipInput}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                  testID="zip-code-change-input"
+                />
+                <Pressable
+                  style={[styles.zipSaveBtn, zipInput.length === 5 && styles.zipSaveBtnActive]}
+                  onPress={handleSaveZip}
+                  testID="zip-change-save-btn"
+                >
+                  <Text style={styles.zipSaveBtnText}>Save</Text>
+                </Pressable>
+              </View>
+            )}
+            <View style={styles.carouselBreakout}>
+              <Carousel itemWidth={newsCardWidth} testID="local-news-carousel">
+                {localNews.map((item) => (
+                  <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
+                ))}
+              </Carousel>
+            </View>
+            {localNews.length === 0 && (
+              <EmptyState icon="newspaper" title="Loading local news..." subtitle="Fetching news for your area" />
+            )}
+          </View>
+        )}
+
+        {newsTab === "national" && (
+          <View style={styles.carouselBreakout}>
+            <Carousel itemWidth={newsCardWidth} testID="national-news-carousel">
+              {(nationalNews || []).map((item) => (
+                <NewsCard key={item.id} item={item} cardWidth={newsCardWidth} />
+              ))}
+            </Carousel>
+          </View>
+        )}
+
+        {newsTab === "world" && (
+          <View style={styles.carouselBreakout}>
+            <Carousel itemWidth={worldNewsCardWidth} testID="world-news-carousel">
+              {(worldNews || []).map((item) => (
+                <WorldNewsCard key={item.id} item={item} cardWidth={worldNewsCardWidth} />
+              ))}
+            </Carousel>
+          </View>
+        )}
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
@@ -695,8 +847,18 @@ const styles = StyleSheet.create({
   newsCardBody: {
     gap: 4,
   },
-  newsCategoryBadge: {
+  newsCategoryRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
     marginBottom: 4,
+  },
+  newsCategoryBadge: {
+  },
+  newsSource: {
+    fontSize: 10,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
   },
   newsCategoryText: {
     fontSize: 11,
@@ -715,6 +877,111 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     lineHeight: 18,
+  },
+  newsTabRow: {
+    flexDirection: "row" as const,
+    gap: 8,
+    marginBottom: 12,
+  },
+  newsTabBtn: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  newsTabActive: {
+    backgroundColor: "rgba(0,224,255,0.12)",
+    borderColor: Colors.primary,
+  },
+  newsTabText: {
+    fontSize: 13,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_500Medium",
+  },
+  newsTabTextActive: {
+    color: Colors.primary,
+  },
+  zipPrompt: {
+    alignItems: "center" as const,
+    gap: 8,
+    paddingVertical: 8,
+  },
+  zipPromptTitle: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  zipPromptText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+  },
+  zipInputRow: {
+    flexDirection: "row" as const,
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  zipTextInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    color: Colors.textPrimary,
+    fontFamily: "Inter_400Regular",
+    fontSize: 15,
+    paddingHorizontal: 14,
+    textAlign: "center" as const,
+    letterSpacing: 2,
+  },
+  zipSaveBtn: {
+    paddingHorizontal: 18,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  zipSaveBtnActive: {
+    backgroundColor: Colors.primary,
+  },
+  zipSaveBtnText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  localNewsHeader: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginBottom: 10,
+  },
+  localLocationBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+    backgroundColor: "rgba(0,224,255,0.1)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  localLocationText: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontFamily: "Inter_500Medium",
+  },
+  changeZipText: {
+    fontSize: 12,
+    color: Colors.textTertiary,
+    fontFamily: "Inter_400Regular",
+    textDecorationLine: "underline" as const,
   },
   worldNewsCardWrapper: {
     width: 296,
