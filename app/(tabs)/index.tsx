@@ -248,7 +248,7 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>{greeting},</Text>
+            <Text style={styles.greeting} testID="home-greeting">{greeting},</Text>
             <GradientText text={firstName} style={styles.username} />
           </View>
           <Pressable
@@ -510,6 +510,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between" as const,
     alignItems: "flex-start" as const,
     marginBottom: 20,
+    paddingLeft: 44,
   },
   headerLeft: {
     flex: 1,

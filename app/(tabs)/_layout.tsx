@@ -4,6 +4,7 @@ import { Tabs } from "expo-router";
 import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, View, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
@@ -85,34 +86,13 @@ function ActiveTabIcon({ name, color, size, focused }: { name: string; color: st
   );
 }
 
-function ClassicTabLayout({ onMenuOpen }: { onMenuOpen: () => void }) {
+function ClassicTabLayout() {
   const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: "transparent",
-          borderBottomWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTransparent: true,
-        headerTintColor: Colors.textPrimary,
-        headerTitleStyle: {
-          fontFamily: "Inter_600SemiBold",
-          fontSize: 17,
-        },
-        headerLeft: () => (
-          <Pressable
-            onPress={onMenuOpen}
-            style={tabBarStyles.headerMenuBtn}
-            testID="hamburger-button"
-          >
-            <Ionicons name="menu" size={22} color={Colors.textPrimary} />
-          </Pressable>
-        ),
+        headerShown: false,
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.tabInactive,
         tabBarStyle: {
@@ -180,13 +160,17 @@ function ClassicTabLayout({ onMenuOpen }: { onMenuOpen: () => void }) {
 }
 
 function FloatingMenuButton({ onPress }: { onPress: () => void }) {
+  const insets = useSafeAreaInsets();
+  const webTopInset = Platform.OS === "web" ? 67 : 0;
+  const topPos = insets.top + webTopInset + 10;
+
   return (
     <Pressable
       onPress={onPress}
-      style={tabBarStyles.floatingMenuBtn}
+      style={[tabBarStyles.floatingMenuBtn, { top: topPos }]}
       testID="hamburger-button"
     >
-      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill}>
+      <BlurView intensity={40} tint="dark" style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}>
         <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(12,18,36,0.6)" }]} />
       </BlurView>
       <Ionicons name="menu" size={22} color={Colors.textPrimary} />
@@ -209,7 +193,8 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ClassicTabLayout onMenuOpen={() => setMenuVisible(true)} />
+      <ClassicTabLayout />
+      <FloatingMenuButton onPress={() => setMenuVisible(true)} />
       <HamburgerMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </View>
   );
@@ -240,20 +225,8 @@ const tabBarStyles = StyleSheet.create({
     flex: 1,
     borderRadius: 1.5,
   },
-  headerMenuBtn: {
-    marginLeft: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
   floatingMenuBtn: {
     position: "absolute" as const,
-    top: 58,
     left: 16,
     zIndex: 100,
     width: 40,
