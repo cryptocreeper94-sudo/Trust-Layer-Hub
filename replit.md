@@ -12,7 +12,15 @@ I prefer a dark theme UI for all applications.
 Do not make changes to the `HALLMARK_AFFILIATE_HANDOFF.md` file.
 
 ## System Architecture
-The application is built using React Native 0.81 and Expo SDK 54, leveraging Expo Router for file-based routing and tab navigation. The UI adheres to a strict dark theme (`#0c1224` base with cyan/purple accents) and utilizes a distinctive "Liquid Glass" design language, featuring `GlassCard` components with `BlurView`, `LinearGradient` glows, and `FadeInDown` entry animations via `React Native Reanimated 3`. Core UI components are reusable, such as `EmptyState` for consistent empty content displays and `GradientText` for branded typography.
+The application is built using React Native 0.81 and Expo SDK 54, leveraging Expo Router for file-based routing and tab navigation. The UI adheres to a strict dark-only theme (`#0c1224` base with cyan/purple accents — NO light mode per spec) and utilizes a distinctive "Cyber-Glassmorphism" design language featuring:
+- **GlassCard** with `BlurView`, inner gradient overlay, and optional glow border (cyan-purple)
+- **BackgroundGlow** with 5 layered gradient orbs for atmospheric depth
+- **GradientText** for branded section headers and hero typography
+- **GradientButton** with shadow/elevation for premium CTA buttons
+- **Tab bar** with glassmorphic background, active cyan indicator line, and outline/fill icon toggle
+- **FadeInDown** spring animations via `React Native Reanimated 3` on card entries
+- **EmptyState** for consistent empty content displays
+- All interactive elements use `Inter` font family, pill-shaped badges, rounded containers, and uppercase labels with letter-spacing for a premium fintech aesthetic.
 
 The architecture emphasizes a strong separation of concerns:
 - **API Layer**: `lib/api.ts` manages all API interactions, including authentication tokens, GET/POST requests, and SSO URL construction.
