@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
-import { MOCK_BALANCE, MOCK_TRANSACTIONS } from "@/constants/mock-data";
 
 interface BalanceData {
   totalTokens: number;
@@ -59,12 +58,7 @@ export function useBalance() {
           presale: data.presaleTokens || 0,
         };
       } catch {
-        return {
-          sig: MOCK_BALANCE.sig,
-          stSig: MOCK_BALANCE.stSig,
-          liquid: MOCK_BALANCE.sig - MOCK_BALANCE.stSig,
-          presale: 0,
-        };
+        return { sig: 0, stSig: 0, liquid: 0, presale: 0 };
       }
     },
     staleTime: 30000,
@@ -79,7 +73,7 @@ export function useShellBalance() {
         const data = await apiGet<ShellBalance>("/api/shells/my-balance");
         return data.balance || 0;
       } catch {
-        return MOCK_BALANCE.shells;
+        return 0;
       }
     },
     staleTime: 30000,
@@ -94,10 +88,10 @@ export function useDwcBag() {
         return await apiGet<DwcBag>("/api/user/dwc-bag");
       } catch {
         return {
-          totalDwc: MOCK_BALANCE.sig,
-          currentValue: MOCK_BALANCE.portfolioValue,
-          launchProjectedValue: MOCK_BALANCE.portfolioValue * 2.5,
-          sources: { presale: 0, shells: MOCK_BALANCE.shells, airdrops: 0, earlyAdopterBonus: 0 },
+          totalDwc: 0,
+          currentValue: 0,
+          launchProjectedValue: 0,
+          sources: { presale: 0, shells: 0, airdrops: 0, earlyAdopterBonus: 0 },
         };
       }
     },
@@ -126,7 +120,7 @@ export function useTransactions() {
       try {
         const data = await apiGet<{ transactions: Transaction[] }>("/api/user/transactions");
         if (!data?.transactions || !Array.isArray(data.transactions)) {
-          return MOCK_TRANSACTIONS;
+          return [];
         }
         return data.transactions.map(tx => ({
           id: tx.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -138,7 +132,7 @@ export function useTransactions() {
           createdAt: tx.date || tx.createdAt || new Date().toISOString(),
         }));
       } catch {
-        return MOCK_TRANSACTIONS;
+        return [];
       }
     },
     staleTime: 30000,

@@ -15,19 +15,6 @@ interface StakingInfo {
   cooldownAmount: number;
 }
 
-const FALLBACK_STAKING: StakingInfo = {
-  apy: 12.5,
-  cooldownDays: 7,
-  totalStaked: 50000,
-  rewardsEarned: 1562.5,
-  monthlyRewardEstimate: 520.83,
-  yearlyRewardEstimate: 6250,
-  stakedRatio: 0.397,
-  cooldownActive: false,
-  cooldownRemaining: 0,
-  cooldownAmount: 0,
-};
-
 export function useStakingInfo() {
   return useQuery({
     queryKey: ["staking-info"],
@@ -35,7 +22,18 @@ export function useStakingInfo() {
       try {
         return await apiGet<StakingInfo>("/api/staking/info");
       } catch {
-        return FALLBACK_STAKING;
+        return {
+          apy: 0,
+          cooldownDays: 7,
+          totalStaked: 0,
+          rewardsEarned: 0,
+          monthlyRewardEstimate: 0,
+          yearlyRewardEstimate: 0,
+          stakedRatio: 0,
+          cooldownActive: false,
+          cooldownRemaining: 0,
+          cooldownAmount: 0,
+        };
       }
     },
     staleTime: 30000,

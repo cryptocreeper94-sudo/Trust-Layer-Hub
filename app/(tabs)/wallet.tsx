@@ -497,7 +497,7 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
   const unstakeMutation = useUnstake();
 
   const numAmount = parseFloat(amount) || 0;
-  const apy = stakingInfo?.apy || 12.5;
+  const apy = stakingInfo?.apy || 0;
   const monthlyReward = (numAmount * apy / 100 / 12);
   const yearlyReward = (numAmount * apy / 100);
 
@@ -761,26 +761,12 @@ export default function WalletScreen() {
 
   const handleConnectExternalWallet = (type: "walletconnect" | "phantom") => {
     setShowWalletModal(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
     if (type === "phantom") {
-      const demoAddress = "7xKX" + "a3b9" + Date.now().toString(36).slice(-8) + "PhNt";
-      connectWallet.mutate({
-        address: demoAddress,
-        chain: "solana",
-        walletType: "phantom",
-        label: "Phantom",
-      });
-      Alert.alert("Phantom Connected", "Demo Solana wallet connected. In production, this deeplinks to Phantom for approval.");
+      Alert.alert("Coming Soon", "Phantom wallet integration via Solana deep links is coming in a future update.");
     } else {
-      const demoAddress = "0x" + Date.now().toString(16).padStart(40, "a").slice(0, 40);
-      connectWallet.mutate({
-        address: demoAddress,
-        chain: "ethereum",
-        walletType: "walletconnect",
-        label: "WalletConnect",
-      });
-      Alert.alert("WalletConnect", "Demo Ethereum wallet connected. In production, this opens WalletConnect pairing.");
+      Alert.alert("Coming Soon", "WalletConnect integration for MetaMask, Trust Wallet, and Rainbow is coming in a future update.");
     }
   };
 
@@ -805,7 +791,7 @@ export default function WalletScreen() {
     { key: "crypto", label: "Crypto" },
   ];
 
-  const stakingApy = stakingInfo?.apy || 12.5;
+  const stakingApy = stakingInfo?.apy || 0;
   const totalStaked = stakingInfo?.totalStaked || stSigBalance;
   const rewardsEarned = stakingInfo?.rewardsEarned || 0;
   const stakedRatio = sigBalance + stSigBalance > 0 ? stSigBalance / (sigBalance + stSigBalance) : 0;

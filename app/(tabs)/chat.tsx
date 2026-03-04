@@ -21,7 +21,6 @@ import { GradientText } from "@/components/GradientText";
 import { EmptyState } from "@/components/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/lib/auth-context";
-import { MOCK_CHANNELS, MOCK_MESSAGES } from "@/constants/mock-data";
 
 type ViewMode = "channels" | "messages";
 
@@ -171,7 +170,7 @@ export default function ChatScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("channels");
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
-  const [localMessages, setLocalMessages] = useState(MOCK_MESSAGES);
+  const [localMessages, setLocalMessages] = useState<Array<{ id: string; sender: string; senderInitials: string; text: string; timestamp: string; isMe: boolean }>>([]);
 
   const isLiveChat = chat.isConnected;
   const displayMessages = isLiveChat ? chat.messages : localMessages;
@@ -236,7 +235,7 @@ export default function ChatScreen() {
         unread: 0,
         isPublic: true,
       }))
-    : MOCK_CHANNELS;
+    : [];
 
   const activeChannelData = channelsToShow.find(c => c.id === activeChannel);
 

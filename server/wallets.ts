@@ -4,39 +4,8 @@ import { externalWallets } from "./db/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticateToken } from "./auth";
 
-const DEMO_BALANCES: Record<string, { native: string; usd: string; tokens: Array<{ symbol: string; balance: string; usd: string }> }> = {
-  ethereum: {
-    native: "2.4531",
-    usd: "8,921.47",
-    tokens: [
-      { symbol: "USDC", balance: "1,250.00", usd: "1,250.00" },
-      { symbol: "LINK", balance: "45.2", usd: "678.00" },
-    ],
-  },
-  solana: {
-    native: "127.85",
-    usd: "18,412.60",
-    tokens: [
-      { symbol: "USDC", balance: "3,500.00", usd: "3,500.00" },
-      { symbol: "RAY", balance: "200.0", usd: "340.00" },
-    ],
-  },
-  polygon: {
-    native: "5,230.12",
-    usd: "3,138.07",
-    tokens: [
-      { symbol: "USDC", balance: "800.00", usd: "800.00" },
-    ],
-  },
-  bitcoin: {
-    native: "0.0842",
-    usd: "5,473.00",
-    tokens: [],
-  },
-};
-
-function getDemoBalance(chain: string) {
-  return DEMO_BALANCES[chain.toLowerCase()] || {
+function getWalletBalance(_chain: string) {
+  return {
     native: "0.00",
     usd: "0.00",
     tokens: [],
@@ -78,7 +47,7 @@ export function registerWalletRoutes(app: Express): void {
         })
         .returning();
 
-      const balances = getDemoBalance(chain);
+      const balances = getWalletBalance(chain);
 
       res.status(201).json({ wallet: { ...wallet, balances } });
     } catch (error: any) {
@@ -98,7 +67,7 @@ export function registerWalletRoutes(app: Express): void {
 
       const walletsWithBalances = wallets.map((w) => ({
         ...w,
-        balances: getDemoBalance(w.chain),
+        balances: getWalletBalance(w.chain),
       }));
 
       res.json({ wallets: walletsWithBalances });
@@ -155,7 +124,7 @@ export function registerWalletRoutes(app: Express): void {
         return res.status(404).json({ error: "Wallet not found" });
       }
 
-      const balances = getDemoBalance(wallet.chain);
+      const balances = getWalletBalance(wallet.chain);
 
       res.json({ wallet: { id: wallet.id, address: wallet.address, chain: wallet.chain }, balances });
     } catch (error: any) {

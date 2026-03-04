@@ -23,7 +23,6 @@ import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { useAuth } from "@/lib/auth-context";
 import { useMembership, useSubscriptionStatus } from "@/hooks/useMembership";
-import { MOCK_USER } from "@/constants/mock-data";
 import { useHallmarkTimeline } from "@/hooks/useHallmarkTimeline";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -105,13 +104,13 @@ export default function ProfileScreen() {
   const { data: timelineData } = useHallmarkTimeline();
   const timeline = timelineData?.timeline || [];
 
-  const displayName = user?.displayName || user?.username || MOCK_USER.displayName;
-  const username = user?.username || MOCK_USER.username;
-  const email = user?.email || MOCK_USER.email;
-  const trustLayerId = membership?.trustLayerId || user?.trustLayerId || MOCK_USER.trustLayerId;
+  const displayName = user?.displayName || user?.username || "Trust User";
+  const username = user?.username || "user";
+  const email = user?.email || "";
+  const trustLayerId = membership?.trustLayerId || user?.trustLayerId || "";
   const membershipStatus = membership?.membershipStatus || "active";
-  const voidTier = MOCK_USER.voidTier;
-  const guardianScore = MOCK_USER.guardianScore;
+  const voidTier = membership?.voidTier || "Explorer";
+  const guardianScore = membership?.guardianScore || 0;
   const avatarInitials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) || "TL";
 
   const scoreColor = guardianScore >= 90 ? Colors.success :

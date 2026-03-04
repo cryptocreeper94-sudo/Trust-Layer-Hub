@@ -25,7 +25,7 @@ The application is built using React Native 0.81 and Expo SDK 54, leveraging Exp
 The architecture emphasizes a strong separation of concerns:
 - **API Layer**: `lib/api.ts` manages all API interactions, including authentication tokens, GET/POST requests, and SSO URL construction.
 - **Authentication**: A dedicated `Auth Context` (`lib/auth-context.tsx`) handles user authentication flows (login, registration, logout, session management) and manages an `isNewRegistration` flag for onboarding.
-- **Data Management**: `TanStack Query v5` is used for server state management, augmented by `React Context` for authentication state and local component state. Custom hooks in the `hooks/` directory provide live API queries with integrated mock data fallbacks for development and resilience.
+- **Data Management**: `TanStack Query v5` is used for server state management, augmented by `React Context` for authentication state and local component state. Custom hooks in the `hooks/` directory provide live API queries with zero-value fallbacks on failure (no fake data).
 - **Navigation**: A five-tab navigation structure (Home, Explore, Wallet, Chat, Profile) is implemented, complemented by a slide-in hamburger menu for secondary navigation.
 - **Backend**: An Express server handles API routes for authentication, AI services, financial integrations (Plaid, WalletConnect, Phantom), multi-sig operations, news feeds, staking, affiliate programs, and chat persistence.
 - **Database**: PostgreSQL with Drizzle ORM is used for data persistence, managing a wide array of schemas including users, sessions, financial accounts, multi-sig vaults, chat data, and the unique Hallmark system.
@@ -36,7 +36,7 @@ Key architectural decisions include:
 - **Glassmorphism UI**: Consistent aesthetic across interactive elements.
 - **PWA support**: Ensures web accessibility and offline capabilities.
 - **Modular components**: Promotes reusability and maintainability.
-- **Live API with Mock Fallback**: Ensures functionality during development and provides resilience against API outages.
+- **Zero-value Fallbacks**: All hooks return zeros/empty arrays on API failure — never fake data. Users see their real balances or nothing.
 - **Single Sign-On (SSO)**: Facilitates seamless transitions between the Hub and 32 ecosystem applications.
 - **Cross-App Hashing**: The `[PREFIX]-[8-DIGIT-PADDED]` hallmark format and universal `uniqueHash` affiliate ID interconnect all 33 applications, forming a cohesive ecosystem.
 
@@ -46,8 +46,8 @@ Key architectural decisions include:
     - **Twilio**: For SMS 2FA codes and compliant SMS opt-in.
 - **Financial Services:**
     - **Plaid**: For linking bank accounts and accessing transaction data (sandbox mode).
-    - **WalletConnect**: For connecting Ethereum-based external crypto wallets.
-    - **Phantom**: For connecting Solana-based external crypto wallets.
+    - **WalletConnect**: Coming Soon — Ethereum-based external crypto wallet integration.
+    - **Phantom**: Coming Soon — Solana-based external crypto wallet deep link integration.
 - **AI & Voice:**
     - **OpenAI**: For AI agent chat streaming.
     - **ElevenLabs**: For text-to-speech (TTS) capabilities for the AI agent.
@@ -76,3 +76,15 @@ Three-tier tabbed news system on the home dashboard:
 - Backend: `server/news.ts` — RSS feed aggregation with 10-minute cache, deduplication, category mapping. No API keys required.
 - Frontend: `hooks/useLatestNews.ts` (useNationalNews, useLocalNews), `hooks/useWorldNews.ts`
 - API endpoints: `GET /api/news/national`, `GET /api/news/world`, `GET /api/news/local?zip=XXXXX`, `GET /api/news/zip-lookup?zip=XXXXX`
+
+## Mock Data Audit (Completed)
+All fake/placeholder data has been removed from the app:
+- `constants/mock-data.ts` — stripped to only `SHELL_TIERS` (real pricing) and `FEATURED_APP_IDS`
+- `hooks/useBalance.ts` — returns 0 SIG / 0 Shells / 0 stSIG on API failure (was 125,847 SIG / $18,742)
+- `hooks/useStaking.ts` — returns 0% APY / 0 staked on failure (was 12.5% APY / 50,000 staked)
+- `hooks/useWalletActions.ts` — returns null on failure (was fake `user.tlid` / `0xaaa...` address)
+- `hooks/useBalance.ts (useTransactions)` — returns empty array on failure (was 6 fake transactions)
+- `server/wallets.ts` — returns zero balances for external wallets (was fake $8k-$18k balances)
+- `app/(tabs)/wallet.tsx` — Phantom/WalletConnect show "Coming Soon" alert (was generating fake demo addresses)
+- `app/(tabs)/profile.tsx` — uses real user data or generic defaults (was hardcoded "Satoshi V." / score 94)
+- `app/(tabs)/chat.tsx` — starts with empty messages/channels when not connected (was fake conversation)

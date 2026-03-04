@@ -26,13 +26,6 @@ interface SwapResult {
   txHash: string;
 }
 
-const FALLBACK_RECEIVE: ReceiveInfo = {
-  tlidAddress: "user.tlid",
-  hexAddress: "0x" + "a".repeat(40),
-  chain: "Trust Layer",
-  supportedAssets: ["SIG", "Shells", "stSIG"],
-};
-
 export function useSendTokens() {
   return useMutation({
     mutationFn: async (params: { to: string; amount: number; asset: string }) => {
@@ -53,7 +46,7 @@ export function useReceiveInfo() {
       try {
         return await apiGet<ReceiveInfo>("/api/wallet/receive");
       } catch {
-        return FALLBACK_RECEIVE;
+        return null;
       }
     },
     staleTime: 300000,
