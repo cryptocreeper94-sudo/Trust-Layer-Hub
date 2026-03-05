@@ -8,6 +8,7 @@ import {
   Platform,
   useWindowDimensions,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -25,7 +26,7 @@ export default function PrivacyScreen() {
     <View style={styles.container}>
       <BackgroundGlow />
       <View style={[styles.header, { paddingTop: insets.top + webTopInset + 8 }]}>
-        <Pressable onPress={() => router.back()} style={styles.closeButton}>
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} style={styles.closeButton} hitSlop={8} accessibilityLabel="Close">
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </Pressable>
         <GradientText text="Privacy Policy" style={styles.headerTitle} />

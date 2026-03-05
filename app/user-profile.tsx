@@ -17,6 +17,7 @@ import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { usePublicProfile } from "@/hooks/usePublicProfile";
+import { EmptyState } from "@/components/EmptyState";
 import Colors from "@/constants/colors";
 
 const TIER_COLORS: Record<string, string> = {
@@ -73,12 +74,7 @@ export default function UserProfileScreen() {
         </View>
       ) : !profile ? (
         <View style={styles.loadingContainer}>
-          <Ionicons
-            name="person-outline"
-            size={48}
-            color={Colors.textTertiary}
-          />
-          <Text style={styles.notFoundText}>Profile not found</Text>
+          <EmptyState icon="person-outline" title="Profile not found" subtitle="This user may not exist or their profile is private" />
         </View>
       ) : (
         <ScrollView

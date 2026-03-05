@@ -25,7 +25,10 @@ function HealthDot({ status }: { status: string }) {
     status === "degraded" ? Colors.warning :
     status === "unreachable" || status === "unhealthy" ? Colors.error :
     Colors.textMuted;
-  return <View style={[styles.healthDot, { backgroundColor: color, shadowColor: color }]} />;
+  const dotStyle = Platform.OS === "web"
+    ? { backgroundColor: color, boxShadow: `0 0 4px ${color}` }
+    : { backgroundColor: color, shadowColor: color };
+  return <View style={[styles.healthDot, dotStyle]} />;
 }
 
 function StatBox({ label, value, color }: { label: string; value: string | number; color?: string }) {
@@ -325,9 +328,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
+    ...(Platform.OS !== "web" ? {
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 4,
+    } : {}),
   },
   healthLabel: {
     fontSize: 12,

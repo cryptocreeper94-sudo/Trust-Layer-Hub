@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
@@ -99,7 +100,7 @@ export default function RegisterScreen() {
       <BackgroundGlow />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: insets.top + webTopInset + 40, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 20, maxWidth: isDesktop ? 480 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} style={styles.backButton} hitSlop={8}>
             <Ionicons name="chevron-back" size={24} color={Colors.primary} />
           </Pressable>
         </View>
@@ -233,7 +234,7 @@ export default function RegisterScreen() {
 
         <View style={styles.loginRow}>
           <Text style={styles.loginText}>Already have an account?</Text>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} hitSlop={8}>
             <Text style={styles.loginLink}>Sign In</Text>
           </Pressable>
         </View>

@@ -1322,11 +1322,15 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,255,255,0.3)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    ...(Platform.OS === "web" ? {
+      boxShadow: `0px 4px 12px rgba(0,255,255,0.3)`,
+    } : {
+      shadowColor: Colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
+    }),
   },
   pulseHeader: {
     flexDirection: "row" as const,

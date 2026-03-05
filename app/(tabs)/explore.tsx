@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
+import { EmptyState } from "@/components/EmptyState";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { ECOSYSTEM_APPS, CATEGORIES, type Category, type EcosystemApp } from "@/constants/ecosystem-apps";
@@ -134,10 +135,7 @@ export default function ExploreScreen() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <AppGridCard app={item} />}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="search" size={40} color={Colors.textMuted} />
-            <Text style={styles.emptyText}>No apps found</Text>
-          </View>
+          <EmptyState icon="search" title="No apps found" subtitle="Try a different search term" />
         }
       />
     </View>
@@ -259,17 +257,6 @@ const styles = StyleSheet.create({
   appCategoryText: {
     fontSize: 10,
     color: Colors.secondary,
-    fontFamily: "Inter_500Medium",
-  },
-  emptyState: {
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: Colors.textMuted,
     fontFamily: "Inter_500Medium",
   },
 });

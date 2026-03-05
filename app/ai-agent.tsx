@@ -270,7 +270,7 @@ export default function AIAgentScreen() {
           },
         ]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} style={styles.backButton} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={Colors.primary} />
         </Pressable>
         <View style={styles.headerCenter}>

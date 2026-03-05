@@ -69,10 +69,7 @@ const styles = StyleSheet.create({
   shadowWrap: {
     borderRadius: 14,
     ...(Platform.OS === "web" ? {
-      shadowColor: "rgba(6,182,212,0.3)",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 1,
-      shadowRadius: 12,
+      boxShadow: "0px 4px 12px rgba(6,182,212,0.3)",
     } : {
       shadowColor: "#06b6d4",
       shadowOffset: { width: 0, height: 4 },

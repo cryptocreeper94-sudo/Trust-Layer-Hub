@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 export function BackgroundGlow() {
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}>
       <LinearGradient
         colors={["rgba(0,255,255,0.08)", "rgba(0,255,255,0.02)", "transparent"]}
         style={styles.orbTopLeft}

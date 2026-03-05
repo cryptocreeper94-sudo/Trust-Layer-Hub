@@ -35,7 +35,7 @@ export default function AppDetailScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top + webTopInset }]}>
         <Text style={styles.errorText}>App not found</Text>
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} hitSlop={8}>
           <Text style={styles.backLink}>Go back</Text>
         </Pressable>
       </View>
@@ -55,7 +55,7 @@ export default function AppDetailScreen() {
     <View style={styles.container}>
       <BackgroundGlow />
       <View style={[styles.header, { paddingTop: insets.top + webTopInset + 8 }]}>
-        <Pressable onPress={() => router.back()} style={styles.closeButton}>
+        <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.back(); }} style={styles.closeButton} hitSlop={8} accessibilityLabel="Close">
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </Pressable>
       </View>

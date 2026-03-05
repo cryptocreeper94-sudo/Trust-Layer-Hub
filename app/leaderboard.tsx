@@ -223,7 +223,7 @@ export default function LeaderboardScreen() {
           styles.content,
           {
             paddingTop: insets.top + webTopInset + 16,
-            paddingBottom: 40,
+            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 20,
           },
         ]}
         showsVerticalScrollIndicator={false}
