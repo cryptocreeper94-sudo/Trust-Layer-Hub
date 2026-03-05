@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { db } from "./db";
 import { users, verificationCodes, sessions } from "./db/schema";
 import { eq, and, gt, sql } from "drizzle-orm";
-import { sendVerificationEmail, sendPasswordResetEmail } from "./services/resend";
+import { sendVerificationEmail, sendPasswordResetEmail, sendUsernameRecoveryEmail } from "./services/resend";
 import { sendSMS2FACode, isTwilioConfigured } from "./services/twilio";
 import { generateTrustHubHallmark, createTrustStamp } from "./hallmark";
 
@@ -187,7 +187,7 @@ export function registerAuthRoutes(app: Express): void {
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, password, rememberMe } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ error: "Email and password are required." });
@@ -278,7 +278,8 @@ export function registerAuthRoutes(app: Express): void {
       }
 
       const token = generateToken();
-      const sessionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const sessionDuration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      const sessionExpiresAt = new Date(Date.now() + sessionDuration);
 
       await db.insert(sessions).values({
         userId: user.id,
@@ -614,6 +615,141 @@ export function registerAuthRoutes(app: Express): void {
     } catch (error: any) {
       console.error("Token exchange error:", error?.message);
       res.status(500).json({ error: "Token exchange failed" });
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email is required." });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.toLowerCase()));
+
+      if (!user) {
+        return res.json({ success: true, message: "If an account with that email exists, a reset code has been sent." });
+      }
+
+      const code = generateCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      await db.insert(verificationCodes).values({
+        userId: user.id,
+        code,
+        type: "password_reset",
+        expiresAt,
+      });
+
+      await sendPasswordResetEmail(user.email, code);
+
+      res.json({ success: true, message: "If an account with that email exists, a reset code has been sent." });
+    } catch (error: any) {
+      console.error("Forgot password error:", error?.message);
+      res.status(500).json({ error: "Failed to process request. Please try again." });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { email, code, newPassword } = req.body;
+
+      if (!email || !code || !newPassword) {
+        return res.status(400).json({ error: "Email, code, and new password are required." });
+      }
+
+      const passwordValidation = validatePassword(newPassword);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.message });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.toLowerCase()));
+
+      if (!user) {
+        return res.status(400).json({ error: "Invalid or expired reset code." });
+      }
+
+      const [verification] = await db
+        .select()
+        .from(verificationCodes)
+        .where(
+          and(
+            eq(verificationCodes.userId, user.id),
+            eq(verificationCodes.code, code),
+            eq(verificationCodes.type, "password_reset"),
+            eq(verificationCodes.used, false),
+            gt(verificationCodes.expiresAt, new Date())
+          )
+        );
+
+      if (!verification) {
+        return res.status(400).json({ error: "Invalid or expired reset code." });
+      }
+
+      const salt = await bcrypt.genSalt(12);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      await db
+        .update(users)
+        .set({ passwordHash: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      await db
+        .update(verificationCodes)
+        .set({ used: true })
+        .where(eq(verificationCodes.id, verification.id));
+
+      await db
+        .delete(sessions)
+        .where(eq(sessions.userId, user.id));
+
+      createTrustStamp({
+        userId: user.id,
+        category: "trusthub-password-reset",
+        data: {
+          userId: user.id,
+          emailHash: crypto.createHash("sha256").update(user.email).digest("hex"),
+          timestamp: new Date().toISOString(),
+        },
+      }).catch((err) => console.error("Trust stamp error:", err?.message));
+
+      res.json({ success: true, message: "Password has been reset. Please sign in with your new password." });
+    } catch (error: any) {
+      console.error("Reset password error:", error?.message);
+      res.status(500).json({ error: "Failed to reset password. Please try again." });
+    }
+  });
+
+  app.post("/api/auth/forgot-username", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: "Email is required." });
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email.toLowerCase()));
+
+      if (!user) {
+        return res.json({ success: true, message: "If an account with that email exists, your username has been sent." });
+      }
+
+      await sendUsernameRecoveryEmail(user.email, user.username, user.firstName || undefined);
+
+      res.json({ success: true, message: "If an account with that email exists, your username has been sent." });
+    } catch (error: any) {
+      console.error("Forgot username error:", error?.message);
+      res.status(500).json({ error: "Failed to process request. Please try again." });
     }
   });
 

@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
+import * as LocalAuthentication from "expo-local-authentication";
 import {
   apiPost,
   apiGet,
@@ -35,7 +38,12 @@ interface AuthContextValue {
   phoneHint: string;
   isNewRegistration: boolean;
   isDevMode: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  biometricsAvailable: boolean;
+  biometricsEnabled: boolean;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  loginWithBiometrics: () => Promise<boolean>;
+  enableBiometrics: () => Promise<boolean>;
+  disableBiometrics: () => Promise<void>;
   register: (email: string, username: string, password: string, firstName?: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
   verify2FA: (code: string) => Promise<void>;
@@ -59,12 +67,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [phoneHint, setPhoneHint] = useState("");
   const [isNewRegistration, setIsNewRegistration] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
+  const [biometricsAvailable, setBiometricsAvailable] = useState(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
   useEffect(() => {
     checkSession();
     AsyncStorage.getItem("devModeActive").then(val => {
       if (val === "true") setIsDevMode(true);
     });
+    AsyncStorage.getItem("biometricsEnabled").then(val => {
+      if (val === "true") setBiometricsEnabled(true);
+    });
+    if (Platform.OS !== "web") {
+      LocalAuthentication.hasHardwareAsync().then(has => {
+        if (has) {
+          LocalAuthentication.isEnrolledAsync().then(enrolled => {
+            setBiometricsAvailable(enrolled);
+          });
+        }
+      });
+    }
   }, []);
 
   async function checkSession() {
@@ -81,17 +103,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string, rememberMe?: boolean) {
     const data = await apiPost<{
       user: User;
       sessionToken: string;
       requiresEmailVerification?: boolean;
       requires2FA?: boolean;
       phoneHint?: string;
-    }>("/api/auth/login", { email, password }, false);
+    }>("/api/auth/login", { email, password, rememberMe: rememberMe ?? false }, false);
 
     await setSessionToken(data.sessionToken);
     setUser(data.user);
+
+    if (rememberMe && Platform.OS !== "web") {
+      await SecureStore.setItemAsync("biometricEmail", email);
+      await SecureStore.setItemAsync("biometricPassword", password);
+    }
 
     if (data.requiresEmailVerification) {
       setAuthStep("email_verify");
@@ -101,6 +128,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setAuthStep("idle");
     }
+  }
+
+  async function loginWithBiometrics(): Promise<boolean> {
+    if (Platform.OS === "web") return false;
+    try {
+      const enabled = await AsyncStorage.getItem("biometricsEnabled");
+      if (enabled !== "true") return false;
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Sign in to Trust Layer Hub",
+        cancelLabel: "Cancel",
+        disableDeviceFallback: false,
+      });
+
+      if (!result.success) return false;
+
+      const savedEmail = await SecureStore.getItemAsync("biometricEmail");
+      const savedPassword = await SecureStore.getItemAsync("biometricPassword");
+
+      if (!savedEmail || !savedPassword) return false;
+
+      await login(savedEmail, savedPassword, true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function enableBiometrics(): Promise<boolean> {
+    if (Platform.OS === "web") return false;
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      if (!hasHardware) return false;
+
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!isEnrolled) return false;
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Enable biometric login",
+        cancelLabel: "Cancel",
+        disableDeviceFallback: false,
+      });
+
+      if (!result.success) return false;
+
+      await AsyncStorage.setItem("biometricsEnabled", "true");
+      setBiometricsEnabled(true);
+      setBiometricsAvailable(true);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function disableBiometrics() {
+    await AsyncStorage.removeItem("biometricsEnabled");
+    if (Platform.OS !== "web") {
+      await SecureStore.deleteItemAsync("biometricEmail");
+      await SecureStore.deleteItemAsync("biometricPassword");
+    }
+    setBiometricsEnabled(false);
   }
 
   async function register(email: string, username: string, password: string, firstName?: string) {
@@ -177,6 +265,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPhoneHint("");
     setIsDevMode(false);
     AsyncStorage.removeItem("devModeActive");
+    AsyncStorage.removeItem("biometricsEnabled");
+    if (Platform.OS !== "web") {
+      SecureStore.deleteItemAsync("biometricEmail").catch(() => {});
+      SecureStore.deleteItemAsync("biometricPassword").catch(() => {});
+    }
+    setBiometricsEnabled(false);
   }
 
   async function refreshUser() {
@@ -217,7 +311,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phoneHint,
       isNewRegistration,
       isDevMode,
+      biometricsAvailable,
+      biometricsEnabled,
       login,
+      loginWithBiometrics,
+      enableBiometrics,
+      disableBiometrics,
       register,
       verifyEmail,
       verify2FA,
@@ -231,7 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       activateDevMode,
       deactivateDevMode,
     }),
-    [user, isLoading, authStep, phoneHint, isNewRegistration, isDevMode]
+    [user, isLoading, authStep, phoneHint, isNewRegistration, isDevMode, biometricsAvailable, biometricsEnabled]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

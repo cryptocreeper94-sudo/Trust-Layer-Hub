@@ -85,6 +85,8 @@ function RootLayoutNav() {
           }}
         />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+        <Stack.Screen name="forgot-username" options={{ headerShown: false }} />
       </Stack>
     </>
   );

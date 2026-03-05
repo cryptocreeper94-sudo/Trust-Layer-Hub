@@ -126,6 +126,29 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - **Hook**: `hooks/useDeveloperStats.ts` (useDeveloperStats, useDeveloperHealth) — auto-refreshes 60s/30s
 - **Production-safe**: Uses AbortController pattern (not AbortSignal.timeout) for external API calls
 
+## Account Recovery
+- **Forgot Password**: 3-step flow (email → code → new password)
+  - Backend: `POST /api/auth/forgot-password` (sends 6-digit code via Resend), `POST /api/auth/reset-password` (validates code, updates password, invalidates all sessions)
+  - Frontend: `app/forgot-password.tsx` — multi-step screen with code input, password requirements display
+  - Password reset creates a trust stamp (`trusthub-password-reset`)
+  - Code expires in 10 minutes; follows same verification pattern as email/2FA codes
+- **Forgot Username**: Email-based recovery
+  - Backend: `POST /api/auth/forgot-username` (sends username to email via Resend)
+  - Frontend: `app/forgot-username.tsx` — single-step screen with confirmation
+  - Resend service: `sendUsernameRecoveryEmail()` in `server/services/resend.ts`
+- Both screens accessible from login page via "Forgot password?" / "Forgot username?" links
+- Security: All responses use neutral messaging ("If an account exists...") to prevent email enumeration
+
+## Remember Me & Biometric Auth
+- **Remember Me toggle**: Login screen checkbox — 30-day session (checked) vs 24-hour session (unchecked)
+  - Backend: `rememberMe` flag in `POST /api/auth/login` controls session duration
+  - Security info bubble explains session duration policy
+- **Biometric Login** (native only, expo-local-authentication):
+  - Enable/disable via Profile > Settings > Biometric Auth toggle
+  - Login screen shows prominent biometric button when enabled
+  - Credentials stored in AsyncStorage on device (cleared on logout)
+  - Auth context: `biometricsAvailable`, `biometricsEnabled`, `loginWithBiometrics()`, `enableBiometrics()`, `disableBiometrics()`
+
 ## Blockchain Connection (dwtl.io) — LIVE
 - **Backend proxy**: `server/blockchain.ts` connects to `https://dwtl.io` for all on-chain data
 - **Address derivation**: `0x` + SHA256(`trustlayer:member:` + userId).slice(0, 40)

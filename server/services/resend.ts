@@ -85,6 +85,49 @@ export async function sendVerificationEmail(
   }
 }
 
+export async function sendUsernameRecoveryEmail(
+  toEmail: string,
+  username: string,
+  firstName?: string
+): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getResendClient();
+    const greeting = firstName ? `Hi ${firstName}` : "Hi there";
+
+    await client.emails.send({
+      from: fromEmail || "Trust Layer <noreply@resend.dev>",
+      to: toEmail,
+      subject: "Trust Layer - Your Username",
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #0c1224; color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <h1 style="color: #00ffff; font-size: 24px; margin: 0;">Trust Layer</h1>
+            <p style="color: #8899aa; font-size: 14px; margin-top: 4px;">Blockchain Ecosystem Hub</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 32px; text-align: center;">
+            <p style="color: #e0e6ed; font-size: 16px; margin: 0 0 8px 0;">${greeting},</p>
+            <p style="color: #8899aa; font-size: 14px; margin: 0 0 24px 0;">You requested your username. Here it is:</p>
+            <div style="background: rgba(0,255,255,0.08); border: 2px solid rgba(0,255,255,0.2); border-radius: 8px; padding: 16px; margin: 0 auto; display: inline-block;">
+              <span style="font-size: 24px; color: #00ffff; font-weight: 700;">${username}</span>
+            </div>
+            <p style="color: #8899aa; font-size: 12px; margin-top: 24px;">If you didn't request this, you can safely ignore this email.</p>
+          </div>
+          <p style="color: #556677; font-size: 11px; text-align: center; margin-top: 32px;">
+            Protected by TrustShield.tech<br/>
+            &copy; 2026 DarkWave Studios LLC
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(`Username recovery email sent to ${toEmail}`);
+    return true;
+  } catch (error: any) {
+    console.error("Failed to send username recovery email:", error?.message);
+    return false;
+  }
+}
+
 export async function sendPasswordResetEmail(
   toEmail: string,
   code: string

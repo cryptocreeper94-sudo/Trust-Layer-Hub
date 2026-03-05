@@ -98,11 +98,11 @@ export default function ProfileScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const { user, isAuthenticated, logout, isDevMode, activateDevMode, deactivateDevMode } = useAuth();
+  const { user, isAuthenticated, logout, isDevMode, activateDevMode, deactivateDevMode, biometricsAvailable, biometricsEnabled, enableBiometrics, disableBiometrics } = useAuth();
   const { data: membership } = useMembership();
   const { data: subscription } = useSubscriptionStatus();
   const [notifications, setNotifications] = useState(true);
-  const [biometrics, setBiometrics] = useState(false);
+  const [biometricToggling, setBiometricToggling] = useState(false);
   const { data: timelineData } = useHallmarkTimeline();
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
@@ -253,8 +253,21 @@ export default function ProfileScreen() {
             icon="finger-print"
             label="Biometric Auth"
             toggle
-            toggleValue={biometrics}
-            onToggle={setBiometrics}
+            toggleValue={biometricsEnabled}
+            onToggle={async (val: boolean) => {
+              if (biometricToggling) return;
+              setBiometricToggling(true);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              if (val) {
+                const success = await enableBiometrics();
+                if (!success && Platform.OS !== "web") {
+                  Alert.alert("Biometrics Unavailable", "Please set up fingerprint or Face ID in your device settings.");
+                }
+              } else {
+                await disableBiometrics();
+              }
+              setBiometricToggling(false);
+            }}
             testID="setting-biometrics"
           />
           <View style={styles.divider} />

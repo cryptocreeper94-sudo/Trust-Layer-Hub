@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
@@ -25,11 +26,14 @@ export default function LoginScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const { login, authStep } = useAuth();
+  const { login, loginWithBiometrics, biometricsAvailable, biometricsEnabled, authStep } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showSecurityInfo, setShowSecurityInfo] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
@@ -40,7 +44,7 @@ export default function LoginScreen() {
     setError("");
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), password, rememberMe);
     } catch (err: any) {
       const msg = err?.message || "Login failed. Please try again.";
       if (msg.includes("401") || msg.includes("403") || msg.includes("Invalid")) {
@@ -54,10 +58,24 @@ export default function LoginScreen() {
     setLoading(false);
   };
 
+  const handleBiometricLogin = async () => {
+    setError("");
+    setBiometricLoading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      const success = await loginWithBiometrics();
+      if (!success) {
+        setError("Biometric login failed. Please sign in with your credentials.");
+      }
+    } catch {
+      setError("Biometric authentication unavailable.");
+    }
+    setBiometricLoading(false);
+  };
+
   React.useEffect(() => {
     if (authStep === "email_verify" || authStep === "sms_2fa") {
       router.replace("/verify");
-    } else if (authStep === "idle") {
     }
   }, [authStep]);
 
@@ -129,6 +147,41 @@ export default function LoginScreen() {
           </View>
         </GlassCard>
 
+        <View style={styles.rememberRow}>
+          <Pressable
+            style={styles.rememberToggle}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setRememberMe(!rememberMe);
+            }}
+            testID="login-remember-me"
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+              {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
+            </View>
+            <Text style={styles.rememberText}>Remember me for 30 days</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowSecurityInfo(!showSecurityInfo);
+            }}
+            hitSlop={8}
+            testID="login-security-info"
+          >
+            <Ionicons name="information-circle-outline" size={20} color={Colors.textMuted} />
+          </Pressable>
+        </View>
+
+        {showSecurityInfo && (
+          <View style={styles.securityInfoBox}>
+            <Ionicons name="shield-checkmark" size={16} color={Colors.primary} />
+            <Text style={styles.securityInfoText}>
+              When disabled, your session expires after 24 hours. Enabling "Remember me" extends your session to 30 days. Your credentials are stored securely on this device only and are never shared.
+            </Text>
+          </View>
+        )}
+
         <GradientButton
           title="Sign In"
           onPress={handleLogin}
@@ -137,6 +190,48 @@ export default function LoginScreen() {
           style={styles.loginButton}
           testID="login-submit-button"
         />
+
+        {biometricsAvailable && biometricsEnabled && Platform.OS !== "web" && (
+          <Pressable
+            style={styles.biometricButton}
+            onPress={handleBiometricLogin}
+            disabled={biometricLoading}
+            testID="login-biometric-button"
+          >
+            {biometricLoading ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="finger-print" size={28} color={Colors.primary} />
+                <Text style={styles.biometricText}>Sign in with biometrics</Text>
+              </>
+            )}
+          </Pressable>
+        )}
+
+        <View style={styles.forgotRow}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/forgot-password");
+            }}
+            hitSlop={8}
+            testID="login-forgot-password"
+          >
+            <Text style={styles.forgotLink}>Forgot password?</Text>
+          </Pressable>
+          <Text style={styles.forgotDot}>{"\u00B7"}</Text>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/forgot-username");
+            }}
+            hitSlop={8}
+            testID="login-forgot-username"
+          >
+            <Text style={styles.forgotLink}>Forgot username?</Text>
+          </Pressable>
+        </View>
 
         <View style={styles.registerRow}>
           <Text style={styles.registerText}>New to Trust Layer?</Text>
@@ -246,8 +341,84 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontFamily: "Inter_400Regular",
   },
+  rememberRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+  },
+  rememberToggle: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  checkboxActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  rememberText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+  },
+  securityInfoBox: {
+    flexDirection: "row" as const,
+    gap: 10,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.12)",
+    borderRadius: 10,
+    padding: 12,
+  },
+  securityInfoText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+    flex: 1,
+    lineHeight: 18,
+  },
+  biometricButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.15)",
+  },
+  biometricText: {
+    fontSize: 15,
+    color: Colors.primary,
+    fontFamily: "Inter_600SemiBold",
+  },
   loginButton: {
     marginTop: 4,
+  },
+  forgotRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 10,
+  },
+  forgotLink: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+  },
+  forgotDot: {
+    fontSize: 13,
+    color: Colors.textMuted,
   },
   registerRow: {
     flexDirection: "row" as const,
