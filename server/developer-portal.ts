@@ -1,20 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { db } from "./db";
 import { users, sessions, hallmarks, trustStamps, chatChannels, chatMessages, linkedAccounts, stripeConnections } from "./db/schema";
-import { sql, eq, and, gt } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { authenticateToken } from "./auth";
 
 const BOOT_TIME = Date.now();
-
-async function requireAdmin(req: Request, res: Response, next: Function) {
-  const user = (req as any).user;
-  if (!user || (user.role !== "admin" && user.role !== "developer")) {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  next();
-}
 
 const API_ENDPOINTS = [
   { method: "POST", path: "/api/auth/register", auth: false, desc: "Register new user" },
@@ -63,7 +55,7 @@ const API_ENDPOINTS = [
 ];
 
 export function registerDeveloperPortalRoutes(app: Express) {
-  app.get("/api/developer/stats", authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+  app.get("/api/developer/stats", authenticateToken, async (_req: Request, res: Response) => {
     try {
       const [
         userCount,
@@ -159,7 +151,7 @@ export function registerDeveloperPortalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/developer/health", authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+  app.get("/api/developer/health", authenticateToken, async (_req: Request, res: Response) => {
     const checks: Record<string, string> = {};
 
     try {

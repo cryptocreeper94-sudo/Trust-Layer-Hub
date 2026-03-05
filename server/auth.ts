@@ -113,9 +113,6 @@ export function registerAuthRoutes(app: Express): void {
 
       const referredBy = req.body.referralCode || null;
 
-      const [userCountResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
-      const isFirstUser = Number(userCountResult?.count || 0) === 0;
-
       const [newUser] = await db
         .insert(users)
         .values({
@@ -125,7 +122,7 @@ export function registerAuthRoutes(app: Express): void {
           passwordHash,
           phone: phone || null,
           uniqueHash,
-          role: isFirstUser ? "admin" : "user",
+          role: "user",
           emailVerified: false,
           phoneVerified: false,
           twoFactorEnabled: false,

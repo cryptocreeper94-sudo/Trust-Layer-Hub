@@ -113,13 +113,17 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
 
 ## Developer Portal
-- **Route**: `/developer` — full admin dashboard served as HTML
+- **In-App Tab**: `app/(tabs)/developer.tsx` — hidden Developer tab, unlocked via PIN 0424
+- **Activation**: Profile page footer — tap "Trust Layer Hub v1.0.0" 5 times to trigger PIN entry modal. Deactivate by tapping 3 times when active, or via "Exit" button on the Dev tab.
+- **PIN stored**: `AsyncStorage("devModeActive")` — persists across sessions, clears on logout
+- **Auth context**: `isDevMode`, `activateDevMode(pin)`, `deactivateDevMode()` in `lib/auth-context.tsx`
+- **No admin roles**: All users are "user" role. PIN is purely client-side gating — no special server permissions
 - **Backend**: `server/developer-portal.ts`
-  - `GET /api/developer/stats` — aggregated system stats (DB counts, blockchain status, Pulse status, server info, endpoint catalog)
-  - `GET /api/developer/health` — service health checks (server, database, blockchain, pulse)
-  - `GET /developer` — serves the developer portal HTML page
-- **Dashboard shows**: system overview (user/session/hallmark/stamp counts), service health (server/DB/chain/pulse with colored indicators), server info (uptime/node version/memory/env), blockchain stats (block time/TPS/accounts), Pulse stats (signals/sentiment/accuracy), all 42+ API endpoints with method/path/auth/description, integration status, quick links
-- **Template**: `server/templates/developer-portal.html` — dark cyber-glassmorphic monospace design, auto-refreshes every 60s
+  - `GET /api/developer/stats` (auth) — aggregated system stats (DB counts, blockchain status, Pulse status, server info, endpoint catalog)
+  - `GET /api/developer/health` (auth) — service health checks (server, database, blockchain, pulse)
+  - `GET /developer` — web fallback developer portal HTML page
+- **Dev tab shows**: health status bar, system overview (user/session/hallmark/stamp counts), server info (uptime/node/memory/env), blockchain stats (block time/TPS/accounts), Pulse stats (signals/sentiment/accuracy), integrations status, collapsible API endpoint catalog with filters, quick links
+- **Hook**: `hooks/useDeveloperStats.ts` (useDeveloperStats, useDeveloperHealth) — auto-refreshes 60s/30s
 - **Production-safe**: Uses AbortController pattern (not AbortSignal.timeout) for external API calls
 
 ## Blockchain Connection (dwtl.io) — LIVE
