@@ -224,7 +224,7 @@ export default function LoginScreen() {
             setSsoLoading(true);
             const ssoEmail = email.trim();
             if (!ssoEmail) {
-              setError("Enter your Trust Layer email above, then tap this button.");
+              setError("Enter your Trust Layer email above, then tap TrustLink.");
               setSsoLoading(false);
               return;
             }
@@ -247,25 +247,25 @@ export default function LoginScreen() {
                   }
                 }
               }
-              setError("Could not find an existing Trust Layer account. Please sign in with your credentials or create an account.");
+              setError("No Trust Layer account found for this email. Sign in with your credentials or create an account.");
             } catch {
-              setError("Trust Layer ecosystem is temporarily unavailable. Please sign in with your credentials.");
+              setError("TrustLink is temporarily unavailable. Please sign in with your credentials.");
             }
             setSsoLoading(false);
           }}
           disabled={ssoLoading}
-          testID="login-sso-button"
+          testID="login-trustlink-button"
         >
           {ssoLoading ? (
             <ActivityIndicator size="small" color={Colors.primary} />
           ) : (
             <>
-              <Ionicons name="shield-checkmark" size={22} color={Colors.primary} />
-              <Text style={styles.ssoButtonText}>Sign in with Trust Layer</Text>
+              <Ionicons name="link" size={20} color={Colors.secondary} />
+              <Text style={styles.ssoButtonText}>TrustLink</Text>
             </>
           )}
         </Pressable>
-        <Text style={styles.ssoHint}>Already a Trust Layer ecosystem member? Enter your email above and use this button.</Text>
+        <Text style={styles.ssoHint}>Already a Trust Layer member? Enter your email above and tap TrustLink to sign in instantly.</Text>
 
         <View style={styles.forgotRow}>
           <Pressable

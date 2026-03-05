@@ -149,14 +149,15 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
   - Credentials stored in SecureStore on device (cleared on logout)
   - Auth context: `biometricsAvailable`, `biometricsEnabled`, `loginWithBiometrics()`, `enableBiometrics()`, `disableBiometrics()`
 
-## Ecosystem SSO (Single Sign-On)
+## TrustLink — Ecosystem SSO (Single Sign-On)
+- **Branding**: The cross-ecosystem SSO feature is branded "TrustLink" across all apps
 - **Outbound SSO** (Hub → apps): `buildAppLaunchUrl()` in `lib/api.ts` appends `?auth_token={sessionToken}` when launching ecosystem apps via in-app browser
-- **Inbound SSO** (apps → Hub):
+- **Inbound SSO / TrustLink** (apps → Hub):
   - Backend: `POST /api/auth/sso/verify` — accepts `sso_token` or `auth_token`, validates against `dwtl.io/api/auth/exchange-token` and `/api/auth/me`, finds or creates local user with matching `uniqueHash`, returns Hub session
   - If user exists locally, syncs `uniqueHash` from ecosystem to ensure cross-app consistency
   - If user doesn't exist, auto-creates account (email verified, hallmark generated, trust stamp created)
   - Auth context: `loginWithSSO(token)` in `lib/auth-context.tsx`
-  - Login screen: "Sign in with Trust Layer" button for existing ecosystem members
+  - Login screen: "TrustLink" button for existing ecosystem members
 - **Token Exchange** (for other apps calling Hub):
   - `POST /api/auth/exchange-token` — accepts `hubSessionToken`, returns `ecosystemToken` + `uniqueHash` + user info
 - **UniqueHash**: Ecosystem-wide affiliate identifier. SSO carries it across all 33 apps. Referral links use format `https://[app].tlid.io/ref/[uniqueHash]`
