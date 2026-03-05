@@ -16,6 +16,7 @@ import { registerPublicProfileRoutes } from "./public-profiles";
 import { registerChatPersistenceRoutes } from "./chat-persistence";
 import { registerPulseRoutes } from "./pulse";
 import { registerBlockchainRoutes } from "./blockchain";
+import { registerDeveloperPortalRoutes } from "./developer-portal";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   registerBlockchainRoutes(app);
@@ -34,6 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerPublicProfileRoutes(app);
   registerChatPersistenceRoutes(app);
   registerPulseRoutes(app);
+  registerDeveloperPortalRoutes(app);
 
   const httpServer = createServer(app);
 

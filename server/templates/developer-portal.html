@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Developer Portal - Trust Layer Hub</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b16" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+  <style>
+    :root {
+      --bg: #070b16; --bg2: #0c1224; --card: rgba(12,18,36,0.7);
+      --cyan: #00e5ff; --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+      --violet: #8b5cf6; --blue: #3b82f6;
+      --text: #e8eaf0; --dim: rgba(255,255,255,0.5); --muted: rgba(255,255,255,0.3);
+      --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(7,11,22,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 12px; }
+    .top-bar-logo {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 11px; color: #fff; font-family: -apple-system, sans-serif;
+    }
+    .top-bar-title { font-size: 14px; font-weight: 700; color: #fff; font-family: -apple-system, sans-serif; }
+    .top-bar-badge {
+      font-size: 9px; padding: 2px 8px; border-radius: 4px;
+      background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2);
+      color: var(--cyan); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .top-bar-right { display: flex; align-items: center; gap: 12px; }
+    .top-bar-link {
+      font-size: 12px; color: var(--dim); font-family: -apple-system, sans-serif;
+      transition: color 0.2s;
+    }
+    .top-bar-link:hover { color: var(--cyan); text-decoration: none; }
+    .refresh-btn {
+      padding: 5px 12px; border-radius: 6px; font-size: 11px;
+      background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2);
+      color: var(--cyan); cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .refresh-btn:hover { background: rgba(0,229,255,0.2); }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    .health-bar {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 14px 18px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .health-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--dim);
+    }
+    .health-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .health-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .health-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .health-dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .health-label { color: #fff; font-weight: 600; }
+
+    .section-title {
+      font-size: 11px; font-weight: 700; color: var(--dim);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px; padding-left: 2px;
+      font-family: -apple-system, sans-serif;
+    }
+
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin-bottom: 28px;
+    }
+    @media(min-width:640px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+    .stat-card {
+      padding: 16px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .stat-value {
+      font-size: 24px; font-weight: 800; color: #fff;
+      font-family: -apple-system, sans-serif;
+    }
+    .stat-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value .cyan { color: var(--cyan); }
+    .stat-value .green { color: var(--green); }
+    .stat-value .violet { color: var(--violet); }
+
+    .info-grid {
+      display: grid; grid-template-columns: 1fr; gap: 10px;
+      margin-bottom: 28px;
+    }
+    @media(min-width:640px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+    .info-card {
+      padding: 18px; border-radius: 12px;
+      background: var(--card); border: 1px solid var(--border);
+    }
+    .info-card-title {
+      font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 10px;
+      font-family: -apple-system, sans-serif;
+    }
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: var(--dim); }
+    .info-val { color: #fff; font-weight: 600; text-align: right; }
+
+    .endpoints-section { margin-bottom: 28px; }
+    .endpoints-filter {
+      display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 5px 14px; border-radius: 6px; font-size: 11px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--dim); cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .filter-btn:hover { border-color: var(--border2); color: #fff; }
+    .filter-btn.active { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+
+    .endpoint-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--card); border-radius: 12px;
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .endpoint-table th {
+      text-align: left; padding: 10px 14px; font-size: 10px;
+      color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
+      font-family: -apple-system, sans-serif;
+    }
+    .endpoint-table td {
+      padding: 8px 14px; font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .endpoint-table tr:last-child td { border-bottom: none; }
+    .endpoint-table tr:hover { background: rgba(255,255,255,0.02); }
+    .method-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .method-GET { background: rgba(16,185,129,0.15); color: var(--green); }
+    .method-POST { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .method-PUT { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .method-DELETE { background: rgba(239,68,68,0.15); color: var(--red); }
+    .auth-badge {
+      font-size: 9px; padding: 1px 6px; border-radius: 3px;
+    }
+    .auth-yes { background: rgba(139,92,246,0.15); color: var(--violet); }
+    .auth-no { background: rgba(255,255,255,0.05); color: var(--muted); }
+    .ep-path { color: var(--cyan); }
+    .ep-desc { color: var(--dim); }
+
+    .footer-bar {
+      text-align: center; padding: 20px;
+      font-size: 10px; color: var(--muted);
+      border-top: 1px solid var(--border);
+      font-family: -apple-system, sans-serif;
+    }
+
+    .loading { text-align: center; padding: 60px; color: var(--dim); font-size: 14px; }
+    .scroll-wrap { overflow-x: auto; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-bar-logo">TL</div>
+      <span class="top-bar-title">Developer Portal</span>
+      <span class="top-bar-badge">Internal</span>
+    </div>
+    <div class="top-bar-right">
+      <a href="/" class="top-bar-link">Explorer</a>
+      <a href="https://dwtl.io" class="top-bar-link" target="_blank">Chain</a>
+      <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="health-bar fade-in" id="health-bar">
+      <div class="health-item"><span class="health-dot" id="h-server"></span> <span class="health-label">Server</span></div>
+      <div class="health-item"><span class="health-dot" id="h-db"></span> <span class="health-label">Database</span></div>
+      <div class="health-item"><span class="health-dot" id="h-chain"></span> <span class="health-label">Blockchain</span></div>
+      <div class="health-item"><span class="health-dot" id="h-pulse"></span> <span class="health-label">Pulse</span></div>
+      <div class="health-item" style="margin-left:auto"><span id="h-time" style="font-size:11px;color:var(--muted)">--</span></div>
+    </div>
+
+    <div class="section-title">System Overview</div>
+    <div class="stats-grid fade-in" id="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="s-users">--</div><div class="stat-label">Users</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-sessions">--</div><div class="stat-label">Active Sessions</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-hallmarks">--</div><div class="stat-label">Hallmarks</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-stamps">--</div><div class="stat-label">Trust Stamps</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-channels">--</div><div class="stat-label">Chat Channels</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-messages">--</div><div class="stat-label">Chat Messages</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-linked">--</div><div class="stat-label">Linked Accounts</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-stripe">--</div><div class="stat-label">Stripe Connections</div></div>
+    </div>
+
+    <div class="section-title">Services</div>
+    <div class="info-grid fade-in" id="info-grid">
+      <div class="info-card">
+        <div class="info-card-title">Server</div>
+        <div class="info-row"><span class="info-key">Uptime</span><span class="info-val" id="i-uptime">--</span></div>
+        <div class="info-row"><span class="info-key">Node.js</span><span class="info-val" id="i-node">--</span></div>
+        <div class="info-row"><span class="info-key">Environment</span><span class="info-val" id="i-env">--</span></div>
+        <div class="info-row"><span class="info-key">Memory (Heap)</span><span class="info-val" id="i-mem">--</span></div>
+        <div class="info-row"><span class="info-key">Boot Time</span><span class="info-val" id="i-boot">--</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Blockchain (dwtl.io)</div>
+        <div class="info-row"><span class="info-key">Status</span><span class="info-val" id="i-chain-status">--</span></div>
+        <div class="info-row"><span class="info-key">Block Time</span><span class="info-val" id="i-blocktime">--</span></div>
+        <div class="info-row"><span class="info-key">TPS</span><span class="info-val" id="i-tps">--</span></div>
+        <div class="info-row"><span class="info-key">Last Block</span><span class="info-val" id="i-block">--</span></div>
+        <div class="info-row"><span class="info-key">Chain ID</span><span class="info-val" id="i-chainid">--</span></div>
+        <div class="info-row"><span class="info-key">Consensus</span><span class="info-val" id="i-consensus">--</span></div>
+        <div class="info-row"><span class="info-key">Accounts</span><span class="info-val" id="i-accounts">--</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">DarkWave Pulse</div>
+        <div class="info-row"><span class="info-key">Status</span><span class="info-val" id="i-pulse-status">--</span></div>
+        <div class="info-row"><span class="info-key">Active Signals</span><span class="info-val" id="i-signals">--</span></div>
+        <div class="info-row"><span class="info-key">Sentiment</span><span class="info-val" id="i-sentiment">--</span></div>
+        <div class="info-row"><span class="info-key">Accuracy</span><span class="info-val" id="i-accuracy">--</span></div>
+        <div class="info-row"><span class="info-key">Total Predictions</span><span class="info-val" id="i-predictions">--</span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Integrations</div>
+        <div class="info-row"><span class="info-key">OpenAI (AI Agent)</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+        <div class="info-row"><span class="info-key">ElevenLabs (TTS)</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+        <div class="info-row"><span class="info-key">Resend (Email)</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+        <div class="info-row"><span class="info-key">Twilio (SMS 2FA)</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+        <div class="info-row"><span class="info-key">Stripe</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+        <div class="info-row"><span class="info-key">Plaid</span><span class="info-val" style="color:var(--green)">Configured</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">API Endpoints (<span id="ep-count">--</span>)</div>
+    <div class="endpoints-section fade-in">
+      <div class="endpoints-filter">
+        <button class="filter-btn active" data-filter="all" onclick="filterEndpoints('all',this)">All</button>
+        <button class="filter-btn" data-filter="GET" onclick="filterEndpoints('GET',this)">GET</button>
+        <button class="filter-btn" data-filter="POST" onclick="filterEndpoints('POST',this)">POST</button>
+        <button class="filter-btn" data-filter="public" onclick="filterEndpoints('public',this)">Public</button>
+        <button class="filter-btn" data-filter="auth" onclick="filterEndpoints('auth',this)">Auth Required</button>
+      </div>
+      <div class="scroll-wrap">
+        <table class="endpoint-table" id="endpoint-table">
+          <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+          <tbody id="endpoint-body"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-title">Quick Links</div>
+    <div class="info-grid fade-in">
+      <div class="info-card">
+        <div class="info-card-title">External Services</div>
+        <div class="info-row"><span class="info-key">Trust Layer Blockchain</span><span class="info-val"><a href="https://dwtl.io" target="_blank">dwtl.io</a></span></div>
+        <div class="info-row"><span class="info-key">DarkWave Pulse</span><span class="info-val"><a href="https://darkwavepulse.com" target="_blank">darkwavepulse.com</a></span></div>
+        <div class="info-row"><span class="info-key">TrustShield</span><span class="info-val"><a href="https://trustshield.tech" target="_blank">trustshield.tech</a></span></div>
+        <div class="info-row"><span class="info-key">TLID Registry</span><span class="info-val"><a href="https://tlid.io" target="_blank">tlid.io</a></span></div>
+        <div class="info-row"><span class="info-key">DarkWave Studios</span><span class="info-val"><a href="https://darkwavestudios.io" target="_blank">darkwavestudios.io</a></span></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">App URLs</div>
+        <div class="info-row"><span class="info-key">Production</span><span class="info-val"><a href="https://trusthub.tlid.io" target="_blank">trusthub.tlid.io</a></span></div>
+        <div class="info-row"><span class="info-key">Explorer Page</span><span class="info-val"><a href="/">localhost:5000</a></span></div>
+        <div class="info-row"><span class="info-key">Health Check</span><span class="info-val"><a href="/api/developer/health">/api/developer/health</a></span></div>
+        <div class="info-row"><span class="info-key">Stats API</span><span class="info-val"><a href="/api/developer/stats">/api/developer/stats</a></span></div>
+        <div class="info-row"><span class="info-key">Contact</span><span class="info-val"><a href="mailto:team@dwsc.io">team@dwsc.io</a></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    Trust Layer Hub Developer Portal &middot; DarkWave Studios LLC &middot; Internal Use Only
+  </div>
+
+  <div id="login-overlay" style="display:none;position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+    <div style="max-width:360px;width:100%;padding:32px;border-radius:16px;background:var(--card);border:1px solid var(--border);text-align:center;">
+      <div class="top-bar-logo" style="width:40px;height:40px;font-size:16px;margin:0 auto 16px;">TL</div>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;font-family:-apple-system,sans-serif;">Developer Portal</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:20px;">Admin authentication required</div>
+      <input id="login-email" type="email" placeholder="Email" style="width:100%;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);color:#fff;font-size:13px;margin-bottom:10px;outline:none;font-family:inherit;" />
+      <input id="login-password" type="password" placeholder="Password" style="width:100%;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);color:#fff;font-size:13px;margin-bottom:14px;outline:none;font-family:inherit;" />
+      <button id="login-btn" onclick="doLogin()" style="width:100%;padding:10px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--blue));border:none;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:-apple-system,sans-serif;">Sign In</button>
+      <div id="login-error" style="color:var(--red);font-size:11px;margin-top:10px;display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+  var allEndpoints = [];
+  var authToken = localStorage.getItem('dev_portal_token') || '';
+
+  function getHeaders() {
+    return authToken ? { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' } : {};
+  }
+
+  function showLogin() {
+    document.getElementById('login-overlay').style.display = 'flex';
+  }
+
+  function hideLogin() {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+
+  function doLogin() {
+    var email = document.getElementById('login-email').value;
+    var password = document.getElementById('login-password').value;
+    var errEl = document.getElementById('login-error');
+    errEl.style.display = 'none';
+
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: password })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.token) {
+        authToken = d.token;
+        localStorage.setItem('dev_portal_token', d.token);
+        hideLogin();
+        loadAll();
+      } else {
+        errEl.textContent = d.error || 'Login failed';
+        errEl.style.display = 'block';
+      }
+    }).catch(function() {
+      errEl.textContent = 'Connection error';
+      errEl.style.display = 'block';
+    });
+  }
+
+  document.getElementById('login-password').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function setVal(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val != null ? val : '--';
+  }
+
+  function setHealth(id, status) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (status === 'healthy') el.className = 'health-dot green';
+    else if (status === 'unreachable' || status === 'unhealthy') el.className = 'health-dot red';
+    else el.className = 'health-dot amber';
+  }
+
+  function renderEndpoints(list) {
+    var tbody = document.getElementById('endpoint-body');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">No endpoints match filter</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(function(ep) {
+      return '<tr>' +
+        '<td><span class="method-badge method-' + ep.method + '">' + ep.method + '</span></td>' +
+        '<td class="ep-path">' + ep.path + '</td>' +
+        '<td><span class="auth-badge ' + (ep.auth ? 'auth-yes' : 'auth-no') + '">' + (ep.auth ? 'Auth' : 'Public') + '</span></td>' +
+        '<td class="ep-desc">' + ep.desc + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function filterEndpoints(filter, btn) {
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    var filtered = allEndpoints;
+    if (filter === 'GET') filtered = allEndpoints.filter(function(e) { return e.method === 'GET'; });
+    else if (filter === 'POST') filtered = allEndpoints.filter(function(e) { return e.method === 'POST'; });
+    else if (filter === 'public') filtered = allEndpoints.filter(function(e) { return !e.auth; });
+    else if (filter === 'auth') filtered = allEndpoints.filter(function(e) { return e.auth; });
+    renderEndpoints(filtered);
+  }
+
+  function loadAll() {
+    fetch('/api/developer/health', { headers: getHeaders() }).then(function(r) {
+      if (r.status === 401 || r.status === 403) { showLogin(); throw new Error('auth'); }
+      return r.json();
+    }).then(function(d) {
+      hideLogin();
+      setHealth('h-server', d.checks.server);
+      setHealth('h-db', d.checks.database);
+      setHealth('h-chain', d.checks.blockchain);
+      setHealth('h-pulse', d.checks.pulse);
+      setVal('h-time', 'Last checked: ' + new Date().toLocaleTimeString());
+    }).catch(function(e) {
+      if (e.message !== 'auth') setHealth('h-server', 'unreachable');
+    });
+
+    fetch('/api/developer/stats', { headers: getHeaders() }).then(function(r) {
+      if (r.status === 401 || r.status === 403) { showLogin(); throw new Error('auth'); }
+      return r.json();
+    }).then(function(d) {
+      setVal('s-users', d.database.users);
+      setVal('s-sessions', d.database.activeSessions);
+      setVal('s-hallmarks', d.database.hallmarks);
+      setVal('s-stamps', d.database.trustStamps);
+      setVal('s-channels', d.database.chatChannels);
+      setVal('s-messages', d.database.chatMessages);
+      setVal('s-linked', d.database.linkedAccounts);
+      setVal('s-stripe', d.database.stripeConnections);
+
+      setVal('i-uptime', d.system.uptime);
+      setVal('i-node', d.system.nodeVersion);
+      setVal('i-env', d.system.env);
+      setVal('i-mem', d.system.memoryMB + ' MB');
+      setVal('i-boot', new Date(d.system.bootTime).toLocaleString());
+
+      if (d.blockchain.status === 'connected') {
+        setVal('i-chain-status', 'Connected');
+        setVal('i-blocktime', d.blockchain.blockTime);
+        setVal('i-tps', d.blockchain.tps ? d.blockchain.tps.toLocaleString() : '--');
+        setVal('i-block', d.blockchain.lastBlock ? Number(d.blockchain.lastBlock).toLocaleString() : '--');
+        setVal('i-chainid', d.blockchain.chainId);
+        setVal('i-consensus', d.blockchain.consensus);
+        setVal('i-accounts', d.blockchain.totalAccounts);
+      } else {
+        setVal('i-chain-status', 'Unreachable');
+      }
+
+      if (d.pulse.status === 'connected') {
+        setVal('i-pulse-status', 'Connected');
+        setVal('i-signals', d.pulse.activeSignals);
+        setVal('i-sentiment', d.pulse.sentiment + ' (' + d.pulse.sentimentScore + ')');
+        setVal('i-accuracy', d.pulse.accuracy + '%');
+        setVal('i-predictions', d.pulse.totalPredictions ? d.pulse.totalPredictions.toLocaleString() : '--');
+      } else {
+        setVal('i-pulse-status', 'Unreachable');
+      }
+
+      allEndpoints = d.endpoints.list;
+      setVal('ep-count', d.endpoints.total + ' total | ' + d.endpoints.public + ' public | ' + d.endpoints.authenticated + ' auth');
+      renderEndpoints(allEndpoints);
+    }).catch(function(err) {
+      if (err.message !== 'auth') console.error('Stats load error:', err);
+    });
+  }
+
+  if (!authToken) { showLogin(); } else { loadAll(); }
+  setInterval(loadAll, 60000);
+  </script>
+</body>
+</html>

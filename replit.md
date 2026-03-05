@@ -112,6 +112,16 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 - `components/HamburgerMenu.tsx`: Slide-in navigation
 - Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
 
+## Developer Portal
+- **Route**: `/developer` — full admin dashboard served as HTML
+- **Backend**: `server/developer-portal.ts`
+  - `GET /api/developer/stats` — aggregated system stats (DB counts, blockchain status, Pulse status, server info, endpoint catalog)
+  - `GET /api/developer/health` — service health checks (server, database, blockchain, pulse)
+  - `GET /developer` — serves the developer portal HTML page
+- **Dashboard shows**: system overview (user/session/hallmark/stamp counts), service health (server/DB/chain/pulse with colored indicators), server info (uptime/node version/memory/env), blockchain stats (block time/TPS/accounts), Pulse stats (signals/sentiment/accuracy), all 42+ API endpoints with method/path/auth/description, integration status, quick links
+- **Template**: `server/templates/developer-portal.html` — dark cyber-glassmorphic monospace design, auto-refreshes every 60s
+- **Production-safe**: Uses AbortController pattern (not AbortSignal.timeout) for external API calls
+
 ## Blockchain Connection (dwtl.io) — LIVE
 - **Backend proxy**: `server/blockchain.ts` connects to `https://dwtl.io` for all on-chain data
 - **Address derivation**: `0x` + SHA256(`trustlayer:member:` + userId).slice(0, 40)
