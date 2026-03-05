@@ -360,4 +360,14 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     tags: ["Social", "Events", "Rewards", "Hospitality"],
     icon: "cafe",
   },
+  {
+    id: 33,
+    name: "TrustGen",
+    hook: "AI-Powered 3D Creation Studio",
+    description: "Premium AI-powered 3D engine, animation studio, and export tool. Generate, animate, and export stunning 3D models and scenes directly in the browser.",
+    url: "https://trustgen.tlid.io",
+    category: "Core",
+    tags: ["AI", "3D", "Animation", "Creative"],
+    icon: "cube",
+  },
 ];

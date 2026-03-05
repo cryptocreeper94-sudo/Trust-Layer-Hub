@@ -15,7 +15,7 @@ The Trust Hub mobile app (React Native / Expo SDK 54) is functional with:
 - SMS 2FA via Twilio (opt-in with consent, 6-digit codes)
 - Hallmark System integrated (TH-XXXXXXXX numbering, SHA-256 hashing, simulated blockchain submission)
 - AI Agent (OpenAI streaming chat, ElevenLabs TTS)
-- 5-tab interface: Home, Explore (32 apps), Wallet, Chat, Profile
+- 5-tab interface: Home, Explore (34 apps), Wallet, Chat, Profile
 - PWA configured with service worker, manifest, offline support
 - Terms of Service & Privacy Policy screens
 - Dark glassmorphic UI with cyan/purple accents
@@ -182,7 +182,7 @@ GET  /api/subscription/plans     — Available plans
 
 ### Ecosystem
 ```
-GET  /api/ecosystem/apps         — 32-app directory (public)
+GET  /api/ecosystem/apps         — 34-app directory (public)
 POST /api/guardian/scan           — Guardian security scanner (public)
 ```
 

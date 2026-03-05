@@ -1,7 +1,7 @@
 # Trust Layer Hub
 
 ## Overview
-The Trust Layer Hub is a native mobile application designed as the central gateway to a sprawling 32-app blockchain ecosystem. Its primary purpose is to provide a unified user experience for authentication, financial management, communication, and ecosystem exploration. Key capabilities include real authentication, live API integration with robust mock data fallbacks, single sign-on (SSO) for seamless access to ecosystem apps, a persistent WebSocket-based chat system, a comprehensive financial wallet integrating traditional banking (Plaid) and various crypto wallets (WalletConnect, Phantom), an AI agent with voice capabilities (ElevenLabs), and a suite of community features like leaderboards, activity feeds, and a unique Hallmark timeline for tracking digital provenance. The project aims to establish a foundational and interconnected platform for the entire Trust Layer ecosystem, fostering user engagement and providing a secure, transparent digital environment.
+The Trust Layer Hub is a native mobile application designed as the central gateway to a sprawling 34-app blockchain ecosystem. Its primary purpose is to provide a unified user experience for authentication, financial management, communication, and ecosystem exploration. Key capabilities include real authentication, live API integration with robust mock data fallbacks, single sign-on (SSO) for seamless access to ecosystem apps, a persistent WebSocket-based chat system, a comprehensive financial wallet integrating traditional banking (Plaid) and various crypto wallets (WalletConnect, Phantom), an AI agent with voice capabilities (ElevenLabs), and a suite of community features like leaderboards, activity feeds, and a unique Hallmark timeline for tracking digital provenance. The project aims to establish a foundational and interconnected platform for the entire Trust Layer ecosystem, fostering user engagement and providing a secure, transparent digital environment.
 
 ## User Preferences
 I prefer clear, concise instructions and explanations.
@@ -93,8 +93,8 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 
 ## Welcome Modal
 - `components/WelcomeModal.tsx`: First-visit popup explaining the Trust Layer ecosystem
-- Shows 5 key features (wallet, bank/Stripe connections, affiliate program, 32-app ecosystem, trust stamps)
-- Network stats: 200K+ TPS, 400ms blocks, 32 apps
+- Shows 5 key features (wallet, bank/Stripe connections, affiliate program, 34-app ecosystem, trust stamps)
+- Network stats: 200K+ TPS, 400ms blocks, 34 apps
 - CTA: Create Account or Explore as Guest
 - Persisted via AsyncStorage (`hasSeenWelcome_v1`)
 - Rendered on home screen (`app/(tabs)/index.tsx`)
@@ -160,7 +160,7 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
   - Login screen: "TrustLink" button for existing ecosystem members
 - **Token Exchange** (for other apps calling Hub):
   - `POST /api/auth/exchange-token` — accepts `hubSessionToken`, returns `ecosystemToken` + `uniqueHash` + user info
-- **UniqueHash**: Ecosystem-wide affiliate identifier. SSO carries it across all 33 apps. Referral links use format `https://[app].tlid.io/ref/[uniqueHash]`
+- **UniqueHash**: Ecosystem-wide affiliate identifier. SSO carries it across all 34 apps. Referral links use format `https://[app].tlid.io/ref/[uniqueHash]`
 
 ## Blockchain Connection (dwtl.io) — LIVE
 - **Backend proxy**: `server/blockchain.ts` connects to `https://dwtl.io` for all on-chain data

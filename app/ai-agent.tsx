@@ -83,7 +83,7 @@ export default function AIAgentScreen() {
       id: genId(),
       role: "assistant",
       content:
-        "Welcome to the Trust Layer AI Agent. I can help you navigate our 32-app ecosystem, answer questions about Signal (SIG), Shells, staking, security, and more. How can I assist you today?",
+        "Welcome to the Trust Layer AI Agent. I can help you navigate our 34-app ecosystem, answer questions about Signal (SIG), Shells, staking, security, and more. How can I assist you today?",
     },
   ]);
   const [inputText, setInputText] = useState("");

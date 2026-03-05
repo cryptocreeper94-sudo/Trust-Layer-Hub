@@ -2,7 +2,7 @@
 
 ## What Is TrustLink
 
-TrustLink is the Trust Layer ecosystem's single sign-on (SSO) system. It allows any user who has registered on **any** app in the 33-app ecosystem to sign into **any other** app without re-registering. Their identity, `uniqueHash` (affiliate ID), and profile travel with them.
+TrustLink is the Trust Layer ecosystem's single sign-on (SSO) system. It allows any user who has registered on **any** app in the 34-app ecosystem to sign into **any other** app without re-registering. Their identity, `uniqueHash` (affiliate ID), and profile travel with them.
 
 **The user experience**: On your app's login screen, there's a "TrustLink" button. The user enters their Trust Layer email and taps TrustLink. Your app validates them against the central Trust Layer backend (`dwtl.io`), finds or creates a local account, syncs their `uniqueHash`, and logs them in. They see their name, their account, their affiliate identity — all recognized instantly.
 
@@ -320,6 +320,7 @@ For reference, here are all the apps that should implement TrustLink:
 | PaintPros | paintpros.io |
 | Nashville Painting | nashpaintpros.io |
 | DWC Studio | studio.tlid.io |
+| TrustGen | trustgen.tlid.io |
 
 ---
 

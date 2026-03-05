@@ -142,7 +142,7 @@ export function WelcomeModal() {
                 <Text style={styles.descText}>
                   Welcome to the unified hub for the Trust Layer protocol ecosystem.
                   Create your free account to unlock your native wallet, DeFi staking,
-                  affiliate rewards, and access to 32 integrated blockchain applications.
+                  affiliate rewards, and access to 34 integrated blockchain applications.
                 </Text>
               </View>
 
