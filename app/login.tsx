@@ -82,7 +82,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <BackgroundGlow />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: insets.top + webTopInset + 60, maxWidth: isDesktop ? 480 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: insets.top + webTopInset + 60, paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 20, maxWidth: isDesktop ? 480 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]} keyboardShouldPersistTaps="handled">
         <View style={styles.logoSection}>
           <View style={styles.logoIcon}>
             <Ionicons name="shield-checkmark" size={40} color={Colors.primary} />
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     gap: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   logoSection: {
     alignItems: "center" as const,

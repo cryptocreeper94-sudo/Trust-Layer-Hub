@@ -62,6 +62,7 @@ export default function SmsOptInScreen() {
           styles.content,
           {
             paddingTop: insets.top + webTopInset + 40,
+            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 20,
             maxWidth: isDesktop ? 480 : undefined,
             alignSelf: isDesktop ? ("center" as const) : undefined,
             width: isDesktop ? "100%" : undefined,
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     gap: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   headerRow: {
     flexDirection: "row" as const,
