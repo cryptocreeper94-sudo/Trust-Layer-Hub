@@ -610,11 +610,124 @@ export function registerAuthRoutes(app: Express): void {
         expiresIn: 3600,
         userId: user.id.toString(),
         email: user.email,
+        username: user.username,
         displayName: user.firstName || user.username,
+        uniqueHash: user.uniqueHash,
       });
     } catch (error: any) {
       console.error("Token exchange error:", error?.message);
       res.status(500).json({ error: "Token exchange failed" });
+    }
+  });
+
+  app.post("/api/auth/sso/verify", async (req: Request, res: Response) => {
+    try {
+      const { sso_token, auth_token } = req.body;
+      const token = sso_token || auth_token;
+      if (!token) {
+        return res.status(400).json({ error: "SSO token is required" });
+      }
+
+      const DWTL_BASE = "https://dwtl.io";
+      let ecosystemUser: any = null;
+
+      try {
+        const verifyRes = await fetch(`${DWTL_BASE}/api/auth/exchange-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hubSessionToken: token }),
+        });
+        if (verifyRes.ok) {
+          ecosystemUser = await verifyRes.json();
+        }
+      } catch {}
+
+      if (!ecosystemUser && token.length >= 48) {
+        try {
+          const meRes = await fetch(`${DWTL_BASE}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            ecosystemUser = meData.user || meData;
+          }
+        } catch {}
+      }
+
+      if (!ecosystemUser || !ecosystemUser.email) {
+        return res.status(401).json({ error: "Invalid or expired SSO token" });
+      }
+
+      let [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, ecosystemUser.email.toLowerCase()));
+
+      const ecosystemHash = ecosystemUser.uniqueHash || ecosystemUser.unique_hash || null;
+
+      if (!existingUser) {
+        const uniqueHash = ecosystemHash || crypto.randomBytes(16).toString("hex");
+
+        const tempPassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 12);
+
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            email: ecosystemUser.email.toLowerCase(),
+            username: ecosystemUser.username || ecosystemUser.displayName || ecosystemUser.email.split("@")[0],
+            password: tempPassword,
+            firstName: ecosystemUser.firstName || ecosystemUser.displayName || null,
+            uniqueHash,
+            emailVerified: true,
+            role: "user",
+          })
+          .returning();
+
+        existingUser = newUser;
+
+        try {
+          await generateTrustHubHallmark(newUser.id);
+          await createTrustStamp(newUser.id, "account", "sso_registration", { source: "ecosystem_sso" });
+        } catch {}
+      } else if (ecosystemHash && existingUser.uniqueHash !== ecosystemHash) {
+        await db
+          .update(users)
+          .set({ uniqueHash: ecosystemHash })
+          .where(eq(users.id, existingUser.id));
+        existingUser = { ...existingUser, uniqueHash: ecosystemHash };
+      }
+
+      const sessionToken = generateToken();
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      await db.insert(sessions).values({
+        userId: existingUser.id,
+        token: sessionToken,
+        expiresAt,
+      });
+
+      await createTrustStamp(existingUser.id, "account", "sso_login", { source: "ecosystem_sso" });
+
+      res.json({
+        user: {
+          id: existingUser.id.toString(),
+          email: existingUser.email,
+          username: existingUser.username,
+          firstName: existingUser.firstName,
+          displayName: existingUser.firstName || existingUser.username,
+          uniqueHash: existingUser.uniqueHash,
+          role: existingUser.role || "user",
+          emailVerified: existingUser.emailVerified,
+          phoneVerified: existingUser.phoneVerified,
+          twoFactorEnabled: existingUser.twoFactorEnabled,
+          referredBy: existingUser.referredBy,
+        },
+        sessionToken,
+        ssoLinked: true,
+      });
+    } catch (error: any) {
+      console.error("SSO verify error:", error?.message);
+      res.status(500).json({ error: "SSO verification failed" });
     }
   });
 

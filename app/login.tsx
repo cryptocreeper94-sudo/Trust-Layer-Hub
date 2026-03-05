@@ -26,13 +26,14 @@ export default function LoginScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const { login, loginWithBiometrics, biometricsAvailable, biometricsEnabled, authStep } = useAuth();
+  const { login, loginWithSSO, loginWithBiometrics, biometricsAvailable, biometricsEnabled, authStep } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -208,6 +209,63 @@ export default function LoginScreen() {
             )}
           </Pressable>
         )}
+
+        <View style={styles.ssoDivider}>
+          <View style={styles.ssoDividerLine} />
+          <Text style={styles.ssoDividerText}>or</Text>
+          <View style={styles.ssoDividerLine} />
+        </View>
+
+        <Pressable
+          style={styles.ssoButton}
+          onPress={async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setError("");
+            setSsoLoading(true);
+            const ssoEmail = email.trim();
+            if (!ssoEmail) {
+              setError("Enter your Trust Layer email above, then tap this button.");
+              setSsoLoading(false);
+              return;
+            }
+            try {
+              const res = await fetch(
+                `https://dwtl.io/api/auth/lookup`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: ssoEmail }),
+                }
+              );
+              if (res.ok) {
+                const data = await res.json();
+                if (data.sessionToken || data.token) {
+                  const success = await loginWithSSO(data.sessionToken || data.token);
+                  if (success) {
+                    setSsoLoading(false);
+                    return;
+                  }
+                }
+              }
+              setError("Could not find an existing Trust Layer account. Please sign in with your credentials or create an account.");
+            } catch {
+              setError("Trust Layer ecosystem is temporarily unavailable. Please sign in with your credentials.");
+            }
+            setSsoLoading(false);
+          }}
+          disabled={ssoLoading}
+          testID="login-sso-button"
+        >
+          {ssoLoading ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <>
+              <Ionicons name="shield-checkmark" size={22} color={Colors.primary} />
+              <Text style={styles.ssoButtonText}>Sign in with Trust Layer</Text>
+            </>
+          )}
+        </Pressable>
+        <Text style={styles.ssoHint}>Already a Trust Layer ecosystem member? Enter your email above and use this button.</Text>
 
         <View style={styles.forgotRow}>
           <Pressable
@@ -401,6 +459,47 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.primary,
     fontFamily: "Inter_600SemiBold",
+  },
+  ssoDivider: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    marginVertical: 4,
+  },
+  ssoDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  ssoDividerText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+  },
+  ssoButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "rgba(147,51,234,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(147,51,234,0.2)",
+  },
+  ssoButtonText: {
+    fontSize: 15,
+    color: Colors.primary,
+    fontFamily: "Inter_600SemiBold",
+  },
+  ssoHint: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center" as const,
+    lineHeight: 16,
   },
   loginButton: {
     marginTop: 4,

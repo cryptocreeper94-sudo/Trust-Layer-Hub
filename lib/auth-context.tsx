@@ -41,6 +41,7 @@ interface AuthContextValue {
   biometricsAvailable: boolean;
   biometricsEnabled: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  loginWithSSO: (ssoToken: string) => Promise<boolean>;
   loginWithBiometrics: () => Promise<boolean>;
   enableBiometrics: () => Promise<boolean>;
   disableBiometrics: () => Promise<void>;
@@ -127,6 +128,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPhoneHint(data.phoneHint || "");
     } else {
       setAuthStep("idle");
+    }
+  }
+
+  async function loginWithSSO(ssoToken: string): Promise<boolean> {
+    try {
+      const data = await apiPost<{
+        user: User;
+        sessionToken: string;
+        ssoLinked: boolean;
+      }>("/api/auth/sso/verify", { sso_token: ssoToken }, false);
+
+      await setSessionToken(data.sessionToken);
+      setUser(data.user);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -314,6 +331,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       biometricsAvailable,
       biometricsEnabled,
       login,
+      loginWithSSO,
       loginWithBiometrics,
       enableBiometrics,
       disableBiometrics,
