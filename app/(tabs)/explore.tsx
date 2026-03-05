@@ -90,7 +90,7 @@ export default function ExploreScreen() {
       <BackgroundGlow />
       <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
         <GradientText text="Explore" style={styles.screenTitle} />
-        <Text style={styles.subtitle}>32 Apps. One Ecosystem.</Text>
+        <Text style={styles.subtitle}>34 Apps. One Ecosystem.</Text>
 
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={18} color={Colors.textMuted} />
