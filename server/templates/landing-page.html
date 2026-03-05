@@ -643,6 +643,12 @@
           </div>
         </div>
       </div>
+      <div class="hero-dots" id="hero-dots">
+        <button class="hero-dot active" data-idx="0"></button>
+        <button class="hero-dot" data-idx="1"></button>
+        <button class="hero-dot" data-idx="2"></button>
+        <button class="hero-dot" data-idx="3"></button>
+      </div>
     </section>
 
     <div class="mobile-search">
@@ -934,6 +940,43 @@
       renderAccordions(null);
       renderEcoCarousel();
       createParticles();
+
+      var videoCount = 4;
+      var currentVideo = 0;
+      var videos = [];
+      for (var vi = 0; vi < videoCount; vi++) {
+        videos.push(document.getElementById('hero-video-' + vi));
+      }
+      var dots = document.querySelectorAll('.hero-dot');
+
+      function switchVideo(idx) {
+        if (idx === currentVideo) return;
+        videos[currentVideo].classList.remove('active');
+        videos[currentVideo].pause();
+        currentVideo = idx;
+        videos[currentVideo].classList.add('active');
+        videos[currentVideo].currentTime = 0;
+        videos[currentVideo].play().catch(function(){});
+        dots.forEach(function(d, i) {
+          d.classList.toggle('active', i === idx);
+        });
+      }
+
+      videos.forEach(function(v, i) {
+        v.addEventListener('ended', function() {
+          switchVideo((i + 1) % videoCount);
+        });
+      });
+
+      dots.forEach(function(d) {
+        d.addEventListener('click', function() {
+          switchVideo(parseInt(d.getAttribute('data-idx')));
+        });
+      });
+
+      if (videos[0]) {
+        videos[0].play().catch(function(){});
+      }
 
       function fetchNetworkStats() {
         fetch('/api/network/stats').then(function(r) { return r.json(); }).then(function(d) {
