@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/colors";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
+import { useAuth } from "@/lib/auth-context";
 
 function NativeTabLayout() {
   return (
@@ -86,7 +87,7 @@ function ActiveTabIcon({ name, color, size, focused }: { name: string; color: st
   );
 }
 
-function ClassicTabLayout() {
+function ClassicTabLayout({ isDevMode }: { isDevMode: boolean }) {
   const isWeb = Platform.OS === "web";
 
   return (
@@ -155,6 +156,16 @@ function ClassicTabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="developer"
+        options={{
+          title: "Dev",
+          href: isDevMode ? undefined : null,
+          tabBarIcon: ({ color, size, focused }) => (
+            <ActiveTabIcon name={focused ? "code-slash" : "code-slash-outline"} color={color} size={size} focused={focused} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
@@ -180,6 +191,7 @@ function FloatingMenuButton({ onPress }: { onPress: () => void }) {
 
 export default function TabLayout() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const { isDevMode } = useAuth();
 
   if (isLiquidGlassAvailable()) {
     return (
@@ -193,7 +205,7 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ClassicTabLayout />
+      <ClassicTabLayout isDevMode={isDevMode} />
       <FloatingMenuButton onPress={() => setMenuVisible(true)} />
       <HamburgerMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </View>

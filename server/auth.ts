@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { db } from "./db";
 import { users, verificationCodes, sessions } from "./db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, sql } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail } from "./services/resend";
 import { sendSMS2FACode, isTwilioConfigured } from "./services/twilio";
 import { generateTrustHubHallmark, createTrustStamp } from "./hallmark";
@@ -113,6 +113,9 @@ export function registerAuthRoutes(app: Express): void {
 
       const referredBy = req.body.referralCode || null;
 
+      const [userCountResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const isFirstUser = Number(userCountResult?.count || 0) === 0;
+
       const [newUser] = await db
         .insert(users)
         .values({
@@ -122,7 +125,7 @@ export function registerAuthRoutes(app: Express): void {
           passwordHash,
           phone: phone || null,
           uniqueHash,
-          role: "user",
+          role: isFirstUser ? "admin" : "user",
           emailVerified: false,
           phoneVerified: false,
           twoFactorEnabled: false,

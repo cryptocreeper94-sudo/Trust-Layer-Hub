@@ -10,6 +10,8 @@ import {
   Alert,
   Linking,
   useWindowDimensions,
+  Modal,
+  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -96,12 +98,16 @@ export default function ProfileScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isDevMode, activateDevMode, deactivateDevMode } = useAuth();
   const { data: membership } = useMembership();
   const { data: subscription } = useSubscriptionStatus();
   const [notifications, setNotifications] = useState(true);
   const [biometrics, setBiometrics] = useState(false);
   const { data: timelineData } = useHallmarkTimeline();
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [versionTaps, setVersionTaps] = useState(0);
   const timeline = timelineData?.timeline || [];
 
   const displayName = user?.displayName || user?.username || "Trust User";
@@ -384,7 +390,26 @@ export default function ProfileScreen() {
               <Text style={styles.footerLink}>Privacy Policy</Text>
             </Pressable>
           </View>
-          <Text style={styles.footer}>Trust Layer Hub v1.0.0</Text>
+          <Pressable
+            onPress={() => {
+              const next = versionTaps + 1;
+              setVersionTaps(next);
+              if (next >= 5 && !isDevMode) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                setShowPinModal(true);
+                setVersionTaps(0);
+              } else if (isDevMode && next >= 3) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                deactivateDevMode();
+                setVersionTaps(0);
+                Alert.alert("Developer Mode", "Developer mode deactivated.");
+              }
+            }}
+          >
+            <Text style={styles.footer}>
+              Trust Layer Hub v1.0.0{isDevMode ? " (Dev)" : ""}
+            </Text>
+          </Pressable>
           <Pressable onPress={() => Linking.openURL("https://trusthub.tlid.io")}>
             <Text style={styles.footerLink}>DarkWave Studios LLC</Text>
           </Pressable>
@@ -399,6 +424,65 @@ export default function ProfileScreen() {
         </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showPinModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
+      >
+        <Pressable
+          style={styles.pinOverlay}
+          onPress={() => { setShowPinModal(false); setPinInput(""); setPinError(""); }}
+        >
+          <Pressable style={styles.pinCard} onPress={() => {}}>
+            <View style={styles.pinIconWrap}>
+              <Ionicons name="code-slash" size={24} color={Colors.primary} />
+            </View>
+            <Text style={styles.pinTitle}>Developer Access</Text>
+            <Text style={styles.pinSubtitle}>Enter your admin PIN</Text>
+            <TextInput
+              style={styles.pinInput}
+              value={pinInput}
+              onChangeText={(t) => { setPinInput(t); setPinError(""); }}
+              placeholder="PIN"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+              autoFocus
+              testID="dev-pin-input"
+            />
+            {pinError ? <Text style={styles.pinErrorText}>{pinError}</Text> : null}
+            <Pressable
+              style={({ pressed }) => [styles.pinSubmit, pressed && { opacity: 0.8 }]}
+              onPress={() => {
+                if (activateDevMode(pinInput)) {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  setShowPinModal(false);
+                  setPinInput("");
+                  setPinError("");
+                  Alert.alert("Developer Mode", "Developer mode activated. Check your tab bar.");
+                } else {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                  setPinError("Invalid PIN");
+                  setPinInput("");
+                }
+              }}
+              testID="dev-pin-submit"
+            >
+              <LinearGradient
+                colors={["#06b6d4", "#2563eb"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.pinSubmitGrad}
+              >
+                <Text style={styles.pinSubmitText}>Unlock</Text>
+              </LinearGradient>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -776,5 +860,79 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     marginTop: 3,
     letterSpacing: 0.5,
+  },
+  pinOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  pinCard: {
+    width: 300,
+    backgroundColor: Colors.surfaceSolid,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 28,
+    alignItems: "center" as const,
+  },
+  pinIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,255,255,0.08)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    marginBottom: 14,
+  },
+  pinTitle: {
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  pinSubtitle: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textSecondary,
+    marginBottom: 20,
+  },
+  pinInput: {
+    width: "100%" as any,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    color: Colors.textPrimary,
+    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    textAlign: "center" as const,
+    letterSpacing: 8,
+    marginBottom: 8,
+  },
+  pinErrorText: {
+    fontSize: 12,
+    color: Colors.error,
+    fontFamily: "Inter_500Medium",
+    marginBottom: 8,
+  },
+  pinSubmit: {
+    width: "100%" as any,
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: "hidden" as const,
+  },
+  pinSubmitGrad: {
+    paddingVertical: 12,
+    alignItems: "center" as const,
+    borderRadius: 12,
+  },
+  pinSubmitText: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+    color: Colors.textPrimary,
   },
 });

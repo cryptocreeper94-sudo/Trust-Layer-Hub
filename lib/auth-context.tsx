@@ -34,6 +34,7 @@ interface AuthContextValue {
   authStep: AuthStep;
   phoneHint: string;
   isNewRegistration: boolean;
+  isDevMode: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, username: string, password: string, firstName?: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
@@ -45,6 +46,8 @@ interface AuthContextValue {
   refreshUser: () => Promise<void>;
   clearAuthStep: () => void;
   clearNewRegistration: () => void;
+  activateDevMode: (pin: string) => boolean;
+  deactivateDevMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -55,9 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authStep, setAuthStep] = useState<AuthStep>("idle");
   const [phoneHint, setPhoneHint] = useState("");
   const [isNewRegistration, setIsNewRegistration] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(false);
 
   useEffect(() => {
     checkSession();
+    AsyncStorage.getItem("devModeActive").then(val => {
+      if (val === "true") setIsDevMode(true);
+    });
   }, []);
 
   async function checkSession() {
@@ -168,6 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setAuthStep("idle");
     setPhoneHint("");
+    setIsDevMode(false);
+    AsyncStorage.removeItem("devModeActive");
   }
 
   async function refreshUser() {
@@ -185,6 +194,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsNewRegistration(false);
   }
 
+  function activateDevMode(pin: string): boolean {
+    if (pin === "0424") {
+      setIsDevMode(true);
+      AsyncStorage.setItem("devModeActive", "true");
+      return true;
+    }
+    return false;
+  }
+
+  function deactivateDevMode() {
+    setIsDevMode(false);
+    AsyncStorage.removeItem("devModeActive");
+  }
+
   const value = useMemo(
     () => ({
       user,
@@ -193,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authStep,
       phoneHint,
       isNewRegistration,
+      isDevMode,
       login,
       register,
       verifyEmail,
@@ -204,8 +228,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser,
       clearAuthStep,
       clearNewRegistration,
+      activateDevMode,
+      deactivateDevMode,
     }),
-    [user, isLoading, authStep, phoneHint, isNewRegistration]
+    [user, isLoading, authStep, phoneHint, isNewRegistration, isDevMode]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
