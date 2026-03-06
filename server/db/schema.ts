@@ -157,6 +157,25 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt"),
+  content: text("content").notNull(),
+  category: text("category"),
+  tags: jsonb("tags").$type<string[]>(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
+  author: text("author").default("Trust Layer"),
+  publishedAt: timestamp("published_at"),
+  updatedAt: timestamp("updated_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  status: text("status").default("published"),
+  aiGenerated: boolean("ai_generated").default(true),
+});
+
 export const stripeConnections = pgTable("stripe_connections", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),

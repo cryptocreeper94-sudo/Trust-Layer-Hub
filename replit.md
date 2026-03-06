@@ -110,7 +110,26 @@ Staking, swap, and tokenomics aligned with the Trust Layer DeFi spec:
 
 ## Hamburger Menu
 - `components/HamburgerMenu.tsx`: Slide-in navigation
-- Items: Multi-Sig (conditional), Leaderboard, Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
+- Items: Multi-Sig (conditional), Leaderboard, Blog (external), Stripe Dashboard, Guardian Scanner, Hallmark, Developer Portal, Settings, Support
+
+## AI-Driven Blog
+- **Backend**: `server/blog.ts` — full blog system with SEO-optimized server-rendered pages
+- **Database**: `blogPosts` table (slug, title, excerpt, content, category, tags, metaTitle, metaDescription, metaKeywords, author, status, aiGenerated)
+- **API Endpoints**:
+  - `GET /api/blog/posts` (public) — paginated list (?limit, ?offset, ?category)
+  - `GET /api/blog/posts/:slug` (public) — single post by slug
+  - `POST /api/blog/generate` (auth) — AI-generates a blog post via OpenAI (topic + category in, full post out)
+- **Server-Rendered Pages** (SEO-crawlable):
+  - `GET /blog` — blog listing page (dark themed, full OG/Twitter/JSON-LD SEO tags)
+  - `GET /blog/:slug` — individual post page (Article schema, per-post OG tags)
+- **Auto-seeding**: 5 initial posts generated on first access (OpenAI with hardcoded fallback)
+- **Accessible from**: Landing page header nav, Hamburger menu in-app
+
+## SEO
+- **Landing Page**: Full Open Graph, Twitter Card, JSON-LD (Organization + WebApplication + SoftwareApplication), canonical URL, robots meta, comprehensive keywords
+- **robots.txt**: `GET /robots.txt` — allows all crawlers, points to sitemap
+- **sitemap.xml**: `GET /sitemap.xml` — dynamic XML sitemap with homepage, /blog, and all published blog post URLs from DB
+- **Blog Posts**: Each post has individual metaTitle, metaDescription, metaKeywords, OG tags, Twitter cards, and Article JSON-LD schema
 
 ## Developer Portal
 - **In-App Tab**: `app/(tabs)/developer.tsx` — hidden Developer tab, unlocked via PIN 0424

@@ -2,6 +2,9 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { seedGenesisHallmark } from "./hallmark";
+import { db } from "./db";
+import { blogPosts } from "./db/schema";
+import { eq, desc } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -208,6 +211,45 @@ function configureExpoAndLanding(app: express.Application) {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Content-Type", "application/json");
     res.sendFile(path.resolve(process.cwd(), "public", "manifest.json"));
+  });
+
+  app.get("/robots.txt", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/plain");
+    res.send(
+      `User-agent: *\nAllow: /\n\nSitemap: https://trusthub.tlid.io/sitemap.xml\n`
+    );
+  });
+
+  app.get("/sitemap.xml", async (req: Request, res: Response) => {
+    try {
+      const posts = await db
+        .select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt, publishedAt: blogPosts.publishedAt })
+        .from(blogPosts)
+        .where(eq(blogPosts.status, "published"))
+        .orderBy(desc(blogPosts.publishedAt));
+
+      const proto = req.header("x-forwarded-proto") || req.protocol || "https";
+      const host = req.header("x-forwarded-host") || req.get("host") || "trusthub.tlid.io";
+      const base = `${proto}://${host}`;
+      const today = new Date().toISOString().split("T")[0];
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      xml += `  <url><loc>${base}/</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>\n`;
+      xml += `  <url><loc>${base}/blog</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
+
+      for (const post of posts) {
+        const lastmod = (post.updatedAt || post.publishedAt || new Date()).toISOString().split("T")[0];
+        xml += `  <url><loc>${base}/blog/${post.slug}</loc><lastmod>${lastmod}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>\n`;
+      }
+
+      xml += `</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (err) {
+      res.setHeader("Content-Type", "application/xml");
+      res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://trusthub.tlid.io/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n</urlset>`);
+    }
   });
 
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));

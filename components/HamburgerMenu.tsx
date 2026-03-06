@@ -83,6 +83,7 @@ export function HamburgerMenu({ visible, onClose }: HamburgerMenuProps) {
       condition: isMultisig,
     },
     { icon: "podium", label: "Leaderboard", route: "/leaderboard" },
+    { icon: "newspaper", label: "Blog", externalUrl: "https://trusthub.tlid.io/blog" },
     { icon: "card", label: "Stripe Dashboard", route: "/stripe-dashboard" },
     { icon: "scan", label: "Guardian Scanner" },
     { icon: "ribbon", label: "Hallmark" },
