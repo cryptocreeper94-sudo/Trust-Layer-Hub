@@ -1,6 +1,6 @@
 # LUME — The AI-Native Programming Language
 ### Language Design Specification & Build Roadmap
-**Version 0.4 — Complete Draft with Future Vision | March 2026**
+**Version 0.5 — Complete Draft with Future Vision | March 2026**
 
 ---
 
@@ -1072,11 +1072,268 @@ The pictographic layer sits on top of the existing Lume compiler. It doesn't rep
 
 *This is a Lume v2.0+ feature. Build the language first (Milestones 1-5), prove it works, build the community, then introduce pictographic mode as the next evolution.*
 
+### 10.6 Agent-to-Agent Communication
+
+Current AI systems are isolated. An agent in one app can't send instructions to an agent in another app in a way both understand. Lume solves this by becoming the shared language between AI systems — not just a language humans write, but a protocol agents use to communicate with each other.
+
+**How it works:**
+
+```
+// Agent A (in StrikeAgent) writes and sends a Lume script
+let task = compose:
+    let market = fetch price of "AAPL"
+    if market.change is greater than 5:
+        ask "Summarize why AAPL moved today"
+
+send task to agent "tradeworks" at "tradeworksai.io"
+```
+
+```
+// Agent B (in TradeWorks AI) receives and executes it
+receive task from agent "strikeagent":
+    verify signature
+    execute in sandbox
+    return result to sender
+```
+
+**New keywords for agent communication:**
+- `compose` — Build a Lume script as a data structure (not executed immediately)
+- `send ... to agent` — Transmit a composed script to another agent
+- `receive ... from agent` — Listen for incoming scripts from other agents
+- `verify signature` — Check cryptographic signature before execution (see Section 10.7)
+- `execute in sandbox` — Run received code in an isolated environment with limited permissions
+
+**Why this matters:** In the Trust Layer ecosystem with 34+ apps, agents could collaborate across applications using Lume as their shared protocol. A user could say "have StrikeAgent analyze the market and tell TradeWorks to adjust my portfolio" — and the agents handle it by exchanging Lume scripts. The language becomes the connective tissue of the entire ecosystem.
+
+### 10.7 Trust & Code Verification
+
+Every `.lume` file can carry a cryptographic signature proving who wrote it and that it hasn't been modified. This is essential for agent-to-agent communication (Section 10.6) and for building trust in shared code.
+
+**Built-in signing:**
+```
+// Sign a file when building
+$ lume build --sign app.lume
+
+// Verify a file before running it
+$ lume verify app.lume
+Signed by: agent@strikeagent.io
+Signed at: 2026-08-23T14:30:00Z
+Integrity: VALID — no modifications since signing
+```
+
+**In-language verification:**
+```
+let script = receive from agent "external"
+
+when verify script is:
+    trusted(code)   -> execute code
+    untrusted(reason) -> log "Rejected: {reason}"
+    tampered        -> alert "Code was modified after signing"
+```
+
+**Trust levels:**
+| Level | Description | Allowed Actions |
+|-------|-------------|-----------------|
+| `owner` | Code written by the current system | Full access, no restrictions |
+| `trusted` | Code from a verified agent in the ecosystem | Execute in standard environment |
+| `verified` | Code with valid signature from unknown source | Execute in sandbox only |
+| `untrusted` | No signature or invalid signature | Reject by default, log attempt |
+
+**Integration with Trust Layer:** The signing system uses the same blockchain address scheme as the Trust Layer ecosystem (`0x` + SHA256 hash). An agent's code signature is tied to its Trust Layer identity, creating a chain of trust from the code back to the ecosystem.
+
+### 10.8 Memory & Context Persistence
+
+Current AI calls are stateless — every `ask` starts from zero. Lume introduces a `remember` keyword that gives AI calls persistent memory within a session, across sessions, or permanently.
+
+**Session memory (default):**
+```
+// The AI remembers previous exchanges within this program run
+let intro = ask "My name is Ada and I'm building a weather app"
+let followup = ask "What framework would you recommend for what I just described?"
+// The AI knows about Ada and the weather app from the previous call
+```
+
+**Persistent memory:**
+```
+// Remember across program runs — stored locally
+remember "user_preferences":
+    let style = ask "I prefer dark themes and minimal UI"
+    // Next time this program runs, the AI already knows this
+
+// Recall stored memory
+recall "user_preferences"
+let suggestion = ask "Design a settings page for me"
+// The AI uses the stored preference for dark themes and minimal UI
+```
+
+**Scoped memory for agents:**
+```
+// Agent memory — persists across interactions with a specific user
+remember agent "support_bot" for user.id:
+    let history = ask "The user asked about billing last time. Follow up."
+
+// Shared memory — multiple agents can read/write
+remember shared "project_alpha":
+    let status = ask "Update: we finished the API. What's next?"
+// Any agent with access to "project_alpha" memory can read this context
+```
+
+**New keywords:**
+- `remember "label"` — Open a memory block that persists
+- `recall "label"` — Load previously stored memory into the current AI context
+- `forget "label"` — Delete stored memory
+- `remember shared "label"` — Memory accessible by multiple agents/programs
+- `remember agent "name" for user` — Agent-specific memory scoped to a user
+
+**Transpilation:** Memory is stored via `runtime.js` using configurable backends — local file storage for development, database for production, or a dedicated memory service. The runtime injects stored context into the system prompt of subsequent AI calls automatically.
+
+### 10.9 Self-Modifying Programs
+
+What if a Lume program could improve itself? An AI agent could analyze its own code, identify inefficiencies, and rewrite parts of itself — all within safety bounds defined by the language.
+
+**Controlled self-modification:**
+```
+// A program that optimizes its own greeting function
+to greet(name: text) -> text:
+    return "Hello, {name}!"
+
+// Ask AI to improve the function
+let improved = mutate greet with:
+    ask "Make this greeting more personalized based on time of day"
+
+// The mutate block:
+// 1. Reads the source of greet()
+// 2. Sends it to the AI with the instruction
+// 3. Replaces the function with the AI's improved version
+// 4. Validates the new version has the same signature (takes text, returns text)
+// 5. Runs intent block tests if they exist — rolls back if they fail
+```
+
+**Safety guardrails:**
+- `mutate` can only modify functions, not variables or control flow
+- The modified function must maintain the same type signature (same inputs, same output type)
+- If the function has an `intent` block, all intent tests must pass after modification or the change is rolled back automatically
+- A `mutate log` is maintained showing every modification, what changed, and why
+- `mutate` blocks run in a sandbox — the modified code is tested before it replaces the original
+- Maximum mutation depth can be set: `define MAX_MUTATIONS = 3` prevents infinite self-modification loops
+
+**New keywords:**
+- `mutate functionName with:` — Begin a controlled modification block
+- `rollback` — Manually undo the last mutation
+- `mutate log` — Access the history of all modifications
+
+**Why this matters:** This is where Lume moves beyond being a language into being a living system. Programs don't just run — they evolve. An AI agent written in Lume could start simple and gradually improve itself through use, learning from its own execution patterns.
+
+### 10.10 Intent Context Markers
+
+Beyond documentation, Lume code can carry purpose markers that the runtime uses to adjust behavior automatically.
+
+**Marking code with purpose:**
+```
+// Critical code gets automatic retry and alerting
+@critical
+to process_payment(amount: number, user: User) -> result of Receipt:
+    let charge = fetch post to "https://api.stripe.com/charge" with { amount, user }
+    return charge
+// Runtime automatically: retries 3x on failure, logs every attempt, alerts on final failure
+
+// Experimental code runs in a sandbox with extra logging
+@experimental
+to new_recommendation_engine(user: User) -> list of text:
+    let suggestions = ask "Recommend 5 products for a user who likes: {user.interests}"
+    return suggestions
+// Runtime automatically: wraps in try/catch, logs performance metrics, flags in monitoring
+
+// Temporary code warns when it's been in production too long
+@temporary until "2026-12-01"
+to holiday_discount(price: number) -> number:
+    return price * 0.80
+// Runtime automatically: logs a warning after Dec 1 2026 that this code should be removed
+
+// Deprecated code warns callers
+@deprecated "Use new_greet() instead"
+to old_greet(name: text) -> text:
+    return "Hi " + name
+// Compiler shows warning when any code calls old_greet()
+```
+
+**Built-in markers:**
+| Marker | Runtime Behavior |
+|--------|-----------------|
+| `@critical` | Auto-retry (3x), detailed logging, failure alerts |
+| `@experimental` | Sandbox execution, performance metrics, extra error capture |
+| `@temporary until "date"` | Warning after date passes, reminder to remove |
+| `@deprecated "message"` | Compiler warning when called, migration hint shown |
+| `@slow` | Performance monitoring, timeout warnings |
+| `@cached duration` | Result cached for specified duration, skips re-execution |
+| `@authenticated` | Requires valid user context to execute |
+| `@rate_limited count per duration` | Throttles execution automatically |
+
+### 10.11 Natural Language Fallback
+
+When the Lume compiler encounters code it cannot parse, instead of just showing an error, it asks an AI model: "What did they mean?" — then suggests the correct Lume syntax.
+
+**How it works:**
+```
+// Developer types something the compiler doesn't understand
+grab the weather for dallas texas
+
+// Instead of just "Syntax Error", the compiler responds:
+//
+// I don't recognize this syntax, but I think you mean:
+//
+//   let weather = fetch weather from "https://api.weather.com?city=Dallas,TX"
+//   show weather
+//
+// Would you like me to use this instead? [Y/n]
+```
+
+**Implementation:**
+1. The parser attempts to parse the input normally
+2. If parsing fails, the raw text is sent to the configured AI model with the prompt: "The user wrote this in Lume (an AI-native programming language). Convert it to valid Lume syntax."
+3. The AI's suggestion is validated by running it through the parser again
+4. If the suggestion parses successfully, it's shown to the developer with a prompt to accept or reject
+5. Accepted suggestions are logged to a learning file that helps improve future suggestions
+
+**In the REPL:**
+```
+> get me the top 5 headlines from reuters
+
+  I think you mean:
+  let headlines = fetch headlines from "reuters"
+  show headlines
+
+  Accept? [Y/n] y
+
+Reuters Top Headlines:
+1. ...
+2. ...
+```
+
+**In file compilation:**
+```
+$ lume run app.lume
+
+  Error in app.lume at line 3:
+  3 |   grab users from the database
+
+  I don't recognize 'grab'. Did you mean:
+  let users = fetch data from "database://users"
+
+  To auto-fix, run: lume fix app.lume
+```
+
+**The `lume fix` command:** Scans an entire file for syntax errors, generates AI-powered suggestions for each one, and applies fixes with developer confirmation. Like a spell-checker for code.
+
+**Privacy note:** Natural language fallback requires an AI provider configured in `lume.config`. In offline mode or if no provider is configured, standard error messages are shown instead (Section 4.11). No code is sent externally without the developer's configured consent.
+
+*Sections 10.6 through 10.11 are v2.0+ features. They should be preserved in the spec for future development but are not part of the Milestone 1-5 build roadmap.*
+
 ---
 
 ## 11. CHANGELOG
 
-**Version: 0.4 — Complete Draft with Future Vision | March 2026**
+**Version: 0.5 — Complete Draft with Future Vision | March 2026**
 
 | Date | Version | Change |
 |------|---------|--------|
@@ -1084,6 +1341,7 @@ The pictographic layer sits on top of the existing Lume compiler. It doesn't rep
 | March 2026 | 0.2 | Enhanced spec. Added: complete keyword list, complete operator list, indentation rules, full type system (primitives, collections, custom types, maybe/result), AI keyword definitions (ask vs think vs generate with temperature mapping), provider configuration (lume.config), standard library module list, concurrency detection rules, AST node type table, string interpolation syntax, comment syntax (single/multi/doc), natural-to-traditional operator mapping. Updated roadmap timeline and milestones. |
 | March 2026 | 0.3 | Complete draft. Added: scoping rules (block scoping, shadowing, set for outer mutation), full loop syntax (for each, for each with index, range-based for, range with step, while, break/continue, infinite loops), module system details (named imports, local modules, re-exports, circular import detection, resolution order), error messages and diagnostics (error format, error codes, source context, "did you mean?" suggestions via Levenshtein distance, unhandled Result warnings), REPL mode (interactive playground with colon-commands, multi-line input, live AI calls, session persistence, tab completion). Added keywords: set, then, by, all. |
 | March 2026 | 0.4 | Future vision added. Section 10: Pictographic Mode & Dev Keyboard — pictographic symbol input system inspired by Paleo-Hebrew/hieroglyphic writing and courtroom stenography. Symbol-to-Lume compilation pipeline. Custom developer keyboard concept (physical 30-40 key device, virtual on-screen keyboard, voice-to-symbol hybrid). Symbol vocabulary mapping 12 core operations. Accessibility, speed, and mobile development advantages documented. Phased development timeline for post-v1.0 implementation. |
+| March 2026 | 0.5 | Advanced features added to future vision. Agent-to-agent communication (compose, send, receive keywords — agents exchange Lume scripts as a shared protocol across ecosystem apps). Trust and code verification (cryptographic signing, trust levels, blockchain identity integration). Memory and context persistence (remember, recall, forget keywords — session, persistent, and shared agent memory). Self-modifying programs (mutate keyword with safety guardrails, type signature enforcement, intent block validation, rollback). Intent context markers (@critical, @experimental, @temporary, @deprecated, @cached, @rate_limited — runtime adjusts behavior based on code purpose). Natural language fallback (AI-powered error recovery, "did you mean?" code suggestions, lume fix command as spell-checker for code). |
 
 ---
 
