@@ -244,35 +244,116 @@ Lume aims to lower the barrier further — making code readable enough that some
 
 | Term | Plain English Definition |
 |------|------------------------|
+| **AJAX** | Asynchronous JavaScript and XML. A technique that lets a web page talk to a server in the background without reloading the entire page. What makes Google Maps feel smooth when you drag the map. |
 | **API** | A set of rules that lets two programs talk to each other. Like a waiter taking your order to the kitchen and bringing food back. |
 | **AST** | Abstract Syntax Tree. A map of a program's logic that the parser creates. Like a family tree, but for code. |
 | **Async** | Code that doesn't wait around. It starts a task, moves on, and comes back when the task is done. Like ordering food and browsing your phone instead of staring at the kitchen. |
+| **Authentication** | Verifying that someone is who they say they are. Logging in with a username and password. The digital version of showing your ID. |
+| **Authorization** | Deciding what someone is allowed to do after they've been authenticated. You showed your ID (authentication), now can you enter the VIP section? (authorization). |
 | **Backend** | The part of an app that runs on a server, hidden from the user. Handles data, logic, security. |
 | **Blockchain** | A digital ledger where every entry is verified and can't be changed after the fact. Like a notebook where every page is notarized. |
+| **Boilerplate** | Repetitive code that you have to write over and over just to get started, before you can do the actual thing you want to do. Like filling out the same 10 forms every time you visit a new doctor. Lume eliminates boilerplate by handling the repetitive parts automatically. |
+| **Bug** | An error in code that causes unexpected behavior. The term comes from a literal moth found inside an early computer in 1947 that was causing problems. |
+| **Cache** | A temporary storage spot that saves data so it doesn't have to be fetched again. Like keeping frequently used tools on your workbench instead of walking to the toolshed every time. |
+| **Callback** | A function that gets called after something else finishes. Like leaving your phone number with a restaurant so they call you when your table is ready. |
+| **CLI** | Command Line Interface. A text-based way to interact with a computer by typing commands. The black screen with white text that hackers use in movies — except it's just a normal tool. |
+| **Cloud** | Someone else's computer that you rent space on. When people say "the cloud," they mean servers in a data center somewhere that you access over the internet. |
 | **Compiler** | A program that translates code from one language into another. Lume's compiler turns `.lume` files into JavaScript. |
+| **Component** | A reusable building block in an app. A button, a form, a navigation bar — each is a component that can be used in multiple places. Like LEGO bricks. |
+| **CRUD** | Create, Read, Update, Delete. The four basic operations for any data. Every app that stores information does some combination of these. |
 | **CSS** | Cascading Style Sheets. Controls how a web page looks — colors, fonts, spacing, layout. |
+| **Database** | An organized collection of data stored on a computer. Like a filing cabinet, but digital and searchable. |
+| **Dependency** | A piece of software that your software needs in order to work. Like ingredients in a recipe — your cake depends on flour, eggs, and sugar. If one is missing, the cake doesn't work. |
+| **Deploy** | To put your app on a server so other people can use it. Like opening the doors of a store after you've finished setting it up. |
 | **DOM** | Document Object Model. The browser's internal representation of a web page that JavaScript can reach in and change. |
+| **Endpoint** | A specific URL that an API responds to. Like a specific window at the post office — window 1 handles packages, window 2 handles stamps. Each endpoint handles a specific type of request. |
+| **Environment Variable** | A setting stored outside of your code that can change depending on where the code is running. Like a thermostat setting — the building is the same, but you adjust the temperature for different seasons. API keys are commonly stored this way. |
 | **Framework** | A pre-built structure that gives you a head start. Like a house frame — you still finish it, but you don't pour the foundation yourself. |
 | **Frontend** | The part of an app the user sees and interacts with. Buttons, text, images, animations. |
+| **Function** | A reusable block of code that does one specific thing. Like a recipe — you define it once, then you can use it whenever you need that dish. |
+| **Git** | A system for tracking changes to code over time. Like "track changes" in a Word document, but for entire projects. Lets you go back to any previous version. |
+| **GitHub** | A website where developers store and share code using Git. Like Google Drive, but for code projects. |
 | **HTML** | HyperText Markup Language. The structure of a web page — headings, paragraphs, links, images. |
+| **HTTP/HTTPS** | The rules for how data travels across the internet. HTTP is the basic version. HTTPS adds encryption (the "S" stands for Secure) so nobody can read the data in transit. The padlock icon in your browser means HTTPS. |
 | **IDE** | Integrated Development Environment. A code editor with extra tools built in. Like a workshop with all the tools on the wall. |
+| **Import** | Bringing code from another file or package into your current file so you can use it. Like borrowing a tool from a neighbor. |
 | **JavaScript** | The programming language that makes web pages interactive. Everything that moves, responds, or updates on a webpage. |
 | **JSON** | JavaScript Object Notation. A way to structure data that both humans and computers can read. Like a standardized form. |
+| **Keyword** | A reserved word in a programming language that has a special meaning. In Lume, `ask`, `show`, `let` are keywords. You can't use them as variable names because the language has already claimed them. |
+| **Lambda** | A small, anonymous function — a function without a name. Like a sticky note with one instruction on it, used once and thrown away. |
+| **Latency** | The delay between asking for something and getting it. Low latency = fast response. High latency = slow. The time between clicking a link and seeing the page. |
 | **Lexer** | The first step of a compiler. Breaks raw text into labeled chunks (tokens). Like breaking a sentence into labeled words. |
+| **Library** | A collection of pre-written code that you can use in your project. Like a cookbook — someone already figured out the recipes, you just follow them. |
+| **Localhost** | Your own computer acting as a server. When you test a website on your machine before putting it online, it runs on localhost. Your computer is both the chef and the customer. |
+| **Loop** | Code that repeats the same action multiple times. Like saying "wash each dish in the sink" — the action (wash) repeats for every dish. |
+| **Middleware** | Code that runs between receiving a request and sending a response. Like a security checkpoint between the front door and the main office. |
+| **Migration** | Changing the structure of a database in a controlled way. Like remodeling a room in your house — you have a plan, you do it step by step, and you can undo it if needed. |
 | **Monaco** | The code editor that powers VS Code. Can be embedded in web pages for browser-based coding. |
 | **Node.js** | JavaScript running outside a browser, on a server. Created by Ryan Dahl in 2009. |
 | **npm** | Node Package Manager. The world's largest software registry. Where JavaScript tools and libraries are published and installed. |
+| **Open Source** | Software whose code is publicly available for anyone to read, use, modify, and share. Like a recipe that's posted publicly — anyone can cook it, tweak it, or share their version. |
+| **Package** | A bundle of code that someone has published for others to use. Installed through a package manager like npm. Like a boxed kit from the hardware store — everything you need for a specific job, pre-assembled. |
 | **Parser** | The second step of a compiler. Takes tokens and builds a logical structure (AST). Like diagramming a sentence. |
+| **Payload** | The actual data being sent in a request or response. The letter inside the envelope — the envelope is the HTTP request, the letter is the payload. |
+| **Plugin** | An add-on that extends what a program can do. Like adding a new attachment to a power drill — the drill works without it, but the attachment lets it do something new. |
+| **Port** | A numbered channel on a computer where a specific program listens for connections. Like apartment numbers in a building — the building is the computer, and each apartment (port) has a different program living in it. |
+| **Production** | The live version of your app that real users interact with. The opposite of development/testing. Like the difference between a dress rehearsal and opening night. |
+| **Promise** | In JavaScript, a placeholder for a value that will arrive in the future. Like an IOU — "I don't have the data yet, but I promise I will, and here's what to do when it arrives." |
+| **Query** | A question you ask a database. "Give me all users who signed up this month" is a query. |
+| **Refactor** | Rewriting existing code to make it cleaner or more efficient without changing what it does. Like reorganizing your closet — same clothes, better arrangement. |
+| **Repository (Repo)** | A project folder tracked by Git. Contains all the code, history, and files for a project. |
 | **REPL** | Read-Eval-Print Loop. An interactive mode where you type code one line at a time and see results immediately. |
 | **REST API** | A standard way for apps to communicate over the internet using URLs. |
+| **Route** | A URL path that maps to a specific function in your app. `/login` is a route that handles the login page. Like street addresses — each one takes you to a different place. |
 | **Runtime** | The environment where code actually executes. Node.js is a JavaScript runtime. |
+| **Sandbox** | An isolated environment where code can run without affecting the rest of the system. Like a playpen — the kid can do whatever they want inside it without breaking anything in the house. |
+| **Scaffold** | A pre-built project template that gives you a starting structure. Like a construction scaffold — it's not the building, but it holds everything in place while you build. |
+| **Schema** | The blueprint for how data is structured in a database. Like a blank form — it defines what fields exist (name, email, age) before any data is filled in. |
+| **SDK** | Software Development Kit. A collection of tools, libraries, and documentation that helps you build for a specific platform. Like a starter kit for a specific craft. |
+| **Server** | A computer that serves data or functionality to other computers over a network. Like a restaurant kitchen — it receives orders (requests) and sends out food (responses). |
+| **SSL/TLS** | Security protocols that encrypt data traveling between your browser and a server. The technology behind HTTPS. Like sealing a letter in a tamper-proof envelope. |
+| **Stack** | The combination of technologies used to build an app. "MERN stack" means MongoDB, Express, React, Node.js. Like listing the ingredients in a recipe. |
+| **State** | Data that your app is keeping track of at any given moment. The current values of everything — is the user logged in? What page are they on? What's in their cart? |
+| **Syntax** | The rules for how code must be written in a particular language. Like grammar in English — "The dog chased the cat" follows syntax rules. "Dog the cat chased the" doesn't. |
+| **Token** | A small labeled chunk of code that the lexer produces. Like a word with a part-of-speech tag. Also used in security to mean a digital pass that proves your identity. |
 | **Transpiler** | A compiler that converts code from one language into another language at a similar level. Lume transpiles to JavaScript. |
-| **Token** | A small labeled chunk of code that the lexer produces. Like a word with a part-of-speech tag. |
 | **TypeScript** | JavaScript with type checking added. Catches certain errors before code runs. Created by Microsoft. |
+| **Variable** | A named container that holds a value. `let name = "Ada"` creates a variable called `name` that holds the text "Ada." Like a labeled jar — the label is the name, the contents are the value. |
+| **Version Control** | A system for tracking and managing changes to code over time. Git is the most common one. Like having an unlimited undo button with a full history of every change ever made. |
+| **Webhook** | An automatic notification from one app to another when something happens. Like a doorbell — when someone arrives (an event), the bell rings (the webhook fires) and you respond. |
 
 ---
 
-## 11. ANALOGIES THAT MAKE IT CLICK
+## 11. THE SELF-SUSTAINING SOFTWARE CONCEPT
+
+One of the most compelling ideas in modern software is the concept of self-sustaining systems — software that can maintain, update, and improve itself with minimal human intervention.
+
+**Where we are today:**
+Most software requires manual updates. A developer writes a fix, tests it, deploys it. If nobody touches it, the software works but doesn't improve. It's like a car — it runs fine, but you still need to change the oil, rotate the tires, and eventually replace parts.
+
+**Where we're heading:**
+AI is making it possible for software to handle its own maintenance:
+- **Self-healing** — The system detects when something breaks and fixes it automatically. If an API endpoint goes down, the system reroutes to a backup without anyone pressing a button.
+- **Self-optimizing** — The system monitors its own performance and adjusts. If a database query is slow, the system rewrites it to be faster.
+- **Self-updating** — The system checks for dependency updates, tests them in a sandbox, and applies them if everything passes.
+- **Self-improving** — This is the frontier. The system uses AI to analyze its own code and suggest or implement improvements. Lume's `mutate` keyword (Section 10.9 of the Lume spec) is designed for exactly this.
+
+**What this means practically:**
+Instead of a developer checking on an app every week to make sure nothing broke, the app monitors itself and only alerts a human when something requires a decision that the system can't make on its own. The human becomes the architect and decision-maker, not the mechanic.
+
+**The guardrails matter:**
+Self-modifying systems need strict safety rules. Lume's approach requires that any self-modification:
+1. Must maintain the same type signatures (inputs and outputs stay the same)
+2. Must pass all existing tests after modification
+3. Must log every change for human review
+4. Can be rolled back instantly if something goes wrong
+5. Has a maximum mutation depth to prevent runaway self-modification
+
+The goal isn't to remove humans from the process. It's to free humans from the repetitive maintenance so they can focus on the creative and strategic work — deciding what to build next, not fixing what's already built.
+
+---
+
+## 12. ANALOGIES THAT MAKE IT CLICK
 
 These analogies were developed during conversation to explain complex concepts in plain terms:
 
