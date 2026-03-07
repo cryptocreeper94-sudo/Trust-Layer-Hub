@@ -1,0 +1,388 @@
+Of course! Here's the full Lume spec as plain text you can copy and paste directly to your agent:
+
+---
+
+# LUME — The AI-Native Programming Language
+### Language Design Specification & Build Roadmap
+**Version 0.1 — Initial Draft | March 2026**
+
+---
+
+## 1. VISION & PHILOSOPHY
+
+Lume is a programming language built for the AI era. While existing languages treat AI as an external library you bolt on, Lume treats AI as a first-class primitive — as natural as a variable, a loop, or a function call.
+
+The world has changed. Developers now orchestrate AI agents, chain model calls, handle structured outputs, and build systems where the boundary between code and intelligence is blurring. No language was designed for this reality. Lume is.
+
+**Core Philosophy:**
+- Readable — Human-first syntax. Code should read like intent, not machine instructions.
+- AI-Native — AI is a native type. Calling a model is syntax, not an import.
+- Safe — Errors are impossible to ignore. The language enforces handling them.
+- Interoperable — Compiles to JavaScript. Full access to the entire existing ecosystem.
+- Approachable — Gradual complexity. Beginners write real programs; experts go deeper.
+- Self-Documenting — Intent is documentation. Tests, docs, and types live in the code itself.
+
+**The North Star:** Every decision made in Lume's design must answer YES to this question: "Does this make it easier to build AI-powered software while keeping code readable by a human being?"
+
+---
+
+## 2. PAIN POINTS BEING SOLVED
+
+Lume is a direct response to 7 documented pain points in modern programming. Every language feature maps back to at least one of these.
+
+**Pain Point 1 — The Learning Cliff**
+Current reality: Hello world → pointers/async with no middle ground. Beginners get dropped off a cliff.
+Lume solution: Graduated complexity layers. You can build real software at Layer 1 without ever touching Layer 3.
+
+**Pain Point 2 — Async/Concurrency Mess**
+Current reality: async/await, callbacks, Promises — still confusing. Threads are dangerous.
+Lume solution: Concurrency is invisible by default. The runtime handles it. You opt into control only when needed.
+
+**Pain Point 3 — Ugly Error Handling**
+Current reality: Try/catch is verbose. Ignoring errors is easy and common. Rust is correct but intimidating.
+Lume solution: Errors are values, not exceptions. Every operation that can fail returns a Result. You cannot ignore it.
+
+**Pain Point 4 — Code Doesn't Read Like English**
+Current reality: if (user.age >= 18 && user.verified) — technical noise everywhere.
+Lume solution: Natural syntax: "if user is adult and verified" — reads as close to plain English as possible.
+
+**Pain Point 5 — No AI-Native Language**
+Current reality: Python dominates AI but was never designed for it. Calling models requires imports, JSON wrangling, error handling boilerplate.
+Lume solution: ask, think, generate are keywords. Model calls are first-class expressions with typed outputs.
+
+**Pain Point 6 — Config vs Code Split**
+Current reality: JSON configs, YAML, .env files, and code all doing overlapping things. Fragmented.
+Lume solution: Config is code. Environment, settings, and logic live in one unified syntax.
+
+**Pain Point 7 — Intent is Invisible**
+Current reality: Comments go stale. Tests live in separate files. Docs are optional afterthoughts.
+Lume solution: Intent blocks are first-class syntax. Tests and documentation are written inline and enforced.
+
+---
+
+## 3. SYNTAX DESIGN
+
+### 3.1 Variables & Types
+```
+// Inferred types
+let name = "Ada"
+let age = 28
+let active = true
+
+// Explicit types
+let score: number = 0
+let tags: list of text = ["ai", "code", "lume"]
+
+// Constants
+define MAX_RETRIES = 3
+```
+
+### 3.2 Conditions — Human-Readable
+```
+// Natural style (preferred)
+if user is verified and user.age is at least 18:
+    allow access
+
+if score is greater than 100:
+    set score to 100
+
+// Traditional style (also valid)
+if (user.verified && user.age >= 18):
+    allow access
+```
+
+### 3.3 Functions
+```
+// Define a function
+to greet(name: text) -> text:
+    return "Hello, " + name
+
+// Call it
+let message = greet("Ada")
+
+// Short form
+to double(n: number) -> n * 2
+```
+
+### 3.4 AI Calls — First Class
+```
+// Ask a model a question
+let summary = ask "Summarize this in 3 bullets: " + article
+
+// Ask with a specific model
+let review = ask claude.sonnet "Review this code for bugs:" + code
+
+// Ask with structured output
+let sentiment: { score: number, label: text } =
+    ask gpt.4o "Analyze sentiment:" + review as json
+
+// Chain model calls
+let draft = ask "Write a blog post about:" + topic
+let improved = ask "Improve the tone to be friendlier:" + draft
+let final = ask "Add a compelling title to:" + improved
+```
+
+### 3.5 Error Handling
+```
+// Result type — must handle both cases
+let result = fetch data from "https://api.example.com/users"
+
+when result is:
+    ok(data)  -> show data.users
+    error(e)  -> log "Failed: " + e.message
+
+// Short form
+let data = fetch "https://api.example.com" or fail with "Could not connect"
+```
+
+### 3.6 Concurrency — Invisible by Default
+```
+// These run in parallel automatically — no async/await needed
+let weather = fetch weather for "New York"
+let news    = fetch headlines from "reuters"
+let stocks  = fetch price of "AAPL"
+
+show weather, news, stocks
+
+// Explicit sequential (when order matters)
+let token   = login with credentials
+let profile = fetch profile using token
+```
+
+### 3.7 Intent Blocks — Built-In Docs & Tests
+```
+to calculate_discount(price: number, tier: text) -> number:
+    intent:
+        "Returns a discounted price based on customer tier"
+        given price = 100, tier = "gold"   expects 80
+        given price = 100, tier = "silver" expects 90
+        given price = 100, tier = "none"   expects 100
+
+    when tier is:
+        "gold"   -> return price * 0.80
+        "silver" -> return price * 0.90
+        default  -> return price
+```
+
+---
+
+## 4. INTEROPERABILITY
+
+Lume compiles to clean, readable JavaScript. This means every npm package works natively, Lume runs in any browser or Node environment, and existing JS codebases can call Lume modules and vice versa.
+
+### Transpilation Example
+```
+// Lume source
+let message = ask "Translate to French:" + greeting
+
+// Compiled JavaScript output
+const message = await anthropic.messages.create({
+  model: "claude-sonnet-4-6",
+  messages: [{ role: "user", content: "Translate to French: " + greeting }]
+}).then(r => r.content[0].text);
+```
+
+### Calling JS from Lume
+```
+use "lodash" as _
+use "axios" as http
+
+let sorted = _.sortBy(users, "name")
+let response = http.get("https://api.example.com")
+```
+
+### Calling Lume from JavaScript
+```
+// Lume module (math.lume)
+export to add(a: number, b: number) -> a + b
+
+// In JavaScript
+import { add } from './math.lume'
+console.log(add(2, 3))  // 5
+```
+
+**Supported interop targets:** JavaScript/Node (native transpile), TypeScript (type export), Python (REST bridge), REST APIs (native fetch syntax), AI Model APIs (native ask/think/generate), Browser APIs (via JS layer).
+
+---
+
+## 5. PROVING THE LANGUAGE WORKS
+
+### Test Suite Strategy
+```
+test "addition works":
+    expect 2 + 2 to equal 4
+
+test "string concatenation":
+    let name = "Lume"
+    expect "Hello, " + name to equal "Hello, Lume"
+
+test "conditional logic":
+    let x = 10
+    if x is greater than 5:
+        expect true
+```
+
+### Validation Layers
+- Layer 1: Unit tests — individual language features in isolation
+- Layer 2: Integration tests — programs combining multiple features
+- Layer 3: Transpile verification — compiled JS output is valid and equivalent
+- Layer 4: Interop tests — Lume calls JS and JS calls Lume
+- Layer 5: Intent block tests — intent blocks run as executable specs automatically
+
+**Definition of Proven:** Lume is proven at v1.0 when all 100+ test suite programs execute correctly, 3 real-world example apps are built in Lume, JS interop is verified bidirectionally, and intent blocks run as executable tests automatically.
+
+---
+
+## 6. TECHNICAL ARCHITECTURE
+
+### The Four Components
+```
+Source Code (.lume)
+       ↓
+  [1. LEXER]       — Breaks source into tokens
+       ↓
+  [2. PARSER]      — Builds Abstract Syntax Tree (AST)
+       ↓
+  [3. TRANSPILER]  — Walks AST and emits JavaScript
+       ↓
+  JavaScript Output — Runs in Node.js or any browser
+```
+
+### File Structure
+```
+lume/
+├── src/
+│   ├── lexer.js        # Tokenizer
+│   ├── parser.js       # AST builder
+│   ├── transpiler.js   # JS code emitter
+│   ├── runtime.js      # Runtime helpers (Result, AI wrappers)
+│   └── stdlib/         # Standard library
+├── bin/
+│   └── lume.js         # CLI entry point
+├── editor/
+│   └── lume-lang.js    # Monaco IDE integration
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── interop/
+├── examples/
+│   ├── hello.lume
+│   ├── ai_summarizer.lume
+│   └── web_agent.lume
+└── docs/
+    └── spec.md
+```
+
+### Component Responsibilities
+- **Lexer (src/lexer.js):** Tokenizes source. Handles Lume keywords, operators, string literals, numbers, identifiers.
+- **Parser (src/parser.js):** Consumes tokens, builds AST nodes. Handles precedence, blocks, indentation.
+- **Transpiler (src/transpiler.js):** Walks AST, emits JS. Handles AI call expansion, error result wrapping, concurrency detection.
+- **Runtime (src/runtime.js):** Small JS library included in output. Provides Result type, model call helpers, standard library.
+- **CLI (bin/lume.js):** Commands: lume run file.lume, lume build, lume test, lume playground
+- **Monaco Plugin (editor/lume-lang.js):** Syntax highlighting, autocomplete, inline error display.
+
+---
+
+## 7. BUILD ROADMAP
+
+### Milestone 1 — Hello World (Week 1-2)
+Goal: Get the first Lume program running end-to-end.
+- Build lexer: tokenize let, =, strings, numbers, show keyword
+- Build parser: parse variable declarations and print statements
+- Build transpiler: emit valid JavaScript
+- Test: `let name = "Lume" \n show name` outputs "Lume"
+DONE WHEN: lume run hello.lume prints output to console correctly.
+
+### Milestone 2 — Core Language (Week 3-5)
+Goal: All fundamental language features working.
+- Variables, constants, all primitive types
+- Arithmetic, string operations, comparisons
+- if/when/else conditions with natural syntax
+- Functions (to keyword), return values
+- Lists and iteration (for each)
+- Error handling (Result type, when is pattern)
+DONE WHEN: 50% of the unit test suite passes.
+
+### Milestone 3 — AI Integration (Week 6-8)
+Goal: Native AI calls working as first-class syntax.
+- ask keyword transpiles to Anthropic/OpenAI API calls
+- Model selector syntax (ask claude.sonnet, ask gpt.4o)
+- Structured output parsing (as json type casting)
+- Chain calls work correctly
+- Error handling for model failures
+DONE WHEN: ai_summarizer.lume runs and produces correct AI-generated output.
+
+### Milestone 4 — Interoperability (Week 9-11)
+Goal: Lume and JavaScript work together seamlessly.
+- use keyword imports npm/JS modules
+- Lume modules export to JS correctly
+- HTTP fetch syntax compiles to valid async JS
+- Concurrency detection and parallel execution
+- TypeScript type definition export on build
+DONE WHEN: Lume can call lodash, axios, and a custom JS module. JS can import a Lume module.
+
+### Milestone 5 — Tooling & IDE (Week 12-14)
+Goal: Developer experience that makes Lume a joy to use.
+- Monaco syntax highlighting for Lume
+- Inline error display in editor
+- Autocomplete for keywords and stdlib
+- lume test command runs intent blocks automatically
+- Browser playground integrated into Monaco IDE
+- 3 real example apps documented and runnable
+DONE WHEN: A developer who has never seen Lume can open the playground, write a program, and run it within 5 minutes with no instructions.
+
+---
+
+## 8. AGENT HANDOFF INSTRUCTIONS
+
+You are being asked to build the Lume programming language — an AI-native language that transpiles to JavaScript. Read this entire document before writing any code.
+
+### Your First Task
+Build Milestone 1. Make this exact program run:
+
+```
+// hello.lume
+let language = "Lume"
+let version = 1
+show "Hello from " + language + " v" + version
+```
+
+Expected output: `Hello from Lume v1`
+
+Build src/lexer.js, src/parser.js, and src/transpiler.js to make this work. When it passes, report back and await instructions for Milestone 2.
+
+### Implementation Rules
+1. Build in JavaScript (Node.js). No external dependencies for the core compiler.
+2. Write tests FIRST for each feature, then implement until they pass.
+3. Transpiler output must be readable JavaScript — not minified.
+4. Every Lume keyword must map to a documented AST node type.
+5. AI calls must go through runtime.js helper — never call APIs directly in transpiled output.
+6. Preserve line numbers in transpiled output for debuggability.
+7. Work through Milestones 1-5 in order. Do not skip ahead.
+
+### Key Design Decisions to Preserve
+- Natural language keywords (is, and, or, at least, greater than) supported alongside traditional operators
+- Indentation defines blocks — no curly braces required (though they are valid)
+- The ask keyword is reserved exclusively for AI model calls
+- Result type wraps all fallible operations — never throw exceptions at the language level
+- Intent blocks (intent:) must be parsed and stored even if not executed until Milestone 5
+
+### Deliverables Per Milestone
+For each milestone provide: (1) working code, (2) passing tests, (3) a brief summary of what was built and any design decisions made. Keep CHANGELOG.md updated throughout.
+
+---
+
+## 9. CHANGELOG
+
+| Date | Version | Change |
+|------|---------|--------|
+| March 2026 | 0.1 | Initial design document. Core philosophy, pain points, syntax design, and 5-milestone build roadmap established. Language named Lume. |
+
+---
+
+*Lume — The AI-Native Programming Language*
+*Built to make AI-powered software as natural as writing a sentence.*
+
+---
+
+There it is — the full spec in plain text, ready to copy and paste straight to your agent. Tell it to jump to **Section 8** and start at Milestone 1. 🔦
