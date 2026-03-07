@@ -32,7 +32,7 @@ const steps: OnboardingStep[] = [
   {
     icon: <Ionicons name="shield-checkmark" size={64} color={Colors.primary} />,
     title: "Welcome to Trust Layer Hub",
-    subtitle: "Your gateway to 34 blockchain apps",
+    subtitle: "Your gateway to 35 blockchain apps",
     description:
       "One identity, one ecosystem. Access decentralized finance, governance, communication, and more — all secured by the Trust Layer protocol.",
   },
@@ -53,7 +53,7 @@ const steps: OnboardingStep[] = [
   {
     icon: <MaterialCommunityIcons name="apps" size={64} color={Colors.primary} />,
     title: "Explore the Ecosystem",
-    subtitle: "34 apps, one identity",
+    subtitle: "35 apps, one identity",
     description:
       "From SIGNiX DEX to Trust Mesh governance, explore a full suite of blockchain applications — all linked to your Trust Layer ID.",
   },

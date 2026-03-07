@@ -173,7 +173,7 @@ export default function AffiliateScreen() {
           <Text style={styles.hashLabel}>
             Affiliate ID: <Text style={styles.hashValue}>{dashboard?.uniqueHash || "—"}</Text>
           </Text>
-          <Text style={styles.hashNote}>This ID is recognized across all 32+ ecosystem apps</Text>
+          <Text style={styles.hashNote}>This ID is recognized across all 35 ecosystem apps</Text>
           {referralLink ? (
             <View style={styles.qrCenter}>
               <QRCode

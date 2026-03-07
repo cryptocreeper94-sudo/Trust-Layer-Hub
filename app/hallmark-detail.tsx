@@ -124,7 +124,7 @@ export default function HallmarkDetailScreen() {
           <View style={styles.divider} />
           <InfoRow label="Launch Date" value={meta.launchDate ? new Date(meta.launchDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "August 23, 2026"} />
           <View style={styles.divider} />
-          <InfoRow label="Total Apps" value={String(meta.totalApps || 32)} />
+          <InfoRow label="Total Apps" value={String(meta.totalApps || 35)} />
           <View style={styles.divider} />
           <InfoRow label="Native Asset" value={meta.nativeAsset || "SIG"} />
           <View style={styles.divider} />

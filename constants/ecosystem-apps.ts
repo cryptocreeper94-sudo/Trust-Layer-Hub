@@ -21,6 +21,7 @@ export const CATEGORIES = [
   "Health & Services",
   "Publishing",
   "Food & Hospitality",
+  "Developer Tools",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -37,6 +38,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
   "Health & Services": "heart-outline",
   Publishing: "book-outline",
   "Food & Hospitality": "restaurant-outline",
+  "Developer Tools": "code-slash-outline",
 };
 
 export const ECOSYSTEM_APPS: EcosystemApp[] = [
@@ -362,6 +364,16 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
   },
   {
     id: 33,
+    name: "DarkWave Studios",
+    hook: "The Creative Engine",
+    description: "The creative and development powerhouse behind the Trust Layer ecosystem. DarkWave Studios LLC designs, builds, and ships blockchain-integrated applications at scale.",
+    url: "https://darkwavestudios.io",
+    category: "Core",
+    tags: ["Studios", "Development", "Creative", "Blockchain"],
+    icon: "diamond",
+  },
+  {
+    id: 34,
     name: "TrustGen",
     hook: "AI-Powered 3D Creation Studio",
     description: "Premium AI-powered 3D engine, animation studio, and export tool. Generate, animate, and export stunning 3D models and scenes directly in the browser.",
@@ -369,5 +381,15 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["AI", "3D", "Animation", "Creative"],
     icon: "cube",
+  },
+  {
+    id: 35,
+    name: "Lume",
+    hook: "The AI-Native Programming Language",
+    description: "The first programming language where AI is a primitive, not a plugin. Human-readable syntax, first-class AI keywords, and a self-sustaining runtime. Compiles to JavaScript.",
+    url: "https://lume-lang.com",
+    category: "Developer Tools",
+    tags: ["Language", "AI", "Developer", "Compiler"],
+    icon: "bulb",
   },
 ];

@@ -47,7 +47,7 @@ const FEATURES: FeatureRow[] = [
   },
   {
     icon: "apps",
-    title: "32-App Ecosystem",
+    title: "35-App Ecosystem",
     desc: "DeFi, governance, chat, scanning, and more — all under one Trust Layer ID",
     color: "#f59e0b",
   },
@@ -142,7 +142,7 @@ export function WelcomeModal() {
                 <Text style={styles.descText}>
                   Welcome to the unified hub for the Trust Layer protocol ecosystem.
                   Create your free account to unlock your native wallet, DeFi staking,
-                  affiliate rewards, and access to 34 integrated blockchain applications.
+                  affiliate rewards, and access to 35 integrated blockchain applications.
                 </Text>
               </View>
 
@@ -158,7 +158,7 @@ export function WelcomeModal() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statBox}>
-                  <Text style={styles.statNumber}>32</Text>
+                  <Text style={styles.statNumber}>35</Text>
                   <Text style={styles.statLabel}>APPS</Text>
                 </View>
               </View>

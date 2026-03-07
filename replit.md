@@ -1,7 +1,7 @@
 # Trust Layer Hub
 
 ## Overview
-The Trust Layer Hub is a native mobile application designed as the central gateway to a sprawling 34-app blockchain ecosystem. Its primary purpose is to provide a unified user experience for authentication, financial management, communication, and ecosystem exploration. Key capabilities include real authentication, live API integration with robust mock data fallbacks, single sign-on (SSO) for seamless access to ecosystem apps, a persistent WebSocket-based chat system, a comprehensive financial wallet integrating traditional banking (Plaid) and various crypto wallets (WalletConnect, Phantom), an AI agent with voice capabilities (ElevenLabs), and a suite of community features like leaderboards, activity feeds, and a unique Hallmark timeline for tracking digital provenance. The project aims to establish a foundational and interconnected platform for the entire Trust Layer ecosystem, fostering user engagement and providing a secure, transparent digital environment.
+The Trust Layer Hub is a native mobile application designed as the central gateway to a sprawling 35-app blockchain ecosystem. Its primary purpose is to provide a unified user experience for authentication, financial management, communication, and ecosystem exploration. Key capabilities include real authentication, live API integration with robust mock data fallbacks, single sign-on (SSO) for seamless access to ecosystem apps, a persistent WebSocket-based chat system, a comprehensive financial wallet integrating traditional banking (Plaid) and various crypto wallets (WalletConnect, Phantom), an AI agent with voice capabilities (ElevenLabs), and a suite of community features like leaderboards, activity feeds, and a unique Hallmark timeline for tracking digital provenance. The project aims to establish a foundational and interconnected platform for the entire Trust Layer ecosystem, fostering user engagement and providing a secure, transparent digital environment.
 
 ## User Preferences
 I prefer clear, concise instructions and explanations.
@@ -37,8 +37,8 @@ Key architectural decisions include:
 - **PWA support**: Ensures web accessibility and offline capabilities.
 - **Modular components**: Promotes reusability and maintainability.
 - **Zero-value Fallbacks**: All hooks return zeros/empty arrays on API failure — never fake data. Users see their real balances or nothing.
-- **Single Sign-On (SSO)**: Facilitates seamless transitions between the Hub and 32 ecosystem applications.
-- **Cross-App Hashing**: The `[PREFIX]-[8-DIGIT-PADDED]` hallmark format and universal `uniqueHash` affiliate ID interconnect all 33 applications, forming a cohesive ecosystem.
+- **Single Sign-On (SSO)**: Facilitates seamless transitions between the Hub and 35 ecosystem applications.
+- **Cross-App Hashing**: The `[PREFIX]-[8-DIGIT-PADDED]` hallmark format and universal `uniqueHash` affiliate ID interconnect all 35 applications, forming a cohesive ecosystem.
 
 ## External Dependencies
 - **Authentication & Communication:**
