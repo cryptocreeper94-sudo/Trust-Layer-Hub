@@ -1,6 +1,6 @@
 # LUME — The AI-Native Programming Language
 ### Language Design Specification & Build Roadmap
-**Version 0.5 — Complete Draft with Future Vision | March 2026**
+**Version 0.6 — Complete Draft with Future Vision | March 2026**
 
 ---
 
@@ -1327,13 +1327,74 @@ $ lume run app.lume
 
 **Privacy note:** Natural language fallback requires an AI provider configured in `lume.config`. In offline mode or if no provider is configured, standard error messages are shown instead (Section 4.11). No code is sent externally without the developer's configured consent.
 
-*Sections 10.6 through 10.11 are v2.0+ features. They should be preserved in the spec for future development but are not part of the Milestone 1-5 build roadmap.*
+### 10.12 3D & Visual Computing
+
+Lume can interface with 3D engines and visual computing libraries through its JavaScript interop layer. A future stdlib module (`use "3d"`) would wrap Three.js or similar engines into Lume's readable syntax, allowing AI-driven 3D creation.
+
+**3D scene creation:**
+```
+use "3d"
+
+// Create a scene with natural syntax
+let scene = 3d.create scene with { background: "dark" }
+let cube = 3d.add cube to scene with { size: 2, color: "blue", position: [0, 1, 0] }
+let light = 3d.add light to scene with { type: "ambient", intensity: 0.8 }
+let camera = 3d.add camera to scene with { position: [0, 2, 5], look_at: cube }
+
+// Render it
+3d.render scene
+```
+
+**AI-powered 3D generation:**
+```
+use "3d"
+
+// Describe a scene in natural language, AI generates the object definitions
+let objects = ask "Create a low-poly forest scene with 5 trees, a river, and a cabin" as json
+let scene = 3d.create scene with { background: "sky" }
+
+for each obj in objects.items:
+    3d.add obj.type to scene with obj.properties
+
+3d.render scene
+```
+
+**AI-driven 3D modification:**
+```
+use "3d"
+
+let scene = 3d.load "my_scene.glb"
+let improvements = ask "Analyze this 3D scene and suggest improvements for lighting and composition" as json
+
+for each change in improvements.suggestions:
+    3d.apply change to scene
+
+3d.export scene as "improved_scene.glb"
+```
+
+**Animation:**
+```
+use "3d"
+
+let character = 3d.load "character.glb"
+let animation = generate "A walk cycle animation for a humanoid character" as json
+
+3d.animate character with animation
+3d.play for 3 seconds
+3d.export as "walking.mp4"
+```
+
+**Why this matters:** TrustGen (the AI 3D engine at trustgen.tlid.io) already proves this concept works. Wrapping 3D operations in Lume syntax would let developers create, modify, and animate 3D scenes with a fraction of the code currently required — and with AI assistance built into the language itself, not bolted on as an external tool. A 3D scene that takes 200 lines of Three.js could become 10 lines of Lume.
+
+**Implementation:** The `3d` stdlib module would wrap Three.js for web rendering and could interface with Blender, Unity, or other engines via REST bridges for production 3D work. The module translates Lume's natural syntax into the underlying engine's API calls, just like the AI keywords translate `ask` into provider API calls.
+
+*Sections 10.6 through 10.12 are v2.0+ features. They should be preserved in the spec for future development but are not part of the Milestone 1-5 build roadmap.*
 
 ---
 
 ## 11. CHANGELOG
 
-**Version: 0.5 — Complete Draft with Future Vision | March 2026**
+**Version: 0.6 — Complete Draft with Future Vision | March 2026**
 
 | Date | Version | Change |
 |------|---------|--------|
@@ -1342,6 +1403,7 @@ $ lume run app.lume
 | March 2026 | 0.3 | Complete draft. Added: scoping rules (block scoping, shadowing, set for outer mutation), full loop syntax (for each, for each with index, range-based for, range with step, while, break/continue, infinite loops), module system details (named imports, local modules, re-exports, circular import detection, resolution order), error messages and diagnostics (error format, error codes, source context, "did you mean?" suggestions via Levenshtein distance, unhandled Result warnings), REPL mode (interactive playground with colon-commands, multi-line input, live AI calls, session persistence, tab completion). Added keywords: set, then, by, all. |
 | March 2026 | 0.4 | Future vision added. Section 10: Pictographic Mode & Dev Keyboard — pictographic symbol input system inspired by Paleo-Hebrew/hieroglyphic writing and courtroom stenography. Symbol-to-Lume compilation pipeline. Custom developer keyboard concept (physical 30-40 key device, virtual on-screen keyboard, voice-to-symbol hybrid). Symbol vocabulary mapping 12 core operations. Accessibility, speed, and mobile development advantages documented. Phased development timeline for post-v1.0 implementation. |
 | March 2026 | 0.5 | Advanced features added to future vision. Agent-to-agent communication (compose, send, receive keywords — agents exchange Lume scripts as a shared protocol across ecosystem apps). Trust and code verification (cryptographic signing, trust levels, blockchain identity integration). Memory and context persistence (remember, recall, forget keywords — session, persistent, and shared agent memory). Self-modifying programs (mutate keyword with safety guardrails, type signature enforcement, intent block validation, rollback). Intent context markers (@critical, @experimental, @temporary, @deprecated, @cached, @rate_limited — runtime adjusts behavior based on code purpose). Natural language fallback (AI-powered error recovery, "did you mean?" code suggestions, lume fix command as spell-checker for code). |
+| March 2026 | 0.6 | 3D and visual computing section added (10.12). stdlib "3d" module wrapping Three.js with natural Lume syntax for scene creation, AI-powered 3D generation, AI-driven modification, and animation. Integration path with TrustGen ecosystem app. Blender/Unity REST bridge for production 3D work. |
 
 ---
 
