@@ -1,6 +1,6 @@
 # LUME — The AI-Native Programming Language
 ### Language Design Specification & Build Roadmap
-**Version 0.2 — Enhanced Draft | March 2026**
+**Version 0.3 — Complete Draft | March 2026**
 
 ---
 
@@ -166,7 +166,48 @@ to calculate_discount(price: number, tier: text) -> number:
         default  -> return price
 ```
 
-### 3.8 String Interpolation
+### 3.8 Loops & Iteration
+```
+// For each — iterate over a list
+let colors = ["red", "green", "blue"]
+for each color in colors:
+    show color
+
+// For each with index
+for each item, index in colors:
+    show "{index}: {item}"
+
+// Range-based loop (inclusive start, exclusive end)
+for i in 0 to 10:
+    show i
+
+// Range with step
+for i in 0 to 100 by 5:
+    show i
+
+// While loop
+let count = 0
+while count is less than 10:
+    show count
+    set count to count + 1
+
+// Loop control
+for each item in items:
+    if item is null:
+        continue
+    if item.name is "stop":
+        break
+    show item.name
+
+// Infinite loop (must break manually)
+while true:
+    let input = read line
+    if input is "quit":
+        break
+    show "You said: {input}"
+```
+
+### 3.10 String Interpolation
 ```
 // Template strings using curly braces inside double quotes
 let name = "Ada"
@@ -185,7 +226,7 @@ let html = """
 """
 ```
 
-### 3.9 Comments
+### 3.11 Comments
 ```
 // Single-line comment
 
@@ -208,13 +249,13 @@ This section resolves every ambiguity an implementing agent would encounter. The
 The following words are **reserved keywords** and cannot be used as identifiers:
 
 **Core:**
-`let`, `define`, `to`, `return`, `if`, `else`, `when`, `is`, `and`, `or`, `not`, `for`, `each`, `in`, `while`, `break`, `continue`, `show`, `log`
+`let`, `define`, `set`, `to`, `return`, `if`, `else`, `when`, `is`, `and`, `or`, `not`, `for`, `each`, `in`, `while`, `break`, `continue`, `show`, `log`, `then`, `by`
 
 **AI:**
 `ask`, `think`, `generate`, `as`
 
 **Modules:**
-`use`, `export`, `from`
+`use`, `export`, `from`, `all`
 
 **Types:**
 `text`, `number`, `boolean`, `list`, `map`, `of`, `any`, `nothing`, `maybe`
@@ -416,6 +457,239 @@ let a = ask "First question"
 then let b = ask "Second question using: " + a
 ```
 
+### 4.9 Scoping Rules
+
+Lume uses **block scoping**. A variable is visible only within the block where it is declared and any nested blocks inside it.
+
+**Rules:**
+1. Variables declared with `let` are scoped to the nearest enclosing block (function body, if/else branch, loop body, or top-level).
+2. Constants declared with `define` follow the same block scoping rules.
+3. Inner blocks **can read** variables from outer blocks.
+4. Inner blocks **cannot reassign** variables from outer blocks unless using `set`. The `set` keyword explicitly signals mutation of an outer-scope variable.
+5. **Shadowing is allowed** but requires an explicit `let` redeclaration. The inner variable hides the outer one for the duration of the inner block.
+6. Function parameters are scoped to the function body.
+7. Top-level declarations are module-scoped (visible throughout the file, not globally across files).
+
+```
+let name = "Ada"
+
+to greet():
+    // Can read outer 'name'
+    show "Hello, {name}"
+
+    // Shadowing — new 'name' in this scope only
+    let name = "Grace"
+    show "Now greeting {name}"
+
+// Original 'name' is still "Ada" here
+show name
+
+// Mutation of outer scope with 'set'
+let counter = 0
+to increment():
+    set counter to counter + 1
+
+increment()
+show counter  // 1
+```
+
+**Transpilation:** `let` maps to JavaScript `let` (block-scoped). `define` maps to JavaScript `const`. Scoping rules align naturally with JS block scoping.
+
+### 4.10 Module System
+
+Lume uses a file-based module system. Every `.lume` file is a module.
+
+**Importing npm packages:**
+```
+// Import entire package with alias
+use "lodash" as _
+use "axios" as http
+
+// Import specific functions from a package
+use { sortBy, groupBy } from "lodash"
+use { get, post } from "axios"
+```
+
+**Importing local Lume modules:**
+```
+// Import from a local file (extension optional)
+use "./helpers" as helpers
+use "./models/user" as User
+
+// Import specific functions from a local file
+use { validate, format } from "./helpers"
+```
+
+**Exporting from a Lume module:**
+```
+// Export a function
+export to add(a: number, b: number) -> a + b
+
+// Export a variable
+export let version = "1.0"
+
+// Export a type
+export type User:
+    name: text
+    age: number
+
+// Export a constant
+export define MAX_SIZE = 100
+```
+
+**Module resolution order:**
+1. Built-in stdlib modules (`"strings"`, `"math"`, `"time"`, etc.) — resolved first
+2. Local files — if the path starts with `./` or `../`, resolve relative to the current file
+3. npm packages — if not a stdlib module and not a relative path, look in `node_modules/`
+
+**File extension:** Lume source files use the `.lume` extension. When importing local modules, the extension is optional — `use "./helpers"` and `use "./helpers.lume"` are equivalent.
+
+**Circular imports:** Not allowed. The compiler detects circular dependencies at parse time and produces a clear error message listing the cycle. Restructure code using a shared module to break cycles.
+
+**Re-exports:**
+```
+// Re-export everything from another module
+export all from "./utils"
+
+// Re-export specific items
+export { validate, format } from "./helpers"
+```
+
+### 4.11 Error Messages & Diagnostics
+
+Lume's compiler errors must be clear, helpful, and actionable. A developer should never have to Google what an error means.
+
+**Error format:**
+```
+Error [E001] in hello.lume at line 5, column 12:
+
+  5 |   let result = aask "What is 2+2?"
+                     ^^^^
+
+  Unknown keyword 'aask'. Did you mean 'ask'?
+```
+
+**Required components of every error:**
+1. **Error code** — Unique identifier (E001, E002, etc.) for documentation lookup
+2. **File name** — Which file the error occurred in
+3. **Line and column** — Exact position in the source
+4. **Source context** — The offending line with a caret (`^^^^`) pointing to the problem
+5. **Plain-English explanation** — What went wrong, in a sentence a beginner can understand
+6. **Suggestion** (when possible) — "Did you mean...?" or "Try this instead..."
+
+**Error categories:**
+
+| Code Range | Category | Example |
+|------------|----------|---------|
+| E001-E099 | Syntax errors | Missing colon, unmatched brackets, invalid indentation |
+| E100-E199 | Type errors | Wrong type passed to function, incompatible assignment |
+| E200-E299 | Name errors | Undefined variable, unknown function, typo in keyword |
+| E300-E399 | Import errors | Module not found, circular dependency, missing export |
+| E400-E499 | AI errors | Missing provider config, invalid model name, no API key |
+| E500-E599 | Runtime errors | Division by zero, index out of bounds, null access |
+
+**"Did you mean?" suggestions:**
+The compiler uses Levenshtein distance (edit distance) to suggest corrections when an identifier or keyword is close to a known name. Threshold: suggest if edit distance is 2 or less.
+
+```
+Error [E200] in app.lume at line 3, column 1:
+
+  3 |   shw "Hello"
+      ^^^
+
+  Unknown identifier 'shw'. Did you mean 'show'?
+```
+
+**Unhandled Result warning:**
+```
+Warning [W001] in app.lume at line 7, column 5:
+
+  7 |   let data = fetch "https://api.example.com"
+          ^^^^
+
+  This fetch returns a Result type but you are not handling the error case.
+  Use 'when result is: ok(data) -> ... error(e) -> ...' or append 'or fail with "message"'.
+```
+
+**Tab character error:**
+```
+Error [E003] in app.lume at line 4, column 1:
+
+  4 |  [TAB]let x = 5
+      ^^^
+
+  Tabs are not allowed in Lume. Use 4 spaces per indentation level.
+```
+
+### 4.12 REPL Mode (Interactive Playground)
+
+Running `lume` with no arguments drops into an interactive REPL (Read-Eval-Print Loop). This is a live coding environment where developers can experiment with Lume one expression at a time.
+
+**Starting the REPL:**
+```
+$ lume
+Lume v1.0 — Interactive Mode
+Type 'help' for commands, 'exit' to quit.
+
+>
+```
+
+**Basic usage:**
+```
+> let name = "Ada"
+> show "Hello, {name}"
+Hello, Ada
+
+> to double(n: number) -> n * 2
+> show double(21)
+42
+
+> let answer = ask "What is the capital of France?"
+Paris
+
+> let cities = ask "Name 3 cities in Japan" as json
+> for each city in cities:
+...     show city
+Tokyo
+Osaka
+Kyoto
+```
+
+**REPL commands (prefixed with colon):**
+| Command | Action |
+|---------|--------|
+| `:help` | Show available commands |
+| `:exit` or `:quit` | Exit the REPL |
+| `:clear` | Clear all declared variables and functions |
+| `:vars` | List all currently defined variables and their types |
+| `:type expr` | Show the inferred type of an expression without evaluating it |
+| `:time expr` | Evaluate an expression and show execution time |
+| `:save filename` | Save the current session as a `.lume` file |
+| `:load filename` | Load and execute a `.lume` file into the session |
+| `:model provider.model` | Switch the default AI model for the session |
+| `:history` | Show command history |
+
+**Multi-line input:**
+When a line ends with `:` (opening a block), the REPL switches to multi-line mode, indicated by `...` instead of `>`. An empty line or dedent completes the block.
+
+```
+> to greet(name: text) -> text:
+...     return "Hello, {name}!"
+...
+> show greet("world")
+Hello, world!
+```
+
+**REPL-specific behavior:**
+- Expression results are automatically printed (no `show` needed for top-level expressions)
+- Variables persist across lines within a session
+- Errors do not crash the REPL — they display the error and return to the prompt
+- AI calls work live (requires configured `lume.config` or environment variables)
+- Tab completion for keywords, stdlib functions, and declared variables
+- Up/down arrow keys navigate command history
+
+**Transpilation:** The REPL works by transpiling each input to JavaScript and evaluating it in a persistent Node.js context via `vm.createContext`. Variables persist because they're stored in the shared context object.
+
 ---
 
 ## 5. INTEROPERABILITY
@@ -562,8 +836,12 @@ Every language construct maps to a documented AST node. The implementing agent m
 | `LogStatement` | Debug print | `log "debug info"` |
 | `IfStatement` | Conditional | `if x is 5:` |
 | `WhenStatement` | Pattern matching | `when result is:` |
-| `ForEachStatement` | Iteration | `for each item in list:` |
+| `ForEachStatement` | List iteration | `for each item in list:` |
+| `ForEachIndexStatement` | Iteration with index | `for each item, index in list:` |
+| `ForRangeStatement` | Range-based loop | `for i in 0 to 10:`, `for i in 0 to 100 by 5:` |
 | `WhileStatement` | While loop | `while active:` |
+| `BreakStatement` | Exit loop | `break` |
+| `ContinueStatement` | Skip to next iteration | `continue` |
 | `AskExpression` | AI ask call | `ask "question"` |
 | `ThinkExpression` | AI think call | `think "reason about"` |
 | `GenerateExpression` | AI generate call | `generate "create"` |
@@ -588,7 +866,8 @@ Every language construct maps to a documented AST node. The implementing agent m
 | `ExpectStatement` | Test assertion | `expect x to equal 5` |
 | `UseStatement` | Module import | `use "lodash" as _` |
 | `ExportStatement` | Module export | `export to add(...)` |
-| `AssignmentExpression` | Reassignment | `set score to 100`, `x += 1` |
+| `SetStatement` | Outer scope mutation | `set counter to counter + 1` |
+| `AssignmentExpression` | Compound reassignment | `x += 1`, `score -= 10` |
 | `ResultPattern` | ok/error matching | `ok(data) ->` |
 | `BlockStatement` | Indented block | (group of indented statements) |
 | `CommentNode` | Comment (preserved) | `// comment` |
@@ -609,16 +888,19 @@ DONE WHEN: `lume run hello.lume` prints output to console correctly.
 ### Milestone 2 — Core Language (Week 3-5)
 Goal: All fundamental language features working.
 - Variables, constants, all primitive types (text, number, boolean, null)
+- Scoping rules (block scoping, shadowing with explicit `let`, outer mutation with `set`)
 - Arithmetic, string operations, comparisons (both natural and traditional)
 - if/when/else conditions with natural syntax AND traditional syntax
 - Functions (`to` keyword), return values, short form
 - Custom types (`type` keyword, struct-like)
-- Lists and iteration (`for each`)
+- Loops: `for each`, `for each` with index, range-based `for i in 0 to 10`, range with step (`by`), `while`, `break`, `continue`
+- Lists and iteration
 - Maps and property access
 - Error handling (Result type, `when is` pattern, `or fail with` short form)
 - String interpolation in transpiled output
 - Multi-line strings (triple quotes)
 - Comments (single-line, multi-line, doc comments)
+- Compiler error messages with file, line, column, source context, and plain-English explanations (see Section 4.11)
 DONE WHEN: 50% of the unit test suite passes.
 
 ### Milestone 3 — AI Integration (Week 6-9)
@@ -636,26 +918,36 @@ DONE WHEN: `ai_summarizer.lume` runs and produces correct AI-generated output wi
 
 ### Milestone 4 — Interoperability (Week 10-12)
 Goal: Lume and JavaScript work together seamlessly.
-- `use` keyword imports npm/JS modules
-- Lume modules export to JS correctly
+- `use` keyword imports npm/JS modules (full package and named imports)
+- `use { specific } from "package"` destructured imports
+- Local Lume module imports (`use "./helpers"`)
+- Lume modules export to JS correctly (`export to`, `export let`, `export type`, `export define`)
+- Re-exports (`export all from`, `export { x } from`)
+- Circular import detection with clear error messages
+- Module resolution order (stdlib -> local -> npm)
 - HTTP fetch syntax compiles to valid async JS
 - Concurrency detection and parallel execution (Promise.all for independent calls)
 - `then` keyword for forced sequential execution
 - TypeScript type definition export on build
 - `maybe` type maps to nullable in TS output
-DONE WHEN: Lume can call lodash, axios, and a custom JS module. JS can import a Lume module.
+DONE WHEN: Lume can call lodash, axios, and a custom JS module. JS can import a Lume module. Circular imports are detected and reported.
 
 ### Milestone 5 — Tooling & IDE (Week 13-16)
 Goal: Developer experience that makes Lume a joy to use.
 - Monaco syntax highlighting for Lume (all keywords, operators, string interpolation)
-- Inline error display in editor
-- Autocomplete for keywords and stdlib functions
+- Inline error display in editor with source context and suggestions
+- Autocomplete for keywords, stdlib functions, and declared variables
 - `lume test` command runs intent blocks automatically
-- `lume init` command scaffolds a new project
+- `lume init` command scaffolds a new project with `lume.config` template
+- `lume` (no args) launches the interactive REPL (see Section 4.12)
+- REPL colon-commands: `:help`, `:vars`, `:type`, `:time`, `:save`, `:load`, `:model`, `:history`, `:clear`, `:exit`
+- REPL multi-line input, session persistence, tab completion
+- "Did you mean?" suggestions in error output (Levenshtein distance, threshold 2)
+- Error codes (E001-E599) documented and searchable
 - Browser playground integrated into Monaco IDE
 - 5 real example apps documented and runnable
 - Standard library fully implemented (strings, math, time, json, files, http, crypto, env)
-DONE WHEN: A developer who has never seen Lume can open the playground, write a program, and run it within 5 minutes with no instructions.
+DONE WHEN: A developer who has never seen Lume can open the playground, write a program, and run it within 5 minutes with no instructions. The REPL allows live AI calls and multi-line programs interactively.
 
 ---
 
@@ -712,6 +1004,7 @@ For each milestone provide: (1) working code, (2) passing tests, (3) a brief sum
 |------|---------|--------|
 | March 2026 | 0.1 | Initial design document. Core philosophy, pain points, syntax design, and 5-milestone build roadmap established. Language named Lume. |
 | March 2026 | 0.2 | Enhanced spec. Added: complete keyword list, complete operator list, indentation rules, full type system (primitives, collections, custom types, maybe/result), AI keyword definitions (ask vs think vs generate with temperature mapping), provider configuration (lume.config), standard library module list, concurrency detection rules, AST node type table, string interpolation syntax, comment syntax (single/multi/doc), natural-to-traditional operator mapping. Updated roadmap timeline and milestones. |
+| March 2026 | 0.3 | Complete draft. Added: scoping rules (block scoping, shadowing, set for outer mutation), full loop syntax (for each, for each with index, range-based for, range with step, while, break/continue, infinite loops), module system details (named imports, local modules, re-exports, circular import detection, resolution order), error messages and diagnostics (error format, error codes, source context, "did you mean?" suggestions via Levenshtein distance, unhandled Result warnings), REPL mode (interactive playground with colon-commands, multi-line input, live AI calls, session persistence, tab completion). Added keywords: set, then, by, all. |
 
 ---
 
