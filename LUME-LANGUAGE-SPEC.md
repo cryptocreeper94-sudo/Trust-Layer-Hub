@@ -1,6 +1,6 @@
 # LUME — The AI-Native Programming Language
 ### Language Design Specification & Build Roadmap
-**Version 0.3 — Complete Draft | March 2026**
+**Version 0.4 — Complete Draft with Future Vision | March 2026**
 
 ---
 
@@ -998,13 +998,92 @@ For each milestone provide: (1) working code, (2) passing tests, (3) a brief sum
 
 ---
 
-## 10. CHANGELOG
+## 10. FUTURE VISION — PICTOGRAPHIC MODE & DEV KEYBOARD
+
+*This section describes a future endeavor beyond v1.0. It is not part of the current build roadmap but should be preserved for future development.*
+
+### 10.1 The Concept
+
+Lume v1.0 is a text-based language designed to read close to English. But the long-term vision goes further: a pictographic input mode where single symbols represent entire programming concepts, paired with a custom developer keyboard (physical or virtual) designed for symbol-based coding.
+
+The inspiration comes from two real-world systems:
+- **Pictographic writing** (like Paleo-Hebrew, hieroglyphics, or Chinese characters) where one symbol carries a complete idea — no spelling, no parsing individual letters. The reader sees the symbol and immediately understands the concept.
+- **Stenography keyboards** used by courtroom stenographers, where a single chord (multiple keys pressed simultaneously) produces an entire word or phrase. A trained stenographer types at 225+ words per minute because they're not typing letters — they're typing concepts. One keystroke = one idea.
+
+Lume's current keywords already work this way at a small scale: `ask` is one word that represents an entire AI model call with configuration, error handling, and response parsing. Pictographic mode takes this further — one symbol represents what currently takes an entire line of code.
+
+### 10.2 How It Would Work
+
+**Symbol vocabulary:** Each core Lume operation maps to a unique pictographic symbol:
+
+| Symbol | Concept | Lume Equivalent |
+|--------|---------|-----------------|
+| (AI brain icon) | Ask AI | `ask "prompt"` |
+| (thought bubble icon) | Think/Reason | `think "prompt"` |
+| (spark icon) | Generate creative | `generate "prompt"` |
+| (arrow down icon) | Fetch data | `fetch data from url` |
+| (eye icon) | Show/Display | `show value` |
+| (loop icon) | For each | `for each item in list:` |
+| (branch icon) | If/condition | `if condition:` |
+| (box icon) | Let/variable | `let name = value` |
+| (lock icon) | Define/constant | `define NAME = value` |
+| (shield icon) | Error handling | `or fail with "message"` |
+| (link icon) | Import module | `use "module" as alias` |
+| (send icon) | Export | `export to function(...)` |
+
+**The Dev Keyboard:** A custom input device (physical USB keyboard or virtual on-screen keyboard) with symbol keys instead of — or in addition to — letter keys. Think of it as a stenography machine for programming:
+
+- **Physical version:** A compact keyboard with 30-40 symbol keys, each representing a Lume concept. Chord combinations (pressing multiple keys at once) create compound operations. For example: (AI brain) + (list) = "ask for a list and parse as JSON." Single symbol entry for rapid coding.
+- **Virtual version:** An on-screen keyboard inside the Lume playground or IDE plugin. Developers tap symbols on a tablet or touchscreen to compose programs visually. Each tap adds a structured code block to the editor.
+- **Voice + symbol hybrid:** Speak the intent ("fetch weather for Dallas"), and the system displays the corresponding symbols in the editor, which the developer confirms or adjusts. The symbols then compile to Lume text, which compiles to JavaScript.
+
+### 10.3 Expansion Pipeline
+
+```
+Symbol Input (keyboard/touch/voice)
+       |
+  [SYMBOL PARSER]  -- Converts symbols to Lume source text
+       |
+  Lume Source Code (.lume)
+       |
+  [LEXER + PARSER + TRANSPILER]  -- Existing Lume pipeline
+       |
+  JavaScript Output
+```
+
+The pictographic layer sits on top of the existing Lume compiler. It doesn't replace anything — it adds a new input method. The symbols produce standard Lume text, which flows through the same lexer, parser, and transpiler already built.
+
+### 10.4 Why This Matters
+
+- **Speed:** A stenographer is 3-4x faster than a typist. A developer using symbol chords could be significantly faster than one typing keywords letter by letter.
+- **Accessibility:** People who struggle with English syntax — non-English speakers, people with dyslexia, visual thinkers — could program using universal symbols that don't require language fluency.
+- **Mobile development:** Typing code on a phone is painful. Tapping symbols on a touchscreen is natural. This could make mobile-first coding viable.
+- **AI collaboration:** The symbols become a shared vocabulary between human and AI. The developer thinks in symbols, the AI thinks in symbols, and there's less room for misinterpretation than with natural language.
+
+### 10.5 Development Timeline (Post v1.0)
+
+| Phase | Goal |
+|-------|------|
+| Research | Design the symbol set. Test with developers for recognition speed and memorability. Study stenography chord theory. |
+| Virtual keyboard MVP | Build an on-screen symbol keyboard into the Lume web playground. Tap symbols to generate Lume code. |
+| Physical keyboard prototype | Partner with a hardware manufacturer or use a programmable keyboard (like a Stream Deck or custom mechanical keyboard) to map symbols to keys. |
+| Voice-to-symbol | Integrate speech recognition that converts spoken intent into symbol sequences, then into Lume code. |
+| Chord system | Develop multi-key chord combinations for compound operations, trained for muscle memory like stenography. |
+
+*This is a Lume v2.0+ feature. Build the language first (Milestones 1-5), prove it works, build the community, then introduce pictographic mode as the next evolution.*
+
+---
+
+## 11. CHANGELOG
+
+**Version: 0.4 — Complete Draft with Future Vision | March 2026**
 
 | Date | Version | Change |
 |------|---------|--------|
 | March 2026 | 0.1 | Initial design document. Core philosophy, pain points, syntax design, and 5-milestone build roadmap established. Language named Lume. |
 | March 2026 | 0.2 | Enhanced spec. Added: complete keyword list, complete operator list, indentation rules, full type system (primitives, collections, custom types, maybe/result), AI keyword definitions (ask vs think vs generate with temperature mapping), provider configuration (lume.config), standard library module list, concurrency detection rules, AST node type table, string interpolation syntax, comment syntax (single/multi/doc), natural-to-traditional operator mapping. Updated roadmap timeline and milestones. |
 | March 2026 | 0.3 | Complete draft. Added: scoping rules (block scoping, shadowing, set for outer mutation), full loop syntax (for each, for each with index, range-based for, range with step, while, break/continue, infinite loops), module system details (named imports, local modules, re-exports, circular import detection, resolution order), error messages and diagnostics (error format, error codes, source context, "did you mean?" suggestions via Levenshtein distance, unhandled Result warnings), REPL mode (interactive playground with colon-commands, multi-line input, live AI calls, session persistence, tab completion). Added keywords: set, then, by, all. |
+| March 2026 | 0.4 | Future vision added. Section 10: Pictographic Mode & Dev Keyboard — pictographic symbol input system inspired by Paleo-Hebrew/hieroglyphic writing and courtroom stenography. Symbol-to-Lume compilation pipeline. Custom developer keyboard concept (physical 30-40 key device, virtual on-screen keyboard, voice-to-symbol hybrid). Symbol vocabulary mapping 12 core operations. Accessibility, speed, and mobile development advantages documented. Phased development timeline for post-v1.0 implementation. |
 
 ---
 
