@@ -432,11 +432,12 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Safety:** `lume run --sandbox` forces sandbox; `lume run --trusted` skips it for locked programs
 - [ ] **Safety:** `.lume/security-config.json` project-level config for all security settings, committable to version control
 - [ ] **Safety:** Compile lock file (`.lume/compile-lock.json`) prevents regressions when patterns/corrections evolve
-- [ ] **Guardian:** Compiled JavaScript output scanned for malicious patterns AFTER transpilation, BEFORE writing to disk
-- [ ] **Guardian:** `raw:` block output scanned for eval(), obfuscated code, credential access, unauthorized network requests
-- [ ] **Guardian:** Community patterns from Collective Intelligence registry scanned at download time — flagged patterns quarantined
-- [ ] **Guardian:** Configurable scan levels in `.lume/security-config.json`: off, basic, standard (default), strict
-- [ ] **Guardian:** Blocked output shows detailed report: what was found, which line, risk level, how to resolve
+- [ ] **Guardian Output Scanner:** Built into the compiler — runs automatically on every compilation for every developer, not optional, not a separate product
+- [ ] **Guardian Output Scanner:** Compiled JavaScript scanned for malicious patterns AFTER transpilation, BEFORE writing to disk
+- [ ] **Guardian Output Scanner:** `raw:` block output scanned for eval(), obfuscated code, credential access, unauthorized network requests
+- [ ] **Guardian Output Scanner:** Community patterns from Collective Intelligence registry scanned at download time — flagged patterns quarantined
+- [ ] **Guardian Output Scanner:** Configurable scan levels in `.lume/security-config.json`: off, basic, standard (default), strict
+- [ ] **Guardian Output Scanner:** Blocked output shows detailed report: what was found, which line, risk level, how to resolve
 - [ ] **Determinism:** AI resolutions (Layer B) are cached and committed — same input always produces same output on recompile
 - [ ] **Performance:** AI calls are batched (multiple unresolved lines in one request) to minimize API calls and compile time
 - [ ] **Performance:** Cost transparency — compiler shows how many AI calls were made and estimated cost
@@ -1740,9 +1741,11 @@ The CNLD (Certified Lume Natural Language Developer) certification:
 - Webhook endpoint for Stripe events (subscription created, canceled, payment failed)
 - Grace period: if payment fails, Pro features remain active for 7 days before downgrading
 
-### 6. Guardian Scanner Integration — Compiled Output Security
+### 6. Guardian Output Scanner — Built-In Compiled Code Security
 
-The security layer (Section 3 in Critical Architectural Requirements) scans the INPUT — the English instructions. But once the code is compiled to JavaScript, a second security pass is needed on the OUTPUT. This is where Guardian Scanner's philosophy applies: scan the compiled code for malicious patterns, red flags, and suspicious behavior — just like Guardian Scanner does for bots, agents, websites, and platforms across the DarkWave ecosystem.
+**IMPORTANT: This is NOT the Guardian Scanner product from the DarkWave ecosystem (guardianscanner.tlid.io). This is a separate, built-in component of the Lume compiler itself.** It operates on the same philosophy — scan everything, flag suspicious patterns, give the user information to decide — but it is part of Lume, ships with Lume, and runs automatically for EVERY developer on EVERY compilation. It is not optional, not a subscription feature, not a separate download. When someone installs Lume and compiles a program, the Guardian Output Scanner runs. It is as fundamental to the compiler as the Auto-Correct Layer or the Tolerance Chain.
+
+The security layer (Section 3 in Critical Architectural Requirements) scans the INPUT — the English instructions. But once the code is compiled to JavaScript, a second security pass is needed on the OUTPUT. The Guardian Output Scanner scans the compiled code for malicious patterns, red flags, and suspicious behavior before it's written to disk.
 
 **Why input scanning alone is not enough:**
 
@@ -1847,6 +1850,7 @@ These features must NEVER be paywalled — doing so would kill adoption:
 - All CLI commands (`lume build`, `lume run`, `lume repl`, `lume test`, `lume explain`)
 - Compile lock files and deterministic builds
 - Security layer (all 11 threat categories)
+- Guardian Output Scanner (built into the compiler — every developer, every compilation, always)
 - Sandbox mode
 - Source maps
 - The pattern library that ships with each release
