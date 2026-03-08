@@ -186,16 +186,130 @@ The Intent Resolver needs to understand what's available in the current project.
 
 The Context Engine feeds into both Layer A (pattern matching uses context to fill variable slots) and Layer B (AI resolution uses context to disambiguate).
 
-### Error Handling
+### Error Handling & Tolerance Chain
 
-When the compiler can't resolve an English sentence:
+Human input is messy. People misspell words, use bad grammar, speak with accents, correct themselves mid-sentence, and write in sentence structures that don't follow any textbook. The Intent Resolver MUST handle all of this gracefully. This is not optional — it is a core feature.
 
-1. First, try pattern matching (Layer A)
-2. If no match, try AI resolution (Layer B)
-3. If AI resolution confidence is below threshold (e.g., < 80%), show the user what it thinks they meant and ask for confirmation
-4. If completely unresolvable, show a clear error: `"I couldn't understand: [sentence]. Did you mean: [suggestions]?"`
+**The Tolerance Chain — ordered fallback sequence for every input:**
 
-Never silently guess. If there's ambiguity, surface it.
+```
+Step 1: EXACT PATTERN MATCH (Layer A)
+   Input matches a known pattern exactly
+   -> Resolve immediately, zero ambiguity
+   -> Example: "get the user's name" -> user.name
+
+Step 2: FUZZY PATTERN MATCH (Layer A with tolerance)
+   Input is close to a known pattern but has typos or minor errors
+   -> Use Levenshtein distance (edit distance) to find the nearest pattern
+   -> If similarity >= 85%, treat as a match
+   -> Example: "gt the users name" (missing 'e', missing apostrophe)
+              -> matches "get the user's name" at 89% similarity
+              -> Resolve as user.name
+   -> Example: "shwo the result" -> matches "show the result" at 87%
+              -> Resolve as ShowStatement
+
+Step 3: GRAMMAR-TOLERANT PATTERN MATCH (Layer A with word-bag matching)
+   Input has the right words but wrong order or structure
+   -> Extract key nouns and verbs, ignore word order
+   -> Match against patterns by semantic content, not syntax
+   -> Example: "the user name get from database"
+              -> Key words: [user, name, get, database]
+              -> Matches pattern: "get the user's name from the database"
+              -> Resolve as user.name + database query
+
+Step 4: AI RESOLUTION — HIGH CONFIDENCE (Layer B, confidence >= 80%)
+   None of the Layer A strategies matched
+   -> Send to LLM with full project context
+   -> AI returns AST node(s) with confidence score
+   -> If confidence >= 80%, apply the resolution silently
+   -> Log what happened for transparency
+
+Step 5: AI RESOLUTION — LOW CONFIDENCE (Layer B, confidence 50-79%)
+   AI understood something but isn't sure
+   -> Show the user what it thinks they meant
+   -> Ask for confirmation BEFORE compiling
+   -> Format: "I think you mean: [interpreted code]. Is that right? (y/n)"
+   -> If user confirms, compile and add to pattern library for future use
+   -> If user rejects, ask for clarification
+
+Step 6: AI RESOLUTION — VERY LOW CONFIDENCE (Layer B, confidence < 50%)
+   AI can't confidently determine intent
+   -> Show multiple possible interpretations ranked by confidence
+   -> Format: "I'm not sure what you mean. Did you mean:
+              1. [interpretation A] (45% confident)
+              2. [interpretation B] (38% confident)
+              3. Something else?"
+   -> User picks one or rephrases
+
+Step 7: UNRESOLVABLE
+   Neither Layer A nor Layer B could determine intent
+   -> Clear error message: "I couldn't understand: [original sentence]"
+   -> Suggest similar known phrases: "Try something like: [closest patterns]"
+   -> Never crash. Never compile garbage. Never silently skip the line.
+```
+
+**The golden rule: NEVER SILENTLY GUESS.** If the system isn't confident, it asks. A program that compiles incorrectly is infinitely worse than a compiler that asks "did you mean this?" Silent wrong guesses destroy trust in the language.
+
+**Fuzzy Matching Implementation Details:**
+
+Create `src/intent-resolver/fuzzy-matcher.js` with these capabilities:
+
+1. **Levenshtein distance** — character-level edit distance for catching typos ("shwo" -> "show", "databse" -> "database")
+2. **Word-bag matching** — extract meaningful words (nouns, verbs), ignore articles/prepositions/word order, match against pattern word-bags. This handles bad grammar and non-native English sentence structures.
+3. **Phonetic matching** — words that sound the same but are spelled differently ("their/there/they're", "write/right"). Use a Soundex or Metaphone algorithm.
+4. **Common misspelling dictionary** — frequently mistyped programming terms ("fucntion" -> "function", "retrun" -> "return", "varibale" -> "variable"). Build a dictionary of 200+ common misspellings.
+5. **Contraction tolerance** — "dont" = "don't", "cant" = "can't", "its" = "it's" (and vice versa). Missing apostrophes should never cause a match failure.
+
+**Learning from corrections:**
+
+When a user corrects a failed match (Steps 5-6), the system should remember that correction:
+- Store the original input and the confirmed resolution in a project-local pattern cache
+- Next time the same or similar input appears, it resolves instantly via Layer A
+- Over time, the pattern library grows organically from actual usage
+- Pattern cache is saved to `.lume/learned-patterns.json` in the project root
+
+### Voice-Specific Error Handling
+
+Voice input introduces unique challenges beyond typos and grammar. The following must be handled in Milestone 9, but the architecture should be designed in Milestone 7 so the Intent Resolver is ready.
+
+**Self-Corrections:**
+People correct themselves mid-sentence while speaking. The Intent Resolver must detect correction phrases and replace the previous reference:
+
+| Spoken Input | What Happens |
+|-------------|-------------|
+| "get the users... no, the customers" | Replace "users" with "customers" |
+| "save it to... I mean delete it from the database" | Replace "save" with "delete" |
+| "actually, make that a list not a table" | Replace "table" with "list" |
+| "wait, I said that wrong — show the email, not the name" | Replace "name" with "email" |
+
+Correction trigger phrases: "no," "I mean," "actually," "wait," "sorry," "I meant," "scratch that," "not that," "correction"
+
+When a correction phrase is detected:
+1. Identify what's being corrected (the noun/verb before the correction phrase)
+2. Identify the replacement (the noun/verb after the correction phrase)
+3. Substitute and re-resolve the full sentence
+4. If the correction is ambiguous, ask: "Did you want to change [X] to [Y]?"
+
+**Filler Words:**
+The speech-to-text engine (Whisper) strips most filler words ("um," "uh," "like," "you know"), but some may survive transcription. The Intent Resolver should have a filler word list and strip them before pattern matching:
+
+Strip list: "um", "uh", "like", "you know", "basically", "so", "well", "right", "okay", "let me think", "hmm", "er", "ah"
+
+**Numbers:**
+"five" and "5" must resolve identically. "a hundred" = 100. "two thousand" = 2000. "a couple" = 2. "a few" = 3 (configurable). "several" = 5 (configurable). Build a word-to-number converter.
+
+**Homophones:**
+Words that sound identical but mean different things. Context resolves these:
+
+| Spoken | Possible Meanings | Resolution |
+|--------|------------------|------------|
+| "right" | correct / direction | If spatial context -> direction. If conditional -> correct. |
+| "write" | output text | If followed by "to file/database" -> write operation |
+| "for" / "four" | loop / number | If followed by "each" or "times" -> loop. If in numeric context -> 4. |
+| "new" / "knew" | create / past tense know | If followed by a noun -> create object. Otherwise -> past reference. |
+| "their" / "there" / "they're" | possessive / location / contraction | Context determines: "their name" -> possessive, "over there" -> location |
+
+The Context Engine resolves homophones by looking at surrounding words and the current scope. If still ambiguous, fall through to Layer B (AI resolution).
 
 ### CLI Usage
 
@@ -212,9 +326,20 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] Layer B AI resolution handles complex multi-step sentences
 - [ ] Context Engine scans project data models and populates variable slots
 - [ ] Pronoun/reference resolution works ("get the user, then show **their** name")
-- [ ] Errors are clear and suggest corrections
 - [ ] All existing `.lume` files without a mode declaration compile unchanged (backward compatibility is non-negotiable)
 - [ ] Self-sustaining keywords (monitor, heal, optimize, evolve) can be expressed in English and resolve to correct AST nodes
+- [ ] **Tolerance Chain:** Fuzzy matching catches typos ("shwo" -> "show", "databse" -> "database") at 85%+ similarity
+- [ ] **Tolerance Chain:** Word-bag matching handles bad grammar/word order ("the user name get from database" resolves correctly)
+- [ ] **Tolerance Chain:** Common misspelling dictionary handles 200+ programming term misspellings
+- [ ] **Tolerance Chain:** Missing apostrophes and contractions ("dont", "cant", "its") never cause match failures
+- [ ] **Tolerance Chain:** Low-confidence AI resolution (50-79%) asks user for confirmation before compiling
+- [ ] **Tolerance Chain:** Very low confidence (<50%) shows multiple interpretations ranked by confidence
+- [ ] **Tolerance Chain:** Unresolvable input shows clear error with suggestions — never crashes, never compiles garbage
+- [ ] **Learning:** User corrections at Steps 5-6 are saved to `.lume/learned-patterns.json` and resolve instantly next time
+- [ ] **Voice prep:** Self-correction phrases ("no," "I mean," "actually") are handled — replaces previous reference with correction
+- [ ] **Voice prep:** Filler words ("um," "uh," "like," "you know") are stripped before pattern matching
+- [ ] **Voice prep:** Number words resolve to digits ("five" -> 5, "a hundred" -> 100)
+- [ ] **Voice prep:** Homophones resolve by context ("write" vs "right", "for" vs "four")
 
 ---
 
