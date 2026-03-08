@@ -89,10 +89,18 @@ Add a **front-end stage** to the existing compiler pipeline:
 
 ```
 CURRENT:   Lume Source -> Lexer -> Parser -> AST -> Transpiler -> JavaScript
-NEW:       English Source -> Intent Resolver -> Lume AST -> Transpiler -> JavaScript
+NEW:       English Source -> Auto-Correct -> Intent Resolver -> Security/Conflict Check -> Lume AST -> Transpiler -> JavaScript + Source Map + Compile Lock
 ```
 
-The Intent Resolver is the new component. It sits before the existing pipeline and converts English sentences into Lume AST nodes. The rest of the pipeline is untouched. Do NOT modify the Lexer, Parser, or Transpiler for this milestone. The Intent Resolver produces AST nodes directly — it bypasses the Lexer and Parser entirely and feeds AST nodes straight to the Transpiler.
+The Intent Resolver is the new component. It sits before the existing pipeline and converts English sentences into Lume AST nodes. The Intent Resolver produces AST nodes directly — it bypasses the Lexer and Parser entirely and feeds AST nodes straight to the Transpiler.
+
+**What you CAN and CANNOT modify:**
+- **Do NOT modify** the Lexer or Parser — they are not involved in English Mode processing
+- **Do NOT modify** how the Transpiler handles existing AST node types — backward compatibility is absolute
+- **You CAN extend** the Transpiler to handle new AST node types (e.g., `RawBlock` for escape hatch, source map metadata nodes)
+- **You CAN add** pre-transpiler stages (Auto-Correct, Tolerance Chain, Security Layer, Conflict Detection) — these sit before the Transpiler in the pipeline
+- **You CAN add** post-transpiler stages (source map generation, compile lock writing) — these run after the Transpiler produces JavaScript output
+- **The pipeline for English Mode is:** `English Input -> Auto-Correct -> Intent Resolver (with Tolerance Chain) -> Security Layer -> Conflict Detection -> Lume AST -> Transpiler (extended for new node types) -> JavaScript + Source Map + Compile Lock`
 
 ### New Files to Create
 
@@ -410,6 +418,212 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Voice prep:** Filler words ("um," "uh," "like," "you know") are stripped before pattern matching
 - [ ] **Voice prep:** Number words resolve to digits ("five" -> 5, "a hundred" -> 100)
 - [ ] **Voice prep:** Homophones resolve by context ("write" vs "right", "for" vs "four")
+- [ ] **Safety:** Cross-line dependency tracking — changing line 3 re-resolves dependent lines (e.g., line 7's "it" reference)
+- [ ] **Safety:** Intent conflict detection — contradictory operations in the same block are flagged ("delete the users and save the users")
+- [ ] **Safety:** Destructive operation confirmation — irreversible operations require explicit (y/n) before compiling
+- [ ] **Safety:** Security layer flags dangerous operations (file deletion, credential access, network exfiltration)
+- [ ] **Safety:** Compile lock file (`.lume/compile-lock.json`) prevents regressions when patterns/corrections evolve
+- [ ] **Determinism:** AI resolutions (Layer B) are cached and committed — same input always produces same output on recompile
+- [ ] **Performance:** AI calls are batched (multiple unresolved lines in one request) to minimize API calls and compile time
+- [ ] **Performance:** Cost transparency — compiler shows how many AI calls were made and estimated cost
+- [ ] **Escape Hatch:** `raw:` block allows inline JavaScript/Lume syntax inside English Mode files, bypassing all resolution layers
+- [ ] **Debugging:** Source maps link English sentences to compiled JavaScript lines — error stack traces show the English source, not JS
+- [ ] **Testing:** Intent blocks work in English Mode — natural language tests compile alongside natural language code
+
+---
+
+## CRITICAL ARCHITECTURAL REQUIREMENTS
+
+These requirements apply across ALL milestones 7-13. They are non-negotiable and must be implemented as part of Milestone 7's foundation, because every subsequent milestone depends on them.
+
+### 1. Cross-Line Dependency Resolution
+
+When line 5 depends on line 3 (via pronoun references like "it," "them," "that"), and line 3 is modified, the compiler must automatically re-resolve line 5. This means the Intent Resolver must build a dependency graph of references within each file.
+
+```
+Example:
+  Line 3: "get the user from the database"       -> resolves "user" as the active reference
+  Line 5: "show their name"                       -> "their" refers to line 3's "user"
+  Line 7: "save it"                               -> "it" refers to the most recent value
+
+If line 3 changes to "get the order from the database":
+  Line 5 must re-resolve: "their" now refers to "order" -> "show order.name"
+  Line 7 must re-resolve: "it" now refers to "order" -> "save order"
+```
+
+Implement this as a reference graph in the Context Engine. When any line changes, walk the graph forward and re-resolve all dependent lines.
+
+### 2. Intent Conflict Detection
+
+The compiler must detect when two instructions in the same block logically contradict each other:
+
+| Conflict Type | Example | Response |
+|--------------|---------|----------|
+| Create + Delete same target | "create the user, then delete the user" | Warning: "You're creating and deleting the same thing. Did you mean to update it?" |
+| Read after Delete | "delete all users, then show the users" | Error: "The users were deleted on the previous line — there's nothing to show." |
+| Duplicate operations | "save the data, save the data" | Warning: "This saves the same data twice. Did you mean to save it once?" |
+| Type mismatch | "set the user's age to 'hello'" | Error: "Age expects a number, but 'hello' is text." |
+| Unreachable code | "return the result, then show the total" | Warning: "The line after 'return' will never execute." |
+
+This is semantic validation — the compiler understands not just what each line means, but whether the lines make sense together.
+
+### 3. Security Layer
+
+Natural language programs can express dangerous operations in innocent-sounding ways. The compiler MUST have a security layer that intercepts dangerous operations before they compile.
+
+**Dangerous operation categories:**
+
+| Category | Examples | Action |
+|----------|----------|--------|
+| File system destruction | "delete all files," "clear the directory," "wipe the drive" | BLOCK — require explicit confirmation with warning |
+| Credential exposure | "show the API key," "send the password to [url]," "log the secret" | BLOCK — refuse to compile, explain why |
+| Network exfiltration | "send all the data to [external url]," "upload everything" | WARNING — show what data would be sent, require confirmation |
+| Database destruction | "drop the table," "delete all records," "truncate" | CONFIRM — show exactly what will be destroyed, require (y/n) |
+| Infinite operations | "repeat forever," "keep doing this" | WARNING — "This will run forever. Add a stop condition or confirm infinite loop." |
+| System commands | "run [shell command]," "execute on the server" | BLOCK — arbitrary system command execution is blocked by default |
+
+A `--unsafe` flag allows advanced developers to bypass the security layer for legitimate use cases. But the default is always safe.
+
+### 4. Deterministic Compilation
+
+Layer B (AI resolution) uses an LLM, which can return different results for the same input on different days. This breaks reproducibility — a program that compiles today might compile differently tomorrow.
+
+**Solution: Compile Lock File**
+
+When a program compiles successfully, every resolution is saved to `.lume/compile-lock.json`:
+
+```json
+{
+  "version": "1.0",
+  "file": "app.lume",
+  "resolutions": [
+    {
+      "line": 3,
+      "input": "get all users who signed up this month",
+      "resolved_by": "layer_b_ai",
+      "confidence": 0.92,
+      "ast": { "type": "query", "target": "users", "filter": "..." },
+      "timestamp": "2026-09-15T14:30:00Z"
+    }
+  ]
+}
+```
+
+On recompilation:
+1. If the input line hasn't changed AND a lock entry exists -> use the locked resolution (no AI call needed)
+2. If the input line has changed -> re-resolve and update the lock
+3. `lume build --fresh` ignores the lock and re-resolves everything
+
+This guarantees deterministic builds. The lock file should be committed to version control alongside the source code.
+
+### 5. Escape Hatch
+
+Sometimes the developer knows exactly what code they want and the natural language resolution keeps getting it wrong. They need an escape hatch to drop into raw code:
+
+```
+mode: english
+
+get all active users from the database
+
+raw:
+  const filtered = users.filter(u => u.score > calculateThreshold(u.tier));
+
+show the filtered results in a table
+```
+
+The `raw:` block:
+- Passes through the transpiler untouched (no Auto-Correct, no Tolerance Chain, no AI resolution)
+- Can contain raw JavaScript or standard Lume syntax
+- Indentation defines the block boundary (like Python)
+- Multiple `raw:` blocks can appear in the same file
+- The Context Engine still tracks variables created inside `raw:` blocks so subsequent English lines can reference them
+
+Also support inline raw expressions for single lines:
+```
+show `users.filter(u => u.active).length` active users
+```
+Backtick-wrapped expressions are passed through as raw JavaScript.
+
+### 6. Source Maps & Debugging
+
+When a compiled program throws an error, the stack trace should reference the English source line, not the generated JavaScript line. This requires source maps.
+
+The compiler must generate a `.lume.map` file (standard source map format) that maps:
+- English sentence (line number in `.lume` file) -> Generated JavaScript (line number in `.js` output)
+
+When an error occurs at runtime:
+```
+Error: Cannot read property 'name' of undefined
+  at app.lume:7  "show the user's name"
+  (compiled to app.js:23)
+```
+
+The developer sees their English line, not `app.js:23`. This is how TypeScript source maps work — same concept, applied to natural language.
+
+`lume build --sourcemap` generates the map file. Should be on by default in development mode.
+
+### 7. Natural Language Testing
+
+Intent blocks from the main Lume spec must work in English Mode. Tests written in natural language compile alongside the program:
+
+```
+mode: english
+
+to calculate_total(items):
+  add up all the prices in items
+  return the total
+
+test "calculate_total works correctly":
+  given items are [{name: "book", price: 10}, {name: "pen", price: 5}]
+  when I calculate the total of items
+  then the result should be 15
+
+test "calculate_total handles empty list":
+  given items are []
+  when I calculate the total of items
+  then the result should be 0
+```
+
+The test keywords ("given," "when," "then") map to setup, execution, and assertion AST nodes. This follows the Given-When-Then (Gherkin) pattern, which is already designed for human-readable testing.
+
+`lume test app.lume` runs the tests. Test results show in natural language:
+```
+PASS: "calculate_total works correctly"
+FAIL: "calculate_total handles empty list" — expected 0, got undefined
+```
+
+### 8. Performance Boundaries
+
+**AI Call Batching:**
+When multiple lines fail Layer A and need Layer B resolution, batch them into a single AI request instead of making separate API calls for each line. Send: "Resolve these 15 lines in the context of this project" as one request, not 15 individual requests.
+
+**Cost Transparency:**
+After compilation, show a summary:
+```
+Compiled app.lume (47 lines)
+  Pattern matches (Layer A): 38 lines (instant)
+  AI resolutions (Layer B):  9 lines (batched into 1 API call)
+  Estimated cost: $0.002
+  Compile time: 1.8 seconds
+```
+
+**Performance Targets:**
+- Layer A resolution: < 1ms per line
+- Layer B resolution (batched): < 3 seconds for up to 50 lines
+- Total compile time for a 500-line file: < 10 seconds
+- If compile time exceeds 30 seconds, show a progress indicator
+
+### 9. Regression Protection
+
+When the pattern library is updated (new patterns, modified patterns, or Auto-Correct dictionary changes), existing programs must not silently change behavior.
+
+**The Compile Lock File (`.lume/compile-lock.json`)** handles this:
+- Every successful compilation locks the exact resolution for every line
+- On recompilation, locked resolutions are used — new patterns don't apply to old lines unless the source changes
+- `lume build --fresh` forces full re-resolution (developer explicitly opts in to new pattern behavior)
+- `lume build --check` compiles without writing output — just verifies all lines still resolve the same way. Returns exit code 0 if unchanged, exit code 1 if any line would resolve differently.
+
+This is how you prevent the 1% that destroys everything. The lock file is the insurance policy.
 
 ---
 
@@ -493,6 +707,9 @@ Error messages should be returned in the same language the user is writing in. I
 - [ ] Mixed-language files compile correctly
 - [ ] Error messages output in the detected language
 - [ ] Identical AST/JS output regardless of input language
+- [ ] **Auto-Correct:** Multilingual spell check and context-aware correction for all 10 supported languages (not just English)
+- [ ] **Auto-Correct:** Multilingual autocorrect dictionaries (`.lume/autocorrect-dictionary-{lang}.json`) per language per project
+- [ ] **Compile Lock:** Lock file format extended to include language metadata per resolution
 
 ---
 
@@ -552,6 +769,10 @@ Because Milestone 8 already supports multilingual text, voice input in any langu
 - [ ] "Scratch that" / "undo" removes the last transcribed line
 - [ ] Pause detection separates logical blocks
 - [ ] Voice input in non-English languages produces correct output via Milestone 8
+- [ ] **Offline:** Layer A (pattern matching) works fully offline — no internet required
+- [ ] **Offline:** Layer B (AI resolution) queues unresolved lines when offline, marks them as "pending — will resolve when connected"
+- [ ] **Offline:** Optional local LLM fallback (Ollama/Llama) can serve as offline Layer B substitute
+- [ ] **Offline:** CLI voice mode falls back to offline speech engine when Whisper API is unavailable
 
 ---
 
