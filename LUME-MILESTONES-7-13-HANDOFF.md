@@ -1682,15 +1682,45 @@ Trust Layer will handle the Academy content updates. The Lume agent just needs t
 
 ---
 
+## CORE BRAND CONCEPT: COGNITIVE DISTANCE
+
+Every programming language in history has created **cognitive dissonance** — the mental discomfort that comes from thinking one way but being forced to act another way. A developer thinks "get the user's name from the database." But they have to TYPE `const name = await db.query("SELECT name FROM users WHERE id = ?", [userId])`. The thought and the action don't match. The brain says one thing, the fingers do something completely different. That's cognitive dissonance, and every developer experiences it hundreds of times a day without even realizing it has a name.
+
+**Cognitive distance** is the measurement of that gap — how far apart the human thought and the machine instruction are. Every language in computing history has tried to reduce cognitive distance, but none have eliminated it:
+
+| Era | Language | Cognitive Distance | What You Think vs. What You Type |
+|-----|---------|-------------------|----------------------------------|
+| 1950s | Assembly | Maximum | "Add two numbers" -> `MOV AX, 5 / ADD AX, 3` |
+| 1970s | C | High | "Add two numbers" -> `int result = a + b;` |
+| 1990s | Python | Medium | "Add two numbers" -> `result = a + b` |
+| 2020s | AI Agents | Medium-High* | "Add two numbers" -> ask AI -> AI writes code -> you review it -> you run it |
+| 2026 | Lume | Near-Zero | "Add two numbers" -> `add two numbers` |
+
+*AI agents actually INCREASED cognitive distance in one critical way: they added a layer. You used to write code and the compiler ran it (2 layers). Now you ask an AI to write the code, you review what it wrote, the compiler runs it (3 layers). It's more convenient, but it's a longer chain with more room for misunderstanding.
+
+**Lume collapses the chain entirely.** The compiler IS the understanding layer. There is no middleman — no AI agent sitting between you and the machine interpreting your request and deciding what code to write. You speak directly to the compiler, and it understands you directly.
+
+**The marketing position:**
+
+> "Every programming language creates cognitive dissonance — you think in human language but write in machine language. Lume eliminates the cognitive distance between the two. Think it. Say it. It runs."
+
+> "Other tools add an AI between you and your code. Lume removes the code between you and your machine."
+
+This concept should anchor the entire brand — homepage hero, conference talks, blog posts, social media. Cognitive distance is Lume's "horsepower" — the unit of measurement that defines the category and positions Lume as the only language that has reduced it to near-zero.
+
+---
+
 ## LUME WEBSITE (lume-lang.com)
 
-The website is the first thing anyone sees. It needs to clearly communicate three things: what Lume is, why it's safe, and how to start using it.
+The website is the first thing anyone sees. It needs to clearly communicate three things: what Lume is, why it's safe, and how to start using it. The concept of **cognitive distance** should be woven throughout the site — it's the core idea that makes people understand why Lume matters.
 
 ### Required Pages
 
 **1. Homepage (lume-lang.com)**
 - Hero section: "Write code in your language. Any language." with a live demo showing English input compiling to JavaScript
-- Below the fold: the three pillars — Natural Language, Multilingual, Secure
+- Below the fold: the Cognitive Distance comparison table (Assembly -> C -> Python -> AI Agents -> Lume)
+- Below that: the three pillars — Natural Language, Multilingual, Secure
+- Tagline somewhere prominent: "Other tools add an AI between you and your code. Lume removes the code between you and your machine."
 - Quick start: `npm install -g lume` -> `lume init` -> `lume build`
 - Link to playground, docs, Academy
 
