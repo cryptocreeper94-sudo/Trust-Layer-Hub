@@ -186,11 +186,74 @@ The Intent Resolver needs to understand what's available in the current project.
 
 The Context Engine feeds into both Layer A (pattern matching uses context to fill variable slots) and Layer B (AI resolution uses context to disambiguate).
 
+### Auto-Correct Layer
+
+Before input even reaches the Tolerance Chain, it passes through an Auto-Correct Layer that cleans up the input — just like spell check on your phone, but smarter because it understands the programming context. This is self-correcting software at the input level, philosophically identical to Milestone 6's self-healing runtime. The runtime fixes broken API calls automatically; the compiler fixes broken input automatically. Same principle, different layer.
+
+**Pipeline with Auto-Correct:**
+```
+Raw Input -> Auto-Correct Layer -> Tolerance Chain -> AST -> Transpiler -> JavaScript
+```
+
+**Create `src/intent-resolver/auto-correct.js` with these capabilities:**
+
+1. **Spell check with project-aware dictionary:**
+   - Standard English dictionary for general words
+   - Project custom dictionary: variable names, function names, data model fields, table names from the Context Engine are added as valid words automatically
+   - Programming term dictionary: "database," "function," "variable," "parameter," "array," etc.
+   - If "usr" appears and the project has a "user" table, correct to "user"
+   - If "clculate" appears and the project has a "calculate" function, correct to "calculate"
+
+2. **Context-aware correction (NOT just spell check):**
+   - A normal spell checker doesn't know if you meant "save" or "safe" — both are valid English words
+   - Lume's Auto-Correct uses the Context Engine to resolve ambiguity:
+     - In a database context: "safe the data" -> "save the data" (write operation)
+     - In a security context: "save the password" stays as "save" (storage operation)
+     - In a UI context: "hid the button" -> "hide the button" (visibility operation)
+     - In a loop context: "repat this 5 times" -> "repeat this 5 times"
+   - The Context Engine knows what operations make sense in the current scope
+
+3. **Show corrections transparently:**
+   - Every correction is shown to the developer in the compiler output:
+     ```
+     [auto-correct] Line 3: "gt the usr name" -> "get the user name"
+     [auto-correct] Line 7: "safe the form data" -> "save the form data"
+     ```
+   - Corrections are NOT silent — the developer always sees what was changed
+   - A `--no-autocorrect` flag disables the layer for developers who want raw input processing
+   - A `--strict` flag treats any correction as a warning instead of auto-applying
+
+4. **Learning from usage:**
+   - If a developer consistently types "db" to mean "database," the system learns that shorthand
+   - Learned corrections are saved to `.lume/autocorrect-dictionary.json` per project
+   - Developers can add custom abbreviations: `lume config alias db=database`
+   - Team-level dictionaries can be shared via version control
+
+5. **Voice-to-text cleanup:**
+   - Speech-to-text engines often produce phonetically correct but contextually wrong words
+   - "Create a function for four users" — is "four" the number 4, or "for" the preposition? Context resolves it.
+   - "Write the data to the sequel database" — "sequel" is how people say "SQL." Auto-correct to "SQL."
+   - "Send a curl request" — keep "curl" as-is (technical term, not a misspelling)
+   - The Auto-Correct Layer marks technical terms as "do not correct" so domain-specific words survive
+
+**Example — full auto-correct flow:**
+```
+Raw voice input:   "gt all the usrs who singed up this moth and shwo there names"
+After auto-correct: "get all the users who signed up this month and show their names"
+Corrections shown:  [auto-correct] "gt"->"get", "usrs"->"users", "singed"->"signed",
+                    "moth"->"month", "shwo"->"show", "there"->"their"
+Then:              Tolerance Chain processes the clean sentence -> AST -> JavaScript
+```
+
+The Auto-Correct Layer runs BEFORE the Tolerance Chain. This means the Tolerance Chain receives much cleaner input, making fuzzy matching and AI resolution far more accurate. They work together — Auto-Correct handles character-level errors (typos, phonetic mistakes), and the Tolerance Chain handles sentence-level ambiguity (wrong word order, unclear intent).
+
+---
+
 ### Error Handling & Tolerance Chain
 
-Human input is messy. People misspell words, use bad grammar, speak with accents, correct themselves mid-sentence, and write in sentence structures that don't follow any textbook. The Intent Resolver MUST handle all of this gracefully. This is not optional — it is a core feature.
+Human input is messy. Even after the Auto-Correct Layer cleans up typos and phonetic errors, people may use unusual grammar, unclear phrasing, or ambiguous references. The Tolerance Chain handles everything the Auto-Correct Layer can't fix. This is not optional — it is a core feature.
 
-**The Tolerance Chain — ordered fallback sequence for every input:**
+**The Tolerance Chain — ordered fallback sequence for every input (after auto-correct):**
 
 ```
 Step 1: EXACT PATTERN MATCH (Layer A)
@@ -328,6 +391,13 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] Pronoun/reference resolution works ("get the user, then show **their** name")
 - [ ] All existing `.lume` files without a mode declaration compile unchanged (backward compatibility is non-negotiable)
 - [ ] Self-sustaining keywords (monitor, heal, optimize, evolve) can be expressed in English and resolve to correct AST nodes
+- [ ] **Auto-Correct:** Spell check corrects typos using standard + project-aware dictionary before Tolerance Chain runs
+- [ ] **Auto-Correct:** Context-aware correction resolves ambiguous words ("safe" vs "save") using scope context
+- [ ] **Auto-Correct:** All corrections are shown transparently in compiler output — never silent
+- [ ] **Auto-Correct:** `--no-autocorrect` flag disables auto-correct; `--strict` flag shows corrections as warnings only
+- [ ] **Auto-Correct:** Learned corrections saved to `.lume/autocorrect-dictionary.json` per project
+- [ ] **Auto-Correct:** `lume config alias` command allows custom abbreviations (e.g., db=database)
+- [ ] **Auto-Correct:** Voice-to-text phonetic corrections handled ("sequel" -> "SQL", "four"/"for" resolved by context)
 - [ ] **Tolerance Chain:** Fuzzy matching catches typos ("shwo" -> "show", "databse" -> "database") at 85%+ similarity
 - [ ] **Tolerance Chain:** Word-bag matching handles bad grammar/word order ("the user name get from database" resolves correctly)
 - [ ] **Tolerance Chain:** Common misspelling dictionary handles 200+ programming term misspellings
