@@ -450,6 +450,13 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **REPL:** `lume repl --mode english` accepts natural language input and shows results in real-time
 - [ ] **Errors:** Error message standard format: error code, original input, what was attempted, suggestion for fix
 - [ ] **Versioning:** Optional `lume-version: 7` declaration in file header locks compilation behavior to a specific milestone version
+- [ ] **Collective Intelligence:** Opt-in anonymous pattern contribution to `lume-lang.com/patterns` registry
+- [ ] **Collective Intelligence:** `lume patterns sync` downloads community-validated patterns into Layer A
+- [ ] **Collective Intelligence:** Patterns promoted to official library after 100+ independent confirmations
+- [ ] **Collective Intelligence:** Privacy-first — default OFF, all data anonymized, enterprise can fully disable
+- [ ] **Memory:** `.lume/context-memory.json` persists developer style, project domain, and resolution history across sessions
+- [ ] **Memory:** Project domain auto-detection (e-commerce, healthcare, etc.) biases ambiguity resolution
+- [ ] **Synonyms:** Synonym ring for each core operation — "grab," "pull," "fetch" all resolve as "get" in Layer A without AI call
 
 ---
 
@@ -889,6 +896,105 @@ get the user's name and show it
 - `lume build --version 7 app.lume` overrides the file declaration
 - The compiler should warn if a file uses features from a newer version than declared: `"Warning: 'mode: natural' requires lume-version >= 8. Your file declares version 7."`
 - Version declarations are optional — omitting them is fine for personal projects and experimentation. They're important for production code and team projects.
+
+### 19. Collective Intelligence Layer
+
+Individual learning (per-project pattern caches, autocorrect dictionaries) makes Lume smarter for one developer. Collective intelligence makes Lume smarter for EVERYONE.
+
+**How it works:**
+
+When a developer's correction or resolution is confirmed and works (the program compiles and runs correctly), the compiler can optionally contribute that pattern to a global anonymized pattern registry hosted at `lume-lang.com/patterns`.
+
+**What gets shared (anonymized):**
+- The natural language input pattern (e.g., "grab the data from the API")
+- The resolved AST node type (e.g., fetch operation)
+- The confidence score from the original resolution
+- The language (English, Spanish, etc.)
+- Success/failure (did the compiled program work?)
+- NO project-specific data: no variable names, no file paths, no code content, no credentials, nothing identifiable
+
+**What the registry does:**
+- Aggregates patterns across all Lume users worldwide
+- When 100+ developers independently confirm the same natural language -> AST resolution, it gets promoted to the official pattern library in the next release
+- Trending patterns are surfaced: "Last month, 2,400 developers used 'grab' as a synonym for 'get' — adding to Layer A"
+- Language-specific patterns grow organically: French developers teach the compiler French idioms, Japanese developers teach Japanese programming phrases
+- The Auto-Correct dictionary grows the same way: if 5,000 developers type "db" to mean "database," it becomes a global alias
+
+**Privacy and control:**
+- Contributions are **opt-in** — `lume config set telemetry.contribute_patterns true`
+- Default is OFF — privacy first. The developer explicitly chooses to share.
+- Pattern downloads are separate from contributions — you can receive community patterns without contributing your own
+- `lume config set telemetry.receive_patterns true` to receive new patterns from the registry
+- All shared data is anonymized — there is zero way to trace a pattern back to a specific project, developer, or company
+- Enterprise users can disable both directions entirely: `lume config set telemetry.mode off`
+- A local-only mode exists for air-gapped or classified environments
+
+**The flywheel effect:**
+More users -> more patterns -> better Layer A coverage -> fewer AI calls needed -> faster compile times -> lower costs -> more users. The language literally gets smarter the more people use it. After a year of community usage, Layer A might cover 95% of common sentences — meaning most programs compile instantly without any AI calls at all.
+
+**CLI commands:**
+```bash
+lume patterns list                    # Show locally learned patterns
+lume patterns contribute              # Upload anonymized patterns to registry
+lume patterns sync                    # Download latest community patterns
+lume patterns stats                   # Show community stats (total patterns, languages, contributors)
+```
+
+**Registry API (hosted at lume-lang.com):**
+```
+GET  /api/patterns/latest             # Latest community patterns since last sync
+GET  /api/patterns/stats              # Global usage statistics
+POST /api/patterns/contribute         # Submit anonymized patterns (authenticated)
+GET  /api/patterns/language/{lang}    # Patterns for a specific language
+```
+
+### 20. Contextual AI Memory Across Sessions
+
+The Context Engine currently tracks state within a single compilation. But developers work across multiple sessions — they come back tomorrow, next week, next month. The compiler should remember what it learned about the developer and the project across sessions.
+
+**What to persist between sessions (in `.lume/context-memory.json`):**
+
+1. **Developer style profile** — does this developer use formal language ("retrieve the database records") or casual ("grab the users")? Adapt pattern matching confidence thresholds accordingly.
+2. **Project domain knowledge** — after scanning the project once, remember what domain it's in (e-commerce, healthcare, social media, etc.). This helps resolve ambiguity: "order" means a purchase order in e-commerce but a sort direction in a general utility.
+3. **Frequently used operations** — if this developer writes database queries 80% of the time, bias ambiguous references toward database operations.
+4. **Past resolution history** — when the developer last confirmed "grab" means "get," remember that permanently for this project, not just the current session.
+5. **Error patterns** — if the developer consistently triggers LUME-W002 (distant pronoun), the compiler can proactively suggest explicit naming earlier.
+
+**This is NOT user tracking.** All data stays in the local `.lume/` directory. Nothing is sent externally unless the developer opts into the Collective Intelligence Layer. This is the compiler getting better at understanding one specific developer over time — like how your phone keyboard learns your texting style.
+
+### 21. Semantic Understanding Beyond Keywords
+
+The current spec relies heavily on keyword matching ("get," "show," "save," "delete"). But real natural language expresses the same intent in hundreds of ways that don't use any of those keywords.
+
+**Examples of intent expressed without standard keywords:**
+
+| What someone might write | What they mean | Standard keyword equivalent |
+|-------------------------|---------------|---------------------------|
+| "I need the user's email" | get user.email | "get" |
+| "put this on the screen" | show(data) | "show" |
+| "hang onto this data" | save(data) | "save" |
+| "get rid of the old records" | delete(records) | "delete" |
+| "what's the user's name?" | return user.name | "get" |
+| "throw this in the database" | store(data) | "save" |
+| "pull up the dashboard" | navigate("/dashboard") | "show" / "go to" |
+| "fire off an email" | sendEmail() | "send" |
+| "spin up a server" | startServer() | "create" / "start" |
+| "crunch the numbers" | calculate() | "calculate" |
+| "keep an eye on this" | monitor() | "monitor" |
+| "patch things up if it breaks" | heal() | "heal" |
+
+**Implementation:** Expand the pattern library to include colloquial, informal, and idiomatic expressions — not just formal programming-adjacent language. The AI resolver (Layer B) handles the truly unusual phrasing, but Layer A should cover the common informal variants so they resolve instantly without an AI call.
+
+Build a **synonym ring** for each core operation:
+- **get:** fetch, retrieve, grab, pull, obtain, access, look up, find, query, "I need," "what's the," "give me"
+- **show:** display, render, present, print, output, "put on screen," "let me see"
+- **save:** store, persist, write, keep, preserve, "hang onto," "put in the database"
+- **delete:** remove, destroy, erase, clear, wipe, purge, "get rid of," "throw away"
+- **create:** make, build, generate, construct, instantiate, "spin up," set up
+- **send:** dispatch, fire, emit, transmit, broadcast, "fire off," deliver
+- **calculate:** compute, process, evaluate, "crunch," tally, "add up," "figure out"
+
+The synonym ring is checked during Layer A pattern matching before falling through to fuzzy matching or AI resolution.
 
 ---
 
