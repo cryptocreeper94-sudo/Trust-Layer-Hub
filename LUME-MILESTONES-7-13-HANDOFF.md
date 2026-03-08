@@ -1678,6 +1678,71 @@ Trust Layer will handle the Academy content updates. The Lume agent just needs t
 
 ---
 
+## LUME WEBSITE (lume-lang.com)
+
+The website is the first thing anyone sees. It needs to clearly communicate three things: what Lume is, why it's safe, and how to start using it.
+
+### Required Pages
+
+**1. Homepage (lume-lang.com)**
+- Hero section: "Write code in your language. Any language." with a live demo showing English input compiling to JavaScript
+- Below the fold: the three pillars — Natural Language, Multilingual, Secure
+- Quick start: `npm install -g lume` -> `lume init` -> `lume build`
+- Link to playground, docs, Academy
+
+**2. Security Page (lume-lang.com/security)**
+This is critical. Lume must be known for security, not just convenience. The security page should communicate clearly to both technical and non-technical audiences:
+
+**What developers and users should see:**
+
+- "Every program compiled through Lume is protected by three layers of security. This isn't optional. This isn't a premium feature. This is built into the compiler."
+
+- **Layer 1: Input Security** — Before your code compiles, the Security Layer scans your instructions for dangerous operations. File destruction, credential exposure, privilege escalation, resource exhaustion — 11 threat categories are checked before a single line of JavaScript is generated.
+
+- **Layer 2: Output Security (Guardian Output Scanner)** — After your code compiles, the Guardian Output Scanner scans the generated JavaScript for malicious patterns. Obfuscated code, unauthorized network requests, eval() calls, credential access, crypto mining, dependency hijacking — 8 scan categories run on every compilation. If anything suspicious is found, the code is blocked and you see a detailed report explaining exactly what was flagged and why.
+
+- **Layer 3: Sandbox Mode** — The first time a program runs (or any time it changes significantly), it executes in a sandbox. You see a complete report of everything the program WOULD do — every database query, every file write, every network call — before it actually does anything. You approve, or it doesn't run.
+
+- "Three layers. Input, output, runtime. No other programming language in the world scans your code at every stage of the pipeline."
+
+- Visual diagram showing the pipeline with the three security checkpoints highlighted
+
+- Link to the full security documentation
+- Link to the `.lume/security-config.json` reference
+- Link to the Guardian Output Scanner scan categories
+
+**3. Pricing Page (lume-lang.com/pricing)**
+- Clear tier comparison table (Free / Pro / Team / Enterprise)
+- Emphasis that the compiler, security, and Guardian Output Scanner are free forever
+- "Start free, upgrade when you need unlimited AI" messaging
+
+**4. Docs (lume-lang.com/docs)**
+- Getting started guide
+- Pattern library reference (all supported phrases)
+- Security configuration reference
+- CLI command reference
+- API reference (for the pattern registry, usage tracking)
+
+**5. Playground (lume-lang.com/playground)**
+- Browser-based Lume editor
+- Type English, see compiled JavaScript in real-time
+- Microphone button for voice input (Milestone 9)
+- "Explain This Code" button (Milestone 11)
+- Language selector for multilingual input (Milestone 8)
+
+### Security Messaging Guidelines
+
+When writing about Lume's security on the website, in docs, or in marketing:
+
+- DO say: "Built-in security at every stage" / "Protected by default" / "Three layers of security, zero configuration"
+- DO list specific protections: "eval() detection, obfuscated code blocking, credential exposure prevention"
+- DO emphasize that security is FREE and always on: "Every developer. Every compilation. No exceptions."
+- DO NOT reveal the specific implementation details of the scanning algorithms (how exactly patterns are detected). The WHAT is public. The HOW stays internal.
+- DO NOT list specific bypass techniques or edge cases in public-facing content
+- DO link to the security-config.json reference so developers know they can customize scan levels
+
+---
+
 ## MONETIZATION & BUSINESS MODEL
 
 The Lume compiler is free and open source. This is a strategic decision — every successful programming language is free (JavaScript, Python, TypeScript, Go, Rust). Charging for the compiler kills adoption. The value of Lume is proportional to the number of people using it. Maximize adoption, monetize around it.
