@@ -438,6 +438,18 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Escape Hatch:** `raw:` block allows inline JavaScript/Lume syntax inside English Mode files, bypassing all resolution layers
 - [ ] **Debugging:** Source maps link English sentences to compiled JavaScript lines — error stack traces show the English source, not JS
 - [ ] **Testing:** Intent blocks work in English Mode — natural language tests compile alongside natural language code
+- [ ] **Parsing:** Sentence boundary detection — "get the user and show their name" splits into 2 operations, not 1
+- [ ] **Parsing:** Negation detection — "don't," "never," "not," "skip," "except," "unless" correctly invert operations
+- [ ] **Parsing:** Temporal expressions — "last week," "30 days ago," "tomorrow at 9am" generate dynamic date calculations, not static values
+- [ ] **Parsing:** Complex boolean logic — "and," "or," "but not," "unless," "either/or," "except when" generate correct compound conditions
+- [ ] **Parsing:** Async auto-detection — network calls, database queries, file I/O auto-generate async/await; math and local ops stay sync
+- [ ] **Scope:** Pronoun scope resets at function boundaries — "it" does not carry across function definitions
+- [ ] **Scope:** Distant pronoun references (>20 lines) require explicit naming or trigger a warning
+- [ ] **Cross-File:** English Mode `use`/`expose` — "bring in calculate_total from utils" resolves as import; "make this available" resolves as export
+- [ ] **Cross-File:** Context Engine tracks exports from other files for cross-file reference resolution
+- [ ] **REPL:** `lume repl --mode english` accepts natural language input and shows results in real-time
+- [ ] **Errors:** Error message standard format: error code, original input, what was attempted, suggestion for fix
+- [ ] **Versioning:** Optional `lume-version: 7` declaration in file header locks compilation behavior to a specific milestone version
 
 ---
 
@@ -683,6 +695,200 @@ When the pattern library is updated (new patterns, modified patterns, or Auto-Co
 - `lume build --check` compiles without writing output — just verifies all lines still resolve the same way. Returns exit code 0 if unchanged, exit code 1 if any line would resolve differently.
 
 This is how you prevent the 1% that destroys everything. The lock file is the insurance policy.
+
+### 10. Sentence Boundary Detection
+
+Natural language doesn't have semicolons. People chain multiple operations into a single sentence with "and," "then," "also," commas, and run-on structures. The compiler must split multi-operation sentences into individual AST nodes.
+
+**Splitting rules:**
+
+| Connector | Example | Splits Into |
+|-----------|---------|-------------|
+| "and" (between verbs) | "get the user and show their name" | 2 ops: get user, show name |
+| "then" | "save the data, then redirect to home" | 2 ops: save, redirect (sequential) |
+| "also" | "show the name, also log the timestamp" | 2 ops: show, log (parallel) |
+| Comma + verb | "fetch the data, filter it, sort by date" | 3 ops: fetch, filter, sort (sequential) |
+| "and" (within a noun) | "get the user's name and email" | 1 op: get user.name AND user.email (NOT 2 ops) |
+
+The critical distinction: "and" between two **verbs** splits into multiple operations. "And" between two **nouns** stays as one operation with multiple fields. The compiler must do part-of-speech analysis to determine this.
+
+**Implementation:** Add `src/intent-resolver/sentence-splitter.js` that runs before pattern matching. It breaks compound sentences into atomic operations, then each atomic operation goes through the Tolerance Chain independently.
+
+### 11. Negation Detection
+
+Negation flips the meaning of an operation entirely. Getting this wrong means the program does the **exact opposite** of what the developer intended.
+
+**Negation patterns to detect:**
+
+| Pattern | Example | Meaning |
+|---------|---------|---------|
+| "don't" / "do not" | "don't show the password" | Exclude/hide password |
+| "never" | "never delete user data" | Constraint: delete is forbidden on user data |
+| "not" | "users who are not admins" | Filter: admin = false |
+| "skip" | "skip the inactive users" | Filter: active = true |
+| "except" / "except for" | "show everything except the password" | Include all fields minus password |
+| "unless" | "save the data unless validation fails" | Conditional: if validation passes, save |
+| "without" | "create the user without sending an email" | Perform create, suppress email side effect |
+| "hide" / "remove" | "hide the delete button" | Set visibility to false |
+| "prevent" / "block" | "prevent duplicate submissions" | Add guard logic |
+| "no" (before noun) | "no errors allowed" | Add validation that errors = 0 |
+
+**Implementation:** The negation detector runs after sentence splitting but before pattern matching. It identifies negation words, determines their scope (what noun/verb they negate), and tags the operation with a negation flag. The pattern matcher then applies the inversion.
+
+**Critical edge case:** Double negation. "Don't not show the password" = show the password. "It's not impossible" = it's possible. Double negation must resolve correctly, not cancel out silently.
+
+### 12. Temporal Expression Resolution
+
+Time references in natural language are always relative to when the code runs, not when it was written. The compiler must generate dynamic date calculations.
+
+**Temporal expression mappings:**
+
+| Expression | Generated Code |
+|-----------|---------------|
+| "today" | `new Date().setHours(0,0,0,0)` |
+| "yesterday" | `new Date(Date.now() - 86400000)` |
+| "last week" | `new Date(Date.now() - 7 * 86400000)` |
+| "this month" | `new Date(new Date().getFullYear(), new Date().getMonth(), 1)` |
+| "30 days ago" | `new Date(Date.now() - 30 * 86400000)` |
+| "next Friday" | Dynamic weekday calculation |
+| "in 2 hours" | `new Date(Date.now() + 2 * 3600000)` |
+| "at 9am tomorrow" | Combined date + time calculation |
+| "every Monday" | Cron/interval scheduling |
+| "between March and June" | Date range comparison |
+
+**Implementation:** Add `src/intent-resolver/temporal-resolver.js` that detects temporal phrases, extracts the relative time reference, and generates the appropriate Date calculation as an AST node. The temporal resolver should use a well-tested date library (like `date-fns` or Temporal API) in the generated JavaScript, not manual millisecond math, to handle timezone and daylight saving edge cases.
+
+### 13. Complex Boolean Logic
+
+Natural language uses "and," "or," "but," "unless," and other connectors to build compound conditions. The compiler must parse these into correct boolean expressions.
+
+**Natural language -> Boolean expression mapping:**
+
+| Natural Language | Boolean Expression |
+|-----------------|-------------------|
+| "if the user is logged in and is an admin" | `user.loggedIn && user.isAdmin` |
+| "if the price is less than 10 or the item is on sale" | `price < 10 \|\| item.onSale` |
+| "if the user is active but not suspended" | `user.active && !user.suspended` |
+| "unless the form is invalid" | `if (!form.invalid)` or `if (form.valid)` |
+| "either the email or the phone must be provided" | `email \|\| phone` (validation) |
+| "all of these must be true: name, email, password" | `name && email && password` |
+| "none of these should be empty" | `!isEmpty(name) && !isEmpty(email) && !isEmpty(password)` |
+| "if A and B, but not if C" | `(A && B) && !C` |
+
+**Operator precedence in natural language:** "and" binds tighter than "or" (same as `&&` vs `||`). "But not" is AND + NOT. "Unless" inverts the entire condition. Parenthetical grouping uses phrases like "either...or" and "both...and."
+
+### 14. Async Auto-Detection
+
+The compiler must automatically determine if an operation is synchronous or asynchronous based on what it does, because developers writing in English will NOT say "asynchronously."
+
+**Async operation detection:**
+
+| Operation Type | Examples | Generated Code |
+|---------------|----------|----------------|
+| Network requests | "get data from the API," "fetch the weather" | `await fetch(...)` |
+| Database queries | "get users from the database," "save to DB" | `await db.query(...)` |
+| File I/O | "read the config file," "write to log" | `await fs.readFile(...)` |
+| Timers/delays | "wait 3 seconds," "pause for a moment" | `await delay(3000)` |
+| AI operations | "ask the AI to summarize" | `await ask(...)` |
+| Math/logic | "add 5 to the total," "check if active" | Synchronous (no await) |
+| Variable assignment | "set the name to 'John'" | Synchronous |
+| UI updates | "show the result," "hide the button" | Synchronous (unless data-dependent) |
+
+**Parallel detection:** "Get the weather and the news at the same time" -> `await Promise.all([getWeather(), getNews()])`. Key phrases: "at the same time," "simultaneously," "in parallel," "meanwhile," "while that's happening."
+
+**Sequential detection:** "Get the user, then show their name" -> `const user = await getUser(); show(user.name)`. Key phrases: "then," "after that," "once that's done," "next."
+
+The function containing any async operation must itself be marked `async`. The compiler should propagate `async` up through the call chain.
+
+### 15. Pronoun Scope Rules
+
+Pronouns ("it," "they," "their," "this," "that") are resolved by the Context Engine's short-term memory. But without scope boundaries, long programs become unpredictable.
+
+**Scope rules:**
+
+1. **Function boundary = pronoun reset.** Pronouns inside a function cannot refer to variables from outside that function (unless explicitly passed as parameters).
+2. **20-line distance warning.** If a pronoun is more than 20 lines away from its likely referent, the compiler shows a warning: `"Line 45: 'it' may refer to 'user' from line 12. Consider using 'the user' explicitly."`
+3. **Explicit overrides ambiguity.** If the developer writes the actual name instead of a pronoun, that always wins. "Show the user's email" is always clearer than "show their email."
+4. **Multiple possible referents = ask.** If "it" could refer to "user" or "order" (both in scope), ask: `"Line 15: 'it' could refer to 'user' (line 8) or 'order' (line 12). Which one?"`
+5. **Loop scope.** Inside a loop, "it" refers to the current iteration item. "For each user, show their name" — "their" is the current user, not a global reference.
+
+### 16. Cross-File References in English Mode
+
+English Mode files must support importing from and exporting to other files. The Context Engine must track what's available across the project.
+
+**Natural language import patterns:**
+
+| Natural Language | Resolves To |
+|-----------------|-------------|
+| "bring in calculate_total from utils" | `use "calculate_total" from "./utils"` |
+| "use the helper functions from math-tools" | `use "*" from "./math-tools"` |
+| "get the User model from models" | `use "User" from "./models"` |
+| "import everything from the API module" | `use "*" from "./api"` |
+
+**Natural language export patterns:**
+
+| Natural Language | Resolves To |
+|-----------------|-------------|
+| "make this function available to other files" | `expose calculate_total` |
+| "share the results" | `expose results` |
+| "this module provides: calculate, format, validate" | `expose calculate, format, validate` |
+
+The Context Engine must scan the project's other files to know what's available for import. When a developer says "use the calculate function," the engine should check all project files for a function named "calculate" and auto-resolve the file path.
+
+### 17. Error Message Standards
+
+Every error, warning, and informational message from the compiler must follow a consistent format:
+
+```
+[LUME-E001] Unresolvable input
+  Line 7: "flurb the data into the schnozzle"
+  Attempted: Pattern match (no match), Fuzzy match (no match), AI resolution (12% confidence — too low)
+  Suggestion: Try rephrasing. Similar known operations:
+    - "save the data to the database"
+    - "send the data to [url]"
+    - "show the data on the page"
+```
+
+**Error code format:**
+- `LUME-E###` — Errors (compilation fails)
+- `LUME-W###` — Warnings (compilation succeeds but something is suspicious)
+- `LUME-I###` — Informational (auto-corrections, AI resolutions, performance notes)
+
+**Standard error catalog (partial):**
+
+| Code | Category | Message |
+|------|----------|---------|
+| LUME-E001 | Unresolvable | Input could not be understood by any resolution layer |
+| LUME-E002 | Conflict | Two instructions contradict each other |
+| LUME-E003 | Security | Operation blocked by security layer |
+| LUME-E004 | Type mismatch | Value doesn't match expected type from context |
+| LUME-E005 | Missing reference | Referenced variable/function doesn't exist in any scope |
+| LUME-W001 | Low confidence | AI resolution between 50-79% — compiled with confirmation |
+| LUME-W002 | Distant pronoun | Pronoun reference is >20 lines from probable referent |
+| LUME-W003 | Ambiguous pronoun | Multiple possible referents for pronoun |
+| LUME-W004 | Destructive | Operation will delete/destroy data — confirmed by user |
+| LUME-I001 | Auto-correct | Typo corrected before compilation |
+| LUME-I002 | Pattern learned | New pattern saved from user correction |
+| LUME-I003 | AI resolution | Line resolved via Layer B with confidence score |
+
+### 18. Language Version Declaration
+
+As Lume evolves, the compiler behavior will change. A program written and tested against Milestone 7 must produce the same output after Milestone 13 is released.
+
+**Version declaration format:**
+```
+mode: english
+lume-version: 7
+
+get the user's name and show it
+```
+
+**Rules:**
+- If `lume-version` is declared, the compiler locks behavior to that version's pattern library, auto-correct dictionary, and resolution rules
+- If `lume-version` is NOT declared, the compiler uses the latest version (current behavior)
+- `lume build --version 7 app.lume` overrides the file declaration
+- The compiler should warn if a file uses features from a newer version than declared: `"Warning: 'mode: natural' requires lume-version >= 8. Your file declares version 7."`
+- Version declarations are optional — omitting them is fine for personal projects and experimentation. They're important for production code and team projects.
 
 ---
 
