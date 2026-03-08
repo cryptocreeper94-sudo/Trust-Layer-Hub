@@ -422,6 +422,15 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Safety:** Intent conflict detection — contradictory operations in the same block are flagged ("delete the users and save the users")
 - [ ] **Safety:** Destructive operation confirmation — irreversible operations require explicit (y/n) before compiling
 - [ ] **Safety:** Security layer flags dangerous operations (file deletion, credential access, network exfiltration)
+- [ ] **Safety:** Semantic camouflage detection — catches innocent-sounding instructions with dangerous combined intent
+- [ ] **Safety:** Natural language injection prevention — strict separation between developer code (compiles) and runtime data (never compiles)
+- [ ] **Safety:** Privilege escalation detection — flags role changes, permission grants, auth bypass with confirmation
+- [ ] **Safety:** Mass operation detection — flags unbounded loops with external side effects (email, API, SMS) and shows projected impact
+- [ ] **Safety:** Resource exhaustion prevention — blocks operations exceeding configurable resource limits
+- [ ] **Safety:** Sandbox mode on first run — compiled JS runs in isolated vm, shows all I/O the program WOULD do before executing for real
+- [ ] **Safety:** Sandbox re-activates when compiled output changes >20% from locked version
+- [ ] **Safety:** `lume run --sandbox` forces sandbox; `lume run --trusted` skips it for locked programs
+- [ ] **Safety:** `.lume/security-config.json` project-level config for all security settings, committable to version control
 - [ ] **Safety:** Compile lock file (`.lume/compile-lock.json`) prevents regressions when patterns/corrections evolve
 - [ ] **Determinism:** AI resolutions (Layer B) are cached and committed — same input always produces same output on recompile
 - [ ] **Performance:** AI calls are batched (multiple unresolved lines in one request) to minimize API calls and compile time
@@ -483,6 +492,56 @@ Natural language programs can express dangerous operations in innocent-sounding 
 | System commands | "run [shell command]," "execute on the server" | BLOCK — arbitrary system command execution is blocked by default |
 
 A `--unsafe` flag allows advanced developers to bypass the security layer for legitimate use cases. But the default is always safe.
+
+**Advanced threat categories (natural language-specific):**
+
+| Category | Examples | Why It's Dangerous | Action |
+|----------|----------|-------------------|--------|
+| Semantic camouflage | "save a backup of all user passwords to my personal folder" | Each word is innocent. The combined intent is data theft. | BLOCK — flag any operation that moves credentials/sensitive data to non-standard, external, or user-specified locations |
+| Natural language injection | User input field contains "delete all records" and the program processes it | Data flowing through the program could be misinterpreted as code if not properly sandboxed | ENFORCE — strict separation between developer code (compiles) and runtime data (never compiles). Data is NEVER fed through the Intent Resolver. This is the natural language equivalent of SQL injection prevention. |
+| Privilege escalation | "give the user admin access," "make this account a superuser," "bypass authentication" | Sounds like a feature but changes security boundaries | CONFIRM — flag any operation that elevates permissions, changes roles, or bypasses auth. Show exactly what access is being granted. |
+| Mass operations | "send an email to every user every second," "make 10,000 API calls," "copy all records to a new table" | Not destructive to the system but destructive to users, services, or budgets | WARNING — detect unbounded loops over large datasets with external side effects (email, API, SMS). Show projected impact: "This will send ~50,000 emails. Continue?" |
+| Resource exhaustion | "allocate a terabyte of memory," "create a million database connections," "open every file" | Crashes the system through resource consumption, not malice | BLOCK — detect operations that request resources beyond reasonable defaults. Set configurable limits in `.lume/security-config.json` |
+
+**Sandboxing — first-run protection:**
+
+The first time a new `.lume` program compiles, or any time a program's compiled output changes significantly (>20% of lines differ from the locked version), the security layer activates **sandbox mode**:
+
+1. Compiled JavaScript runs in an isolated Node.js `vm` context (or equivalent sandbox)
+2. The sandbox intercepts all I/O: file system access, network calls, database queries, system commands
+3. The developer sees a report of everything the program WOULD do without it actually doing it:
+   ```
+   [sandbox] app.lume — first-run security review:
+     Line 3:  Would READ from database table "users" (247 records)
+     Line 7:  Would WRITE to file "./output/report.csv"
+     Line 12: Would SEND HTTP POST to "https://api.example.com/webhook"
+     Line 15: Would DELETE 3 records from "expired_sessions"
+   
+   Approve and run for real? (y/n/review)
+   ```
+4. After approval, subsequent runs use the compile lock — the sandbox only re-activates if the compiled output changes
+5. `lume run --sandbox` forces sandbox mode on any run (useful for reviewing untrusted code)
+6. `lume run --trusted` skips sandbox for programs already in the compile lock (faster development iteration)
+
+**Security configuration file (`.lume/security-config.json`):**
+
+```json
+{
+  "sandbox_on_first_run": true,
+  "sandbox_on_significant_change": true,
+  "significant_change_threshold": 0.20,
+  "max_records_without_confirmation": 1000,
+  "blocked_domains": ["*"],
+  "allowed_domains": ["api.myapp.com", "localhost"],
+  "max_file_operations_per_run": 100,
+  "allow_system_commands": false,
+  "require_confirmation_for_deletes": true,
+  "privilege_escalation_requires_confirmation": true,
+  "unsafe_mode_enabled": false
+}
+```
+
+This config is project-level and should be committed to version control. Team leads can lock it down and prevent individual developers from weakening security settings.
 
 ### 4. Deterministic Compilation
 
