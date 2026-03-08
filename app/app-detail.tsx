@@ -97,6 +97,67 @@ export default function AppDetailScreen() {
           <Text style={styles.description}>{app.description}</Text>
         </GlassCard>
 
+        {app.id === 35 && (
+          <>
+            <GlassCard>
+              <Text style={styles.descriptionTitle}>Core Features</Text>
+              {[
+                { icon: "mic-outline" as const, title: "Voice-to-Code", desc: "Speak naturally and Lume compiles your intent into secure, typed programs — bridging cognitive distance between thought and code." },
+                { icon: "layers-outline" as const, title: "7-Layer Tolerance Chain", desc: "Progressively resolves natural language through exact match, fuzzy match, grammar-tolerant match, and AI fallback layers to produce typed AST nodes." },
+                { icon: "scan-outline" as const, title: "Guardian Output Scanner", desc: "Real-time AI output verification that catches hallucinations, injection attacks, and constraint violations before they reach production." },
+                { icon: "ribbon-outline" as const, title: "Certified at Birth", desc: "Every compiled program includes a tamper-evident security certificate proving all AST nodes passed the Guardian Output Scanner — security by default." },
+                { icon: "rocket-outline" as const, title: "Self-Sustaining Runtime", desc: "Lume programs monitor, heal, and optimize themselves at runtime — no external orchestration required." },
+              ].map((feat) => (
+                <View key={feat.title} style={styles.lumeFeatureRow}>
+                  <View style={styles.lumeFeatureIcon}>
+                    <Ionicons name={feat.icon} size={20} color={Colors.primary} />
+                  </View>
+                  <View style={styles.lumeFeatureContent}>
+                    <Text style={styles.lumeFeatureTitle}>{feat.title}</Text>
+                    <Text style={styles.lumeFeatureDesc}>{feat.desc}</Text>
+                  </View>
+                </View>
+              ))}
+            </GlassCard>
+
+            <GlassCard>
+              <Text style={styles.descriptionTitle}>By the Numbers</Text>
+              <View style={styles.lumeStatsGrid}>
+                {[
+                  { value: "13", label: "Milestones" },
+                  { value: "366", label: "Tests" },
+                  { value: "305", label: "Acceptance Criteria" },
+                  { value: "10,800", label: "Lines of Code" },
+                ].map((stat) => (
+                  <View key={stat.label} style={styles.lumeStat}>
+                    <Text style={styles.lumeStatValue}>{stat.value}</Text>
+                    <Text style={styles.lumeStatLabel}>{stat.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </GlassCard>
+
+            <View style={styles.lumeCTARow}>
+              <GradientButton
+                title="Try Lume"
+                onPress={async () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  await WebBrowser.openBrowserAsync("https://lume-lang.com");
+                }}
+                style={styles.lumeCTAButton}
+              />
+              <GradientButton
+                title="Read the Paper"
+                onPress={async () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  await WebBrowser.openBrowserAsync("https://lume-lang.org");
+                }}
+                style={styles.lumeCTAButton}
+              />
+            </View>
+          </>
+        )}
+
         {app.url ? (
           <GradientButton
             title="Launch App"
@@ -305,5 +366,67 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     textAlign: "center" as const,
     marginTop: 12,
+  },
+  lumeFeatureRow: {
+    flexDirection: "row" as const,
+    gap: 12,
+    marginBottom: 14,
+  },
+  lumeFeatureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,255,255,0.08)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    marginTop: 2,
+  },
+  lumeFeatureContent: {
+    flex: 1,
+  },
+  lumeFeatureTitle: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+    marginBottom: 2,
+  },
+  lumeFeatureDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 19,
+  },
+  lumeStatsGrid: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: 12,
+  },
+  lumeStat: {
+    flex: 1,
+    minWidth: "40%" as any,
+    backgroundColor: "rgba(0,255,255,0.06)",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: "center" as const,
+  },
+  lumeStatValue: {
+    fontSize: 22,
+    color: Colors.primary,
+    fontFamily: "Inter_700Bold",
+    fontWeight: "700" as const,
+  },
+  lumeStatLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+    marginTop: 2,
+  },
+  lumeCTARow: {
+    flexDirection: "row" as const,
+    gap: 12,
+  },
+  lumeCTAButton: {
+    flex: 1,
   },
 });

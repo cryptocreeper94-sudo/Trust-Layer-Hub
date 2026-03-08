@@ -68,6 +68,16 @@ Key architectural decisions include:
 - **News Feeds:**
     - **fast-xml-parser**: RSS/XML parsing for real-time news feeds.
 
+## Lume Integration (App #35)
+Lume is deeply integrated across the Hub as the flagship developer tool in the ecosystem:
+- **Landing page**: Dedicated "Meet Lume" showcase section with feature cards (Voice-to-Code, Certified at Birth, AI-Native Primitives, Tolerance Chain), plus header nav link and footer links — all pointing to lume-lang.com / lume-lang.org
+- **Ecosystem listing**: Enhanced description in `constants/ecosystem-apps.ts` covering cognitive distance, voice-to-code, Guardian Output Scanner, Tolerance Chain, self-sustaining runtime
+- **App detail screen**: Special expanded feature section for app #35 in `app/app-detail.tsx` with Core Features card, By the Numbers stats grid, and CTA buttons to lume-lang.com and lume-lang.org
+- **AI Agent**: System prompt in `server/ai-agent.ts` includes full Lume knowledge (AI-native language, voice-to-code, certified-at-birth, Tolerance Chain, key stats, URLs)
+- **Blog**: Lume-focused seed post in `server/blog.ts` covering cognitive distance theory, voice-to-code pipeline, Guardian Output Scanner, Tolerance Chain
+- **Documents**: LUME-MASTER-SPECIFICATION.md (2,069 lines, 305 criteria), LUME-ACADEMIC-PAPER.md (1,099 lines, full academic paper)
+- **All roads lead to**: lume-lang.com (main site/IDE) and lume-lang.org (docs/academic paper)
+
 ## News Architecture
 Three-tier tabbed news system on the home dashboard:
 - **Local News**: Google News RSS search by city (resolved from user's zip code via Zippopotam.us API). Zip code stored in AsyncStorage.

@@ -574,6 +574,110 @@
         font-size: 10px; color: var(--text-muted); line-height: 1.6;
       }
 
+      .lume-showcase {
+        position: relative; z-index: 1;
+        max-width: 900px; margin: 40px auto 0;
+        padding: 0 16px;
+      }
+      .lume-showcase-inner {
+        background: linear-gradient(135deg, rgba(255,120,73,0.06) 0%, rgba(139,92,246,0.06) 50%, rgba(0,229,255,0.06) 100%);
+        border: 1px solid rgba(255,120,73,0.15);
+        border-radius: 20px;
+        padding: 36px 28px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .lume-showcase-inner::before {
+        content: '';
+        position: absolute; top: -1px; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, #ff7849, #8b5cf6, #00e5ff, transparent);
+      }
+      .lume-badge {
+        display: inline-block;
+        font-size: 10px; font-weight: 700; color: #ff7849;
+        text-transform: uppercase; letter-spacing: 1.2px;
+        background: rgba(255,120,73,0.12);
+        border: 1px solid rgba(255,120,73,0.2);
+        padding: 4px 14px; border-radius: 20px;
+        margin-bottom: 14px;
+      }
+      .lume-headline {
+        font-size: 28px; font-weight: 800; color: #fff;
+        margin-bottom: 10px;
+      }
+      @media(min-width:640px) { .lume-headline { font-size: 36px; } }
+      .lume-accent { color: #ff7849; }
+      .lume-description {
+        font-size: 14px; color: rgba(255,255,255,0.7);
+        max-width: 600px; margin: 0 auto 28px;
+        line-height: 1.7;
+      }
+      @media(min-width:640px) { .lume-description { font-size: 15px; } }
+      .lume-features {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      @media(max-width:480px) { .lume-features { grid-template-columns: 1fr; } }
+      .lume-feature-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 18px 16px;
+        text-align: left;
+        transition: all 0.25s;
+      }
+      .lume-feature-card:hover {
+        border-color: rgba(255,120,73,0.2);
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-2px);
+      }
+      .lume-feature-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 10px;
+      }
+      .lume-feature-name {
+        font-size: 14px; font-weight: 700; color: #fff;
+        margin-bottom: 4px;
+      }
+      .lume-feature-desc {
+        font-size: 11px; color: var(--text-dim);
+        line-height: 1.5;
+      }
+      .lume-cta-row {
+        display: flex; align-items: center; justify-content: center;
+        gap: 12px; flex-wrap: wrap;
+      }
+      .lume-cta {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 10px 28px; border-radius: 10px;
+        font-size: 14px; font-weight: 700;
+        transition: all 0.25s;
+        text-decoration: none;
+      }
+      .lume-cta-primary {
+        background: linear-gradient(135deg, #ff7849, #f59e0b);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(255,120,73,0.25);
+      }
+      .lume-cta-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(255,120,73,0.35);
+      }
+      .lume-cta-secondary {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+      }
+      .lume-cta-secondary:hover {
+        border-color: rgba(255,120,73,0.3);
+        background: rgba(255,255,255,0.08);
+        transform: translateY(-2px);
+      }
+
       .pwa-banner {
         display: none; position: fixed; bottom: 16px; left: 16px; right: 16px;
         z-index: 100;
@@ -660,6 +764,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <a href="https://lume-lang.com" target="_blank" style="color:#ff7849;font-size:14px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-right:16px;opacity:0.85;transition:opacity 0.2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">Lume</a>
         <a href="/blog" style="color:var(--cyan);font-size:14px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-right:16px;opacity:0.85;transition:opacity 0.2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">Blog</a>
         <div class="search-wrap desktop">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -724,6 +829,48 @@
     <main class="main-content" id="main-content">
     </main>
 
+    <section class="lume-showcase" id="lume-showcase">
+      <div class="lume-showcase-inner">
+        <div class="lume-badge">App #35 in the Ecosystem</div>
+        <h2 class="lume-headline">Meet <span class="lume-accent">Lume</span></h2>
+        <p class="lume-description">The world's first AI-native programming language. Lume eliminates cognitive distance between human intent and machine execution through voice-to-code, certified-at-birth security, and a 7-layer Tolerance Chain that guarantees output integrity.</p>
+        <div class="lume-features">
+          <div class="lume-feature-card">
+            <div class="lume-feature-icon" style="background:linear-gradient(135deg,rgba(251,146,60,0.2),rgba(245,158,11,0.2));color:#ff7849">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <div class="lume-feature-name">Voice-to-Code</div>
+            <div class="lume-feature-desc">Speak your intent naturally. Lume converts voice commands into verified, production-ready code with zero ambiguity.</div>
+          </div>
+          <div class="lume-feature-card">
+            <div class="lume-feature-icon" style="background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(168,85,247,0.2));color:#8b5cf6">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <div class="lume-feature-name">Certified at Birth</div>
+            <div class="lume-feature-desc">Every artifact ships with a cryptographic certificate of origin. Security is not an afterthought &mdash; it is intrinsic.</div>
+          </div>
+          <div class="lume-feature-card">
+            <div class="lume-feature-icon" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(59,130,246,0.2));color:#00e5ff">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="lume-feature-name">AI-Native Primitives</div>
+            <div class="lume-feature-desc">Built-in constructs for confidence scoring, hallucination guards, and Guardian Output Scanner &mdash; AI is a first-class citizen.</div>
+          </div>
+          <div class="lume-feature-card">
+            <div class="lume-feature-icon" style="background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(20,184,166,0.2));color:#10b981">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="lume-feature-name">Tolerance Chain</div>
+            <div class="lume-feature-desc">A 7-layer progressive fallback resolves natural language through exact match, fuzzy match, grammar-tolerant match, and AI confidence tiers.</div>
+          </div>
+        </div>
+        <div class="lume-cta-row">
+          <a href="https://lume-lang.com" target="_blank" class="lume-cta lume-cta-primary">Explore Lume</a>
+          <a href="https://lume-lang.org" target="_blank" class="lume-cta lume-cta-secondary">Read the Docs</a>
+        </div>
+      </div>
+    </section>
+
     <div class="eco-section" id="eco-section">
       <div class="eco-heading">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -748,6 +895,8 @@
           <a href="https://trustvault.tlid.io" class="footer-link" target="_blank">TrustVault</a>
           <a href="https://trustshield.tech" class="footer-link" target="_blank">TrustShield</a>
           <a href="https://darkwavestudios.io" class="footer-link" target="_blank">DarkWave Studios</a>
+          <a href="https://lume-lang.com" class="footer-link" target="_blank" style="color:#ff7849">Lume Language</a>
+          <a href="https://lume-lang.org" class="footer-link" target="_blank">Lume Docs</a>
           <a href="mailto:team@dwsc.io" class="footer-link">Contact</a>
         </div>
         <div class="footer-legal">
@@ -870,7 +1019,7 @@
         { id:32, name:"Brew & Board", hook:"Social Gaming Meets Coffee", desc:"Community platform for coffee shops with loyalty rewards.", url:"https://brewandboard.coffee", cat:"Food & Hospitality", tags:["Coffee","Social","Rewards"] },
         { id:33, name:"DarkWave Studios", hook:"The Creative Engine", desc:"The creative powerhouse behind the Trust Layer ecosystem.", url:"https://darkwavestudios.io", cat:"Core", tags:["Studios","Development","Creative"] },
         { id:34, name:"TrustGen", hook:"AI-Powered 3D Creation", desc:"AI-powered 3D engine, animation studio, and export tool.", url:"https://trustgen.tlid.io", cat:"Core", tags:["AI","3D","Animation"] },
-        { id:35, name:"Lume", hook:"AI-Native Programming Language", desc:"The first language where AI is a primitive, not a plugin. Compiles to JavaScript.", url:"https://lume-lang.com", cat:"Developer Tools", tags:["Language","AI","Developer","Compiler"] }
+        { id:35, name:"Lume", hook:"AI-Native Programming Language", desc:"The first language designed to eliminate cognitive distance. Voice-to-code, certified-at-birth security, 7-layer Tolerance Chain. Compiles to JavaScript.", url:"https://lume-lang.com", cat:"Developer Tools", tags:["Language","AI","Developer","Compiler"] }
       ];
 
       var CATEGORIES = [
