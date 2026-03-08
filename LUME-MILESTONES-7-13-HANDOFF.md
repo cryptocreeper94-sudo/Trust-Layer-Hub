@@ -1672,6 +1672,98 @@ Trust Layer will handle the Academy content updates. The Lume agent just needs t
 
 ---
 
+## MONETIZATION & BUSINESS MODEL
+
+The Lume compiler is free and open source. This is a strategic decision — every successful programming language is free (JavaScript, Python, TypeScript, Go, Rust). Charging for the compiler kills adoption. The value of Lume is proportional to the number of people using it. Maximize adoption, monetize around it.
+
+**What this means for the build:** Several features need free/paid tier logic built into them from the start. This is not a separate system to add later — it's baked into the architecture.
+
+### Tier Structure
+
+| Feature | Free | Pro ($15/mo) | Team ($12/mo/seat) | Enterprise (custom) |
+|---------|------|-------------|-------------------|-------------------|
+| Compiler (Layer A — pattern matching) | Unlimited | Unlimited | Unlimited | Unlimited |
+| AI resolutions (Layer B) | 100/month | Unlimited | Unlimited + shared billing | Unlimited + SLA |
+| Community patterns (receive) | Weekly sync | Real-time sync | Real-time sync | Real-time + on-premise registry |
+| Community patterns (contribute) | Yes | Yes | Yes | Optional (some enterprises keep patterns private) |
+| Compile lock file | Yes | Yes | Yes | Yes |
+| Security layer | Yes | Yes | Yes + custom security-config templates | Yes + compliance auditing |
+| Pattern analytics | Basic (count only) | Full (usage trends, compile time, AI cost tracking) | Full + team-wide dashboards | Full + custom reporting |
+| Team pattern library | No | No | Yes — shared patterns across team projects | Yes + access controls |
+| Source maps | Yes | Yes | Yes | Yes |
+| Sandbox mode | Yes | Yes | Yes | Yes + enterprise sandbox policies |
+| Support | Community (GitHub issues) | Email support (48h response) | Priority support (24h response) | Dedicated support + SLA (4h response) |
+| Certification (CNLD) | No | Exam access included | Exam access for all seats | Custom training + on-site |
+
+### Implementation Requirements for the Build Agent
+
+**1. Usage tracking for Layer B (AI resolutions):**
+The compiler must track how many Layer B (AI) calls a user makes per month. This requires:
+- A user authentication system on `lume-lang.com` (email + password or GitHub OAuth)
+- An API key that the CLI uses: `lume config set api-key <key>`
+- A usage counter stored server-side: `GET /api/usage` returns `{ "ai_resolutions_used": 47, "ai_resolutions_limit": 100, "period": "2026-09" }`
+- When the free tier limit is reached, Layer B is disabled with a clear message: `"You've used 100/100 free AI resolutions this month. Upgrade to Pro for unlimited: lume-lang.com/pricing"`
+- Layer A (pattern matching) is NEVER limited — it runs locally, no server needed, always free
+- Unauthenticated users get 10 AI resolutions to try it out before requiring signup
+
+**2. Pattern registry tiers:**
+The Collective Intelligence registry API (`lume-lang.com/patterns`) must differentiate tiers:
+- Free users: `lume patterns sync` pulls the latest community patterns once per week (cached locally, checked via `Last-Modified` header)
+- Pro/Team users: real-time sync — patterns are available immediately when promoted
+- Enterprise: option to run a private pattern registry on-premise (`lume config set registry.url https://internal.company.com/patterns`)
+
+**3. Team features:**
+Team tier requires:
+- Organization accounts on `lume-lang.com`
+- Shared billing (one bill, multiple seats)
+- Team-level pattern libraries: patterns learned by any team member are available to all team members
+- Admin controls: team leads can lock `.lume/security-config.json` so individual devs can't weaken security
+- Team analytics dashboard: compile times, AI usage, pattern coverage across all team projects
+
+**4. Certification system:**
+The CNLD (Certified Lume Natural Language Developer) certification:
+- Available through DarkWave Academy (`academy.tlid.io`)
+- Exam covers: English Mode syntax, Tolerance Chain behavior, Security Layer awareness, debugging with source maps, testing with Given/When/Then
+- Pro tier includes exam access ($15/month gets both unlimited AI and certification)
+- Passing generates a verifiable certificate with a unique ID and a badge for LinkedIn/GitHub profile
+- Certificate verification: `lume-lang.com/verify/<cert-id>` shows name, date, score
+
+**5. Stripe integration for payments:**
+- Use Stripe for subscription management (the DarkWave ecosystem already has Stripe keys)
+- Subscription management page at `lume-lang.com/billing`
+- CLI can check subscription status: `lume account status`
+- Webhook endpoint for Stripe events (subscription created, canceled, payment failed)
+- Grace period: if payment fails, Pro features remain active for 7 days before downgrading
+
+### What Stays Free Forever (Non-Negotiable)
+
+These features must NEVER be paywalled — doing so would kill adoption:
+
+- The compiler itself (Layer A pattern matching, Auto-Correct, Tolerance Chain Steps 1-3)
+- All CLI commands (`lume build`, `lume run`, `lume repl`, `lume test`, `lume explain`)
+- Compile lock files and deterministic builds
+- Security layer (all 11 threat categories)
+- Sandbox mode
+- Source maps
+- The pattern library that ships with each release
+- Offline compilation (Layer A)
+- Open source code on GitHub
+
+**The line is clear:** anything that runs on the developer's machine is free. Anything that uses server resources (AI calls, real-time pattern sync, team management, analytics) has a free tier with paid upgrades.
+
+### Revenue Projections (For Context Only — Not Part of the Build)
+
+These are estimates to validate that the model works. Not build requirements.
+
+- 1,000 developers using Lume -> ~5% convert to Pro -> 50 x $15/mo = $750/mo
+- 10,000 developers -> ~5% Pro, ~2% Team -> 500 x $15 + 40 teams x 5 seats x $12 = $9,900/mo
+- 100,000 developers -> ~5% Pro, ~3% Team -> $117,000/mo
+- Enterprise deals are separate and vary: $500-5,000/mo each
+
+The Academy certification and ecosystem funnel (Lume -> Trust Layer -> DarkWave ecosystem -> SIG/Shell transactions) are additional revenue on top of these numbers.
+
+---
+
 ## CONTACT
 
 - **Ecosystem owner:** Jason (cryptocreeper94@gmail.com)
