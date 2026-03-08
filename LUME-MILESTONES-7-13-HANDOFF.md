@@ -1212,6 +1212,170 @@ If the project contains 3D dependencies (Three.js, React Three Fiber, or TrustGe
 
 Do NOT spend time building 3D features unless the core 2D/CSS visual context is complete and passing tests first.
 
+### Full-Stack App Generation (THE ULTIMATE GOAL)
+
+Everything in Milestones 7-10 comes together here. This is the capability that makes people say "how has this not existed for 30 years."
+
+When a developer describes an entire app in plain English, Lume generates ALL of it:
+
+**Example input — complete app description:**
+```
+mode: english
+
+this is a recipe sharing app
+
+it has a login page with email and password
+after login, show a dashboard with my saved recipes
+each recipe has a title, ingredients list, steps, and a photo
+I can create new recipes, edit them, and delete them
+other users can browse recipes and save their favorites
+add a search bar that filters recipes by ingredient
+the app should work on phones and computers
+```
+
+**What Lume generates from this description:**
+
+1. **Database schema:**
+   - `users` table (id, email, password_hash, created_at)
+   - `recipes` table (id, user_id, title, ingredients, steps, photo_url, created_at)
+   - `favorites` table (user_id, recipe_id)
+   - Proper foreign keys, indexes, and relationships
+
+2. **Backend API:**
+   - POST /api/auth/register, POST /api/auth/login, POST /api/auth/logout
+   - GET /api/recipes, POST /api/recipes, PUT /api/recipes/:id, DELETE /api/recipes/:id
+   - GET /api/recipes/search?ingredient=chicken
+   - POST /api/favorites/:recipeId, DELETE /api/favorites/:recipeId
+   - Authentication middleware, input validation, error handling
+
+3. **Frontend screens:**
+   - Login/register page with form validation
+   - Dashboard with recipe grid/list
+   - Recipe detail view
+   - Create/edit recipe form with photo upload
+   - Search bar with live filtering
+   - Favorites collection
+   - Responsive layout (works on phones and computers)
+
+4. **Wiring:**
+   - Frontend calls the API correctly
+   - Authentication tokens stored and sent with requests
+   - Loading states, error states, empty states
+   - Navigation between screens
+
+**How this works technically:**
+
+The compiler processes the description in phases:
+
+**Phase 1: Entity Extraction**
+Read the description and identify the data entities and their relationships:
+- "recipe has a title, ingredients list, steps, and a photo" -> Recipe entity with 4 fields
+- "users can browse and save favorites" -> User entity, Favorite relationship (many-to-many)
+- "login with email and password" -> User has email and password fields, needs auth
+
+**Phase 2: Operation Extraction**
+Identify what operations the user described:
+- "create new recipes, edit them, and delete them" -> full CRUD on recipes
+- "browse recipes" -> read-only list/search
+- "save their favorites" -> create/delete on favorites
+- "search by ingredient" -> filtered query
+
+**Phase 3: UI Extraction**
+Identify the screens and layout:
+- "login page" -> auth screen
+- "dashboard with my saved recipes" -> home screen with grid
+- "search bar that filters" -> search component
+- "work on phones and computers" -> responsive design
+
+**Phase 4: Code Generation**
+Generate the actual files using Milestone 7 (Intent Resolver) + Milestone 10 (Visual Context):
+- Database migration files
+- Express API route files
+- React/HTML frontend files
+- CSS for responsive layout
+- Package.json with dependencies
+- README with setup instructions
+
+**Phase 5: Validation**
+The Security Layer and Conflict Detection verify the generated app:
+- Auth is properly implemented (passwords hashed, tokens validated)
+- All CRUD operations have proper authorization checks
+- No security vulnerabilities in the generated code
+- The generated app actually runs
+
+**CLI for full-stack generation:**
+```bash
+lume create app.lume                      # Generate full project from description
+lume create app.lume --frontend react     # Specify frontend framework
+lume create app.lume --frontend expo      # Generate React Native mobile app
+lume create app.lume --backend express    # Specify backend framework (default)
+lume create app.lume --database postgres  # Specify database (default: SQLite)
+lume create app.lume --preview            # Show what would be generated without creating files
+```
+
+**The `--preview` flag is critical.** Before generating anything, the compiler shows:
+```
+[preview] app.lume — Full-stack app generation plan:
+
+Database:
+  - users (id, email, password_hash, created_at)
+  - recipes (id, user_id, title, ingredients, steps, photo_url, created_at)
+  - favorites (user_id, recipe_id)
+
+API Endpoints:
+  - POST /api/auth/register
+  - POST /api/auth/login
+  - GET  /api/recipes (list, with search)
+  - POST /api/recipes (create, auth required)
+  - PUT  /api/recipes/:id (update, owner only)
+  - DELETE /api/recipes/:id (delete, owner only)
+  - POST /api/favorites/:id (save, auth required)
+  - DELETE /api/favorites/:id (unsave, auth required)
+
+Frontend Screens:
+  - /login — email + password form
+  - /register — registration form
+  - /dashboard — recipe grid with search bar
+  - /recipe/:id — recipe detail view
+  - /recipe/new — create recipe form
+  - /recipe/:id/edit — edit recipe form
+  - /favorites — saved recipes
+
+Files to generate: 14 files
+Estimated size: ~2,400 lines of code
+
+Generate? (y/n/modify)
+```
+
+The developer reviews this plan, can modify it ("actually, add a comments section to recipes"), and then approves. The compiler generates everything.
+
+**Iterative refinement after generation:**
+Once the app is generated, the developer can refine it with additional Lume instructions:
+```
+mode: english
+
+make the recipe cards show a thumbnail of the photo
+add a rating system — users can rate recipes 1 to 5 stars
+show the average rating on each recipe card
+sort the dashboard by highest rated by default
+add a "trending this week" section at the top
+```
+
+Each instruction modifies the existing generated app — it doesn't regenerate from scratch. The Context Engine knows what already exists and applies changes incrementally.
+
+**This is how you build entire apps with Lume.** Describe what you want, review the plan, approve, then refine. No code. No frameworks to learn. No syntax to memorize. Just describe your app and it exists.
+
+**Frontend framework support — what Lume generates for each target:**
+
+| Target | What Gets Generated | Use Case |
+|--------|-------------------|----------|
+| `--frontend html` | Vanilla HTML/CSS/JS | Simple websites, no framework needed |
+| `--frontend react` | React app with components | Web apps (default) |
+| `--frontend expo` | React Native / Expo app | Mobile apps (iOS + Android) |
+| `--frontend next` | Next.js app with SSR | Full-stack web apps with SEO |
+
+The backend always generates Express + the specified database. The Intent Resolver handles the translation layer — the same English description produces different code depending on the target, but the app does the same thing regardless of target.
+
 ### Acceptance Criteria
 
 - [ ] UI Element Registry scans project and maps all visual elements
@@ -1220,6 +1384,14 @@ Do NOT spend time building 3D features unless the core 2D/CSS visual context is 
 - [ ] "Add a [component]" generates contextually appropriate full components
 - [ ] Changes are non-destructive — existing layout is preserved unless explicitly changed
 - [ ] 3D spatial resolution works IF project has Three.js/3D dependencies (optional)
+- [ ] **Full-Stack:** `lume create` generates database schema, API, and frontend from a plain English app description
+- [ ] **Full-Stack:** `--preview` flag shows the full generation plan before creating any files
+- [ ] **Full-Stack:** Entity extraction correctly identifies data models and relationships from natural language
+- [ ] **Full-Stack:** Operation extraction identifies CRUD operations, auth requirements, and search/filter needs
+- [ ] **Full-Stack:** Generated apps include proper authentication, authorization, validation, and error handling
+- [ ] **Full-Stack:** Iterative refinement — additional Lume instructions modify the existing app without regenerating from scratch
+- [ ] **Full-Stack:** Frontend target flags (`--frontend react`, `--frontend expo`, `--frontend html`, `--frontend next`) generate appropriate code
+- [ ] **Full-Stack:** Generated apps actually run — the compiler validates the output before declaring success
 
 ---
 
