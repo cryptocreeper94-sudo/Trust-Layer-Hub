@@ -125,9 +125,9 @@ export default function AppDetailScreen() {
               <View style={styles.lumeStatsGrid}>
                 {[
                   { value: "13", label: "Milestones" },
-                  { value: "366", label: "Tests" },
+                  { value: "552", label: "Tests" },
                   { value: "305", label: "Acceptance Criteria" },
-                  { value: "10,800", label: "Lines of Code" },
+                  { value: "11,000+", label: "Lines of Code" },
                 ].map((stat) => (
                   <View key={stat.label} style={styles.lumeStat}>
                     <Text style={styles.lumeStatValue}>{stat.value}</Text>

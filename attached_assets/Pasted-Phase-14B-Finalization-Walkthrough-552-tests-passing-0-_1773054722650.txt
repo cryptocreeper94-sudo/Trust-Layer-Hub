@@ -1,0 +1,75 @@
+Phase 14B — Finalization Walkthrough
+552 tests passing · 0 failures · All Phase 14B items complete
+
+What Was Done
+1. Security Hardening → 
+security-layer.js
+Three new defense layers added:
+
+Layer	What It Does	Examples Caught
+Prompt Injection (8 patterns)	Blocks NL jailbreak attempts	"ignore previous instructions", "bypass security", "jailbreak", "system prompt"
+Output Sanitization (11 patterns)	Scans compiled JS for dangerous calls	
+eval()
+, child_process, __proto__, process.exit, innerHTML
+Rate Limiting	Flags files with >10 AI calls	Prevents API key abuse
+New exports: 
+scanGeneratedCode()
+, 
+checkAIRateLimit()
+, 
+fullSecurityAudit()
+
+2. REPL v1.0.0 → 
+repl.js
+Feature	Details
+Tab Autocomplete	50+ Lume keywords, dot-commands, scope variables
+Persistent History	~/.lume_history, 200-line rolling file
+.scope command	Inspect all variables with types and values
+.run <file>	Execute a .lume file inside the REPL session
+3. VS Code Extension → 
+editor/vscode/
+File	Contents
+package.json
+Extension manifest for marketplace
+language-configuration.json
+Brackets, comments, folding, indent rules
+snippets/lume.json
+19 snippets (functions, AI, loops, English Mode)
+syntaxes/lume.tmLanguage.json	Full TextMate grammar (copied from existing)
+extension.js
+Entry point with version command
+README.md
+Marketplace-ready docs
+4. Git Merge Driver → 
+lume-merge-driver.js
+AST-aware 3-way merge for .lume files. Handles clean merges automatically, writes conflict markers when both sides modify the same line.
+
+5. Documentation
+Doc	Lines	Covers
+cli.md
+190	All 18+ commands, flags, examples
+patterns.md
+165	All 102 patterns by category
+api.md
+180	@lume/compiler programmatic API
+voice.md
+170	Voice CLI, Playground mic, cleanup pipeline
+6. README Updated
+Test badge: 366 → 552
+CLI commands: 17 → 18+
+LOC: 10.8K → 11K+
+Doc links expanded (patterns, CLI, API, voice)
+Verification
+ℹ tests 552
+ℹ pass 552
+ℹ fail 0
+ℹ duration_ms 8788
+Check	Result
+All 552 tests pass	✅
+Prompt injection detection	✅ "ignore previous instructions" → blocked
+Output sanitization	✅ 
+eval()
+ in compiled JS → blocked
+Rate limiting	✅ 1 AI call → within limit
+Merge driver --help	✅ Clean output
+Barrel exports updated	✅ 3 new security functions

@@ -247,7 +247,7 @@ The Intent Resolver feeds AST nodes directly to the Transpiler. No modifications
 
 **Layer A: Pattern Matching (deterministic, offline, no AI)**
 
-A library of regex-based patterns maps common English phrases to AST nodes. The current implementation provides 34+ patterns; the Milestone 7 acceptance target specifies 50+ common phrases with full synonym coverage. Representative patterns:
+A library of 102 regex-based patterns maps common English phrases to AST nodes. Representative patterns:
 
 | Pattern Category | Example Input | AST Node Type |
 |-----------------|--------------|---------------|
@@ -826,14 +826,14 @@ Standalone executables from natural language. `lume build app.lume --compile` pr
 | Lexer | ~400 | src/lexer.js |
 | Parser | ~800 | src/parser.js |
 | Transpiler | ~821 | src/transpiler.js |
-| **Total compiler** | **~10,800** | All source files |
+| **Total compiler** | **~11,000+** | All source files |
 
 | Metric | Value |
 |--------|-------|
 | Compiler milestones | 13 |
-| Test suite | 366 tests |
+| Test suite | 552 tests |
 | Acceptance criteria | 305 |
-| Pattern Library patterns | 34+ implemented (50+ target) |
+| Pattern Library patterns | 102 |
 | Supported languages (M8) | 10 |
 | Homophone pairs | 10 |
 | Filler words stripped | 20 |
@@ -841,7 +841,27 @@ Standalone executables from natural language. `lume build app.lume --compile` pr
 | Security threat categories | 11 (input) + 8 (AST-level) |
 | Security layers | 3 |
 
-### 10.2 Performance Targets
+### 10.2 Phase 14B: Production Readiness
+
+The compiler underwent a finalization phase (Phase 14B) that added three critical production-readiness features:
+
+**Security Hardening.** Three new defense layers were added to the security pipeline: (1) prompt injection detection scanning for 8 jailbreak patterns in natural language input, (2) output sanitization scanning compiled JavaScript for 11 dangerous call patterns (`eval()`, `child_process`, `__proto__`, `process.exit`, `innerHTML`, etc.), and (3) rate limiting to flag files exceeding 10 AI calls. Three new exports — `scanGeneratedCode()`, `checkAIRateLimit()`, `fullSecurityAudit()` — make these layers accessible programmatically.
+
+**REPL v1.0.0.** The interactive REPL was upgraded with tab autocomplete (50+ keywords), persistent command history (`~/.lume_history`, 200-line rolling file), a `.scope` command for runtime variable inspection with types and values, and `.run <file>` for executing `.lume` files within a REPL session.
+
+**Tooling.** A VS Code extension was created for marketplace distribution (TextMate grammar, 19 code snippets, bracket/indent rules). An AST-aware git merge driver (`lume-merge-driver.js`) handles 3-way merges of `.lume` files, merging cleanly when possible and writing conflict markers when both sides modify the same line.
+
+**Documentation.** Four reference documents totaling 705 lines: CLI reference (190 lines, 18+ commands), pattern catalog (165 lines, all 102 patterns), programmatic API reference (180 lines), and voice pipeline guide (170 lines).
+
+### 10.3 Final Test Verification
+
+```
+552 tests passing · 0 failures · duration: 8,788ms
+```
+
+All 552 tests pass across the complete compiler surface: lexer, parser, transpiler, intent resolver, voice pipeline, security layers (including prompt injection and output sanitization), REPL, and merge driver.
+
+### 10.4 Performance Targets
 
 | Operation | Target |
 |-----------|--------|
@@ -850,7 +870,7 @@ Standalone executables from natural language. `lume build app.lume --compile` pr
 | 500-line file compilation | < 10 seconds total |
 | Self-monitoring overhead | < 5% |
 
-### 10.3 Evaluation Criteria
+### 10.5 Evaluation Criteria
 
 The following evaluation dimensions are specified for formal assessment:
 

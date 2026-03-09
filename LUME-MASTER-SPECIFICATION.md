@@ -86,9 +86,9 @@ For typed input, the pipeline starts at "Text Input." For standard Lume syntax (
 | Metric | Value |
 |--------|-------|
 | Compiler milestones | 13 |
-| Test suite | 366 tests (and growing) |
+| Test suite | 552 tests |
 | Acceptance criteria | 305 total |
-| Pattern Library patterns | 34+ (Layer A) |
+| Pattern Library patterns | 102 (Layer A) |
 | Supported languages | 10 (Milestone 8) |
 | Homophone pairs | 10 |
 | Filler words stripped | 20 |
@@ -1934,7 +1934,7 @@ lume/
   bin/
     lume.js              # CLI entry point
   tests/
-    unit/                # 366+ tests
+    unit/                # 552 tests
     integration/
 ```
 
@@ -2052,7 +2052,67 @@ All 305 acceptance criteria are reproduced verbatim in this master document.
 
 ---
 
-## 43. KEY CLAIMS
+## 43. PHASE 14B: FINALIZATION
+
+Phase 14B represents the production-readiness milestone for the Lume compiler.
+
+### Security Hardening
+
+Three new defense layers added to `security-layer.js`:
+
+| Layer | Function | Examples |
+|-------|----------|----------|
+| Prompt Injection Detection (8 patterns) | Blocks NL jailbreak attempts | "ignore previous instructions", "bypass security", "jailbreak", "system prompt" |
+| Output Sanitization (11 patterns) | Scans compiled JS for dangerous calls | `eval()`, `child_process`, `__proto__`, `process.exit`, `innerHTML` |
+| Rate Limiting | Flags files with >10 AI calls | Prevents API key abuse |
+
+New exports: `scanGeneratedCode()`, `checkAIRateLimit()`, `fullSecurityAudit()`
+
+### REPL v1.0.0
+
+| Feature | Details |
+|---------|---------|
+| Tab Autocomplete | 50+ Lume keywords, dot-commands, scope variables |
+| Persistent History | `~/.lume_history`, 200-line rolling file |
+| `.scope` command | Inspect all variables with types and values |
+| `.run <file>` | Execute a `.lume` file inside the REPL session |
+
+### VS Code Extension
+
+| File | Contents |
+|------|----------|
+| `package.json` | Extension manifest for marketplace |
+| `language-configuration.json` | Brackets, comments, folding, indent rules |
+| `snippets/lume.json` | 19 snippets (functions, AI, loops, English Mode) |
+| `syntaxes/lume.tmLanguage.json` | Full TextMate grammar |
+| `extension.js` | Entry point with version command |
+| `README.md` | Marketplace-ready docs |
+
+### Git Merge Driver
+
+`lume-merge-driver.js` — AST-aware 3-way merge for `.lume` files. Handles clean merges automatically, writes conflict markers when both sides modify the same line.
+
+### Documentation Suite
+
+| Document | Lines | Covers |
+|----------|-------|--------|
+| `cli.md` | 190 | All 18+ commands, flags, examples |
+| `patterns.md` | 165 | All 102 patterns by category |
+| `api.md` | 180 | `@lume/compiler` programmatic API |
+| `voice.md` | 170 | Voice CLI, Playground mic, cleanup pipeline |
+
+### Updated Metrics
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Test suite | 366 | 552 |
+| CLI commands | 17 | 18+ |
+| LOC | ~10,800 | ~11,000+ |
+| Pattern Library | 34+ | 102 |
+
+---
+
+## 44. KEY CLAIMS
 
 1. First programming language where voice-to-code is architecturally native
 2. Transcription Cleanup + Tolerance Chain absorbs all speech noise, producing clean AST nodes identical to typed input

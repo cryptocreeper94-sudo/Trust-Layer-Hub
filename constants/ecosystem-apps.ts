@@ -386,7 +386,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     id: 35,
     name: "Lume",
     hook: "The AI-Native Programming Language",
-    description: "The first programming language designed to eliminate cognitive distance between human intent and machine execution. Lume treats AI as a first-class primitive — not a plugin — with native keywords like 'ask', 'think', and 'generate'. Features include Voice-to-Code (speak your logic, compile it directly), Certified-at-Birth security (every AST node verified by the Guardian Output Scanner during compilation), a 7-layer Tolerance Chain that progressively resolves natural language intent through exact match, fuzzy match, grammar-tolerant match, and AI fallback layers, and a self-sustaining runtime that compiles to JavaScript. 13 milestones, 366 tests, 305 acceptance criteria. Learn more at lume-lang.org.",
+    description: "The first programming language designed to eliminate cognitive distance between human intent and machine execution. Lume treats AI as a first-class primitive — not a plugin — with native keywords like 'ask', 'think', and 'generate'. Features include Voice-to-Code (speak your logic, compile it directly), Certified-at-Birth security (every AST node verified by the Guardian Output Scanner during compilation), a 7-layer Tolerance Chain that progressively resolves natural language intent through exact match, fuzzy match, grammar-tolerant match, and AI fallback layers, and a self-sustaining runtime that compiles to JavaScript. 13 milestones, 552 tests, 305 acceptance criteria. Learn more at lume-lang.org.",
     url: "https://lume-lang.com",
     category: "Developer Tools",
     tags: ["Language", "AI", "Developer", "Compiler"],

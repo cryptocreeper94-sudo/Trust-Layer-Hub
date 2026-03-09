@@ -75,7 +75,8 @@ Lume is deeply integrated across the Hub as the flagship developer tool in the e
 - **App detail screen**: Special expanded feature section for app #35 in `app/app-detail.tsx` with Core Features card, By the Numbers stats grid, and CTA buttons to lume-lang.com and lume-lang.org
 - **AI Agent**: System prompt in `server/ai-agent.ts` includes full Lume knowledge (AI-native language, voice-to-code, certified-at-birth, Tolerance Chain, key stats, URLs)
 - **Blog**: Lume-focused seed post in `server/blog.ts` covering cognitive distance theory, voice-to-code pipeline, Guardian Output Scanner, Tolerance Chain
-- **Documents**: LUME-MASTER-SPECIFICATION.md (2,069 lines, 305 criteria), LUME-ACADEMIC-PAPER.md (1,099 lines, full academic paper)
+- **Documents**: LUME-MASTER-SPECIFICATION.md (305 criteria, Phase 14B included), LUME-ACADEMIC-PAPER.md (full academic paper with Phase 14B)
+- **Current stats**: 552 tests, 102 patterns, 13 milestones, 305 acceptance criteria, ~11,000+ LOC
 - **All roads lead to**: lume-lang.com (main site/IDE) and lume-lang.org (docs/academic paper)
 
 ## News Architecture
