@@ -361,7 +361,7 @@ export default function HomeScreen() {
         </GlassCard>
 
         <View style={styles.quickActionsRow}>
-          <QuickAction icon="cart" label="Buy Shells" onPress={() => router.push("/(tabs)/wallet")} testID="home-quick-buy" />
+          <QuickAction icon="trending-up" label="Stake" onPress={() => router.push("/(tabs)/wallet")} testID="home-quick-stake" />
           <QuickAction icon="send" label="Send SIG" onPress={() => router.push("/(tabs)/wallet")} testID="home-quick-send" />
           <QuickAction icon="scan" label="Scan" onPress={() => {}} testID="home-quick-scan" />
           <QuickAction icon="git-compare" label="Bridge" onPress={() => {}} testID="home-quick-bridge" />

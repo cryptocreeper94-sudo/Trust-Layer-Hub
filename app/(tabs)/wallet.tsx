@@ -22,7 +22,6 @@ import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
-import { SHELL_TIERS } from "@/constants/mock-data";
 import QRCode from "react-native-qrcode-svg";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { usePlaidAccounts, useUnlinkAccount, useCreateLinkToken, useExchangePlaidToken } from "@/hooks/usePlaidAccounts";
@@ -217,24 +216,6 @@ function TransactionItem({ tx }: { tx: any }) {
   );
 }
 
-function ShellTierCard({ tier, onPurchase }: { tier: typeof SHELL_TIERS[0]; onPurchase: () => void }) {
-  const isWhale = tier.name === "Whale";
-  return (
-    <View style={styles.tierCardWrapper}>
-      <GlassCard glow={isWhale}>
-        <Text style={styles.tierName}>{tier.name}</Text>
-        <Text style={styles.tierShells}>{tier.shells.toLocaleString()}</Text>
-        <Text style={styles.tierShellsLabel}>Shells</Text>
-        <GradientButton
-          title={`$${tier.price.toFixed(2)}`}
-          onPress={onPurchase}
-          small
-          colors={isWhale ? ["#9333ea", "#6366f1"] : Colors.gradientCyan}
-        />
-      </GlassCard>
-    </View>
-  );
-}
 
 function BottomSheetModal({
   visible,
@@ -738,15 +719,6 @@ export default function WalletScreen() {
     setTimeout(() => setRefreshing(false), 800);
   }, []);
 
-  const handlePurchase = (tierName: string) => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert(
-      "Purchase Shells",
-      `You're about to purchase the ${tierName} tier. This will use your platform's in-app purchase system.`,
-      [{ text: "Cancel", style: "cancel" }, { text: "Continue", style: "default" }]
-    );
-  };
-
   const handleLinkBank = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Alert.alert(
@@ -1232,71 +1204,6 @@ export default function WalletScreen() {
           >
             <Ionicons name="add-circle" size={20} color={Colors.secondary} />
             <Text style={[styles.connectButtonText, { color: Colors.secondary }]}>Connect Wallet</Text>
-          </Pressable>
-        </GlassCard>
-
-        <View style={styles.sectionHeader}>
-          <GradientText text="Buy Shells" style={styles.sectionTitle} />
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tiersRow}
-          snapToInterval={148}
-          decelerationRate="fast"
-        >
-          {SHELL_TIERS.map((tier) => (
-            <ShellTierCard
-              key={tier.name}
-              tier={tier}
-              onPurchase={() => handlePurchase(tier.name)}
-            />
-          ))}
-        </ScrollView>
-
-        <GlassCard>
-          <View style={styles.paymentHeader}>
-            <Ionicons name="card" size={16} color={Colors.textSecondary} />
-            <Text style={styles.paymentTitle}>Payment Methods</Text>
-          </View>
-          <View style={styles.divider} />
-          <Pressable style={styles.paymentRow} testID="apple-pay-row">
-            <View style={[styles.paymentIcon, { backgroundColor: "rgba(255,255,255,0.08)" }]}>
-              <Ionicons name="logo-apple" size={20} color={Colors.textPrimary} />
-            </View>
-            <Text style={styles.paymentLabel}>Apple Pay</Text>
-            <View style={styles.comingSoonBadge}>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
-            </View>
-          </Pressable>
-          <View style={styles.divider} />
-          <Pressable style={styles.paymentRow} testID="google-pay-row">
-            <View style={[styles.paymentIcon, { backgroundColor: "rgba(255,255,255,0.08)" }]}>
-              <Ionicons name="logo-google" size={20} color={Colors.textPrimary} />
-            </View>
-            <Text style={styles.paymentLabel}>Google Pay</Text>
-            <View style={styles.comingSoonBadge}>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
-            </View>
-          </Pressable>
-          <View style={styles.divider} />
-          <Pressable
-            style={styles.paymentRow}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              Alert.alert(
-                "Add Card",
-                "Credit and debit card payments for Shell purchases will be available at launch. Shell purchases currently use Apple In-App Purchase or Google Play Billing.",
-                [{ text: "OK" }]
-              );
-            }}
-            testID="add-card-button"
-          >
-            <View style={[styles.paymentIcon, { backgroundColor: "rgba(0,255,255,0.08)" }]}>
-              <Ionicons name="card-outline" size={20} color={Colors.primary} />
-            </View>
-            <Text style={[styles.paymentLabel, { color: Colors.primary }]}>Add Credit/Debit Card</Text>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
           </Pressable>
         </GlassCard>
 
