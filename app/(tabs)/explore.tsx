@@ -19,6 +19,7 @@ import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { EmptyState } from "@/components/EmptyState";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { ECOSYSTEM_APPS, CATEGORIES, type Category, type EcosystemApp } from "@/constants/ecosystem-apps";
 
 function CategoryTab({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
@@ -89,7 +90,10 @@ export default function ExploreScreen() {
     <View style={styles.container}>
       <BackgroundGlow />
       <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
-        <GradientText text="Explore" style={styles.screenTitle} />
+        <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 8 }}>
+          <GradientText text="Explore" style={styles.screenTitle} />
+          <InfoBubble title="Explore" message="Browse the complete Trust Layer ecosystem of 35 interconnected apps spanning DeFi, governance, identity, social, gaming, AI, and more. Each app uses your Trust Layer ID for seamless cross-app identity. Use the search bar or category tabs to find apps." size={18} />
+        </View>
         <Text style={styles.subtitle}>35 Apps. One Ecosystem.</Text>
 
         <View style={styles.searchContainer}>

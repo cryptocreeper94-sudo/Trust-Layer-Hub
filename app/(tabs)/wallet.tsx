@@ -21,6 +21,7 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { GradientButton } from "@/components/GradientButton";
 import QRCode from "react-native-qrcode-svg";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
@@ -924,6 +925,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="diamond" size={18} color={Colors.primary} />
           <GradientText text="Trust Layer Wallet" style={styles.sectionTitle} />
+          <InfoBubble title="Trust Layer Wallet" message="Your on-chain assets on the Trust Layer blockchain. SIG is the native token ($0.01 each), Shells are micro-tokens ($0.001 each) earned through daily rewards, quests, and ecosystem activity, and stSIG represents your staked SIG." />
         </View>
         <GlassCard>
           <View style={styles.assetRow}>
@@ -971,6 +973,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="trending-up" size={18} color="#f59e0b" />
           <GradientText text="Staking Pools" style={styles.sectionTitle} />
+          <InfoBubble title="Staking Pools" message="Lock your SIG tokens in staking pools to earn rewards. Higher APY pools may have longer lock periods. You can also use liquid staking to mint stSIG, which represents your staked SIG and can still be used across the ecosystem." />
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.poolCarousel} contentContainerStyle={styles.poolCarouselContent}>
           {(stakingInfo?.pools || []).map((pool, i) => {
@@ -1112,7 +1115,10 @@ export default function WalletScreen() {
             )}
           </View>
           <View style={styles.liquidStakingSection}>
-            <Text style={styles.liquidSectionLabel}>LIQUID STAKING</Text>
+            <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 6 }}>
+              <Text style={styles.liquidSectionLabel}>LIQUID STAKING</Text>
+              <InfoBubble title="Liquid Staking" message="Liquid staking lets you stake SIG without locking it up. Mint stSIG to represent your staked position while still using it across the ecosystem. Redeem stSIG back to SIG at any time." size={14} />
+            </View>
             <View style={styles.stakingActions}>
               <Pressable
                 style={styles.stakingActionBtn}
@@ -1141,6 +1147,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="business" size={18} color={Colors.success} />
           <GradientText text="Bank Accounts" style={styles.sectionTitle} />
+          <InfoBubble title="Bank Accounts" message="Securely link your bank accounts through Plaid to view balances alongside your crypto holdings. Your bank credentials are never stored by Trust Layer." />
         </View>
         <GlassCard>
           {(plaidAccounts || []).length > 0 ? (
@@ -1173,6 +1180,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="wallet" size={18} color={Colors.secondary} />
           <GradientText text="External Wallets" style={styles.sectionTitle} />
+          <InfoBubble title="External Wallets" message="Connect wallets from other blockchains (Solana, Ethereum, etc.) to view your complete crypto portfolio in one place. External wallet balances are read-only and updated in real time." />
         </View>
         <GlassCard>
           {(externalWallets || []).length > 0 ? (
@@ -1209,6 +1217,7 @@ export default function WalletScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Transactions" style={styles.sectionTitle} />
+          <InfoBubble title="Transactions" message="Complete history of all your wallet activity including sends, receives, staking, rewards, and Shell earnings. Use the filters to narrow down by transaction type." />
         </View>
         <View style={styles.filterRow}>
           {filterButtons.map((f) => (
@@ -1246,6 +1255,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="shield-checkmark" size={18} color={Colors.primary} />
           <GradientText text="Identity" style={styles.sectionTitle} />
+          <InfoBubble title="Identity" message="Your Trust Layer ID is your unique, blockchain-verified identity. It serves as your universal login across all 35 ecosystem apps and is linked to your on-chain wallet." />
         </View>
         <GlassCard>
           <View style={styles.idRow}>

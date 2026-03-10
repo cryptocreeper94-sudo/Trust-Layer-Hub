@@ -16,6 +16,7 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { useAuth } from "@/lib/auth-context";
 import { useDeveloperStats, useDeveloperHealth } from "@/hooks/useDeveloperStats";
 
@@ -164,6 +165,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="System Overview" style={styles.sectionTitle} />
+            <InfoBubble title="System Overview" message="Real-time counts from the Trust Layer database including registered users, active sessions, completed hallmarks, trust stamps, chat activity, and connected integrations." />
           </View>
           <View style={styles.statsGrid}>
             <StatBox label="Users" value={db?.users ?? "--"} color={Colors.primary} />
@@ -180,6 +182,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="Server" style={styles.sectionTitle} />
+            <InfoBubble title="Server" message="Express.js backend server metrics including uptime, Node.js version, memory usage, and boot time. The server handles all API requests, authentication, and database operations." />
           </View>
           <GlassCard>
             <InfoRow label="Uptime" value={sys?.uptime || "--"} />
@@ -191,6 +194,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="Blockchain" style={styles.sectionTitle} />
+            <InfoBubble title="Blockchain" message="Trust Layer blockchain status including block height, transactions per second (TPS), consensus mechanism, chain ID, and total on-chain accounts. Monitors the health of the underlying blockchain infrastructure." />
           </View>
           <GlassCard>
             <InfoRow label="Status" value={chain?.status === "connected" ? "Connected" : "Unreachable"} valueColor={chain?.status === "connected" ? Colors.success : Colors.error} />
@@ -204,6 +208,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="DarkWave Pulse" style={styles.sectionTitle} />
+            <InfoBubble title="DarkWave Pulse" message="AI-powered market intelligence service providing real-time trading signals, sentiment analysis, and price predictions. Tracks accuracy over time to measure prediction reliability." />
           </View>
           <GlassCard>
             <InfoRow label="Status" value={pulse?.status === "connected" ? "Connected" : "Unreachable"} valueColor={pulse?.status === "connected" ? Colors.success : Colors.error} />
@@ -215,6 +220,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="Integrations" style={styles.sectionTitle} />
+            <InfoBubble title="Integrations" message="Third-party services connected to the Trust Layer backend. Includes OpenAI for the AI agent, ElevenLabs for text-to-speech, Resend for email, Twilio for SMS 2FA, Stripe for payments, and Plaid for bank connections." />
           </View>
           <GlassCard>
             <InfoRow label="OpenAI (AI Agent)" value="Configured" valueColor={Colors.success} />
@@ -230,6 +236,7 @@ export default function DeveloperScreen() {
               text={`API Endpoints (${endpoints?.total || 0})`}
               style={styles.sectionTitle}
             />
+            <InfoBubble title="API Endpoints" message="All available REST API routes on the Express server. Filter by HTTP method (GET/POST), authentication requirement, or access level. Each endpoint shows its path, method, and whether authentication is required." />
             <Pressable
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowEndpoints(!showEndpoints); }}
               testID="toggle-endpoints"
@@ -270,6 +277,7 @@ export default function DeveloperScreen() {
 
           <View style={styles.sectionHeader}>
             <GradientText text="Quick Links" style={styles.sectionTitle} />
+            <InfoBubble title="Quick Links" message="Direct links to Trust Layer's production services including the main hub, blockchain explorer, DarkWave Pulse dashboard, TrustShield security suite, TLID registry, and team contact." />
           </View>
           <GlassCard>
             <InfoRow label="Production" value="trusthub.tlid.io" valueColor={Colors.primary} />

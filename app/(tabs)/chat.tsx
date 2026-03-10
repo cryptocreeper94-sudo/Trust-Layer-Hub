@@ -19,6 +19,7 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { EmptyState } from "@/components/EmptyState";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/lib/auth-context";
@@ -365,6 +366,7 @@ export default function ChatScreen() {
         <View style={styles.sectionLabel}>
           <Ionicons name="megaphone" size={14} color={Colors.primary} />
           <Text style={styles.sectionLabelText}>Public Channels</Text>
+          <InfoBubble title="Public Channels" message="Open community channels available to all Trust Layer members. Messages are end-to-end encrypted and linked to verified blockchain identities. Join channels to connect with the ecosystem community." size={14} />
         </View>
         <GlassCard>
           {channelsToShow.filter(c => c.isPublic !== false).map((ch, i, arr) => (
@@ -380,6 +382,7 @@ export default function ChatScreen() {
             <View style={styles.sectionLabel}>
               <Ionicons name="person" size={14} color={Colors.secondary} />
               <Text style={styles.sectionLabelText}>Direct Messages</Text>
+              <InfoBubble title="Direct Messages" message="Private 1-on-1 conversations with other Trust Layer members. All DMs are end-to-end encrypted. Messages include delivery status indicators so you know when your message has been sent and delivered." size={14} />
             </View>
             <GlassCard>
               {channelsToShow.filter(c => c.isPublic === false).map((ch, i, arr) => (
@@ -395,6 +398,7 @@ export default function ChatScreen() {
         <View style={styles.encryptionNote}>
           <Ionicons name="lock-closed" size={14} color={Colors.success} />
           <Text style={styles.encryptionText}>End-to-end encrypted</Text>
+          <InfoBubble title="Encryption" message="All Signal Chat messages are end-to-end encrypted. Only you and the intended recipients can read your messages. Trust Layer never has access to your message content." size={14} color={Colors.success} />
         </View>
       </ScrollView>
     </View>

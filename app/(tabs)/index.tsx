@@ -19,6 +19,7 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { FEATURED_APP_IDS } from "@/constants/mock-data";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
@@ -322,6 +323,7 @@ export default function HomeScreen() {
         <GlassCard glow delay={100}>
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Portfolio Value</Text>
+            <InfoBubble title="Portfolio Value" message="Your total holdings across SIG, Shells, and stSIG converted to USD. SIG is the native token ($0.01), Shells are micro-tokens ($0.001) earned through ecosystem activity, and stSIG represents your staked SIG." />
             <View style={styles.balanceLiveDot} />
           </View>
           <Text style={styles.balanceValue}>
@@ -333,6 +335,7 @@ export default function HomeScreen() {
                 <Ionicons name="diamond-outline" size={14} color={Colors.primary} />
               </View>
               <Text style={styles.balanceItemLabel}>SIG</Text>
+              <InfoBubble title="SIG (Signal)" message="The native token of the Trust Layer ecosystem. 1 SIG = $0.01. Earned through staking, affiliate rewards, ecosystem participation, and community contributions." size={12} />
               <Text style={styles.balanceItemValue}>
                 {sigBalance.toLocaleString()}
               </Text>
@@ -343,6 +346,7 @@ export default function HomeScreen() {
                 <Ionicons name="ellipse-outline" size={14} color={Colors.secondary} />
               </View>
               <Text style={styles.balanceItemLabel}>Shells</Text>
+              <InfoBubble title="Shells" message="Micro-tokens used across the ecosystem. 1 Shell = $0.001. Earned through daily login rewards, completing quests, app interactions, referrals, and ecosystem activity. Shells cannot be purchased directly." size={12} />
               <Text style={styles.balanceItemValue}>
                 {shellBalance.toLocaleString()}
               </Text>
@@ -353,6 +357,7 @@ export default function HomeScreen() {
                 <Ionicons name="lock-closed-outline" size={14} color={Colors.success} />
               </View>
               <Text style={styles.balanceItemLabel}>stSIG</Text>
+              <InfoBubble title="stSIG (Staked SIG)" message="Liquid staking tokens representing your staked SIG. While your SIG earns staking rewards, stSIG can still be used across the ecosystem. Redeem stSIG back to SIG anytime." size={12} />
               <Text style={styles.balanceItemValue}>
                 {stSigBalance.toLocaleString()}
               </Text>
@@ -372,6 +377,7 @@ export default function HomeScreen() {
             <View style={styles.sectionHeader}>
               <Ionicons name="pulse" size={18} color="#f59e0b" />
               <GradientText text="Market Pulse" style={styles.sectionTitle} />
+              <InfoBubble title="Market Pulse" message="AI-driven market sentiment analysis powered by DarkWave Pulse. Tracks real-time trading signals, price movements, and community sentiment across the ecosystem. The accuracy percentage reflects prediction reliability over the past 30 days." />
             </View>
             <Pressable
               onPress={() => {
@@ -454,6 +460,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="News" style={styles.sectionTitle} />
+          <InfoBubble title="News" message="Stay informed with curated news from the Trust Layer ecosystem and broader blockchain space. Toggle between Local (based on your zip code), National, and World coverage." />
         </View>
 
         <View style={styles.newsTabRow}>
@@ -583,6 +590,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
+          <InfoBubble title="Featured Apps" message="Highlighted applications from the Trust Layer ecosystem of 35 apps. These rotate based on popularity, new releases, and ecosystem updates. Tap any app to learn more." />
           <Pressable onPress={() => router.push("/(tabs)/explore")} testID="home-see-all-apps">
             <Text style={styles.seeAll}>See All</Text>
           </Pressable>
@@ -597,6 +605,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Recent Activity" style={styles.sectionTitle} />
+          <InfoBubble title="Recent Activity" message="Your latest transactions including SIG transfers, Shell earnings, staking activity, and rewards. All transactions are recorded on-chain for full transparency." />
         </View>
         <GlassCard>
           {recentTxs.length > 0 ? (
@@ -616,6 +625,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Ecosystem Activity" style={styles.sectionTitle} />
+          <InfoBubble title="Ecosystem Activity" message="Live feed of platform-wide activity including new user registrations, hallmark verifications, staking events, and app interactions across the 35-app ecosystem." />
           <Pressable onPress={() => router.push("/leaderboard")} hitSlop={8} testID="home-view-leaderboard">
             <Text style={styles.viewAllText}>View All</Text>
           </Pressable>
@@ -664,6 +674,7 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="people" size={18} color={Colors.primary} />
           <GradientText text="Community" style={styles.sectionTitle} />
+          <InfoBubble title="Community" message="Top contributors and active members in the Trust Layer ecosystem. Earn your spot on the leaderboard through staking, referrals, app usage, and community participation." />
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

@@ -22,6 +22,7 @@ import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
+import { InfoBubble } from "@/components/InfoBubble";
 import { GradientButton } from "@/components/GradientButton";
 import { useAuth } from "@/lib/auth-context";
 import { useMembership, useSubscriptionStatus } from "@/hooks/useMembership";
@@ -184,12 +185,18 @@ export default function ProfileScreen() {
 
         <View style={styles.statsRow}>
           <GlassCard glow style={styles.statCard}>
-            <Text style={styles.statLabel}>THE VOID</Text>
+            <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 4 }}>
+              <Text style={styles.statLabel}>THE VOID</Text>
+              <InfoBubble title="The Void" message="Your membership tier in The Void, Trust Layer's loyalty and rewards program. Tiers include Explorer, Builder, Architect, and Sovereign. Advance by staking SIG, completing hallmarks, and actively using ecosystem apps. Higher tiers unlock exclusive features and better rewards." size={14} />
+            </View>
             <Text style={[styles.statValue, { color: Colors.secondary }]}>{voidTier}</Text>
             <Text style={styles.statSub}>Membership Tier</Text>
           </GlassCard>
           <GlassCard glow style={styles.statCard}>
-            <Text style={styles.statLabel}>Guardian Score</Text>
+            <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 4 }}>
+              <Text style={styles.statLabel}>Guardian Score</Text>
+              <InfoBubble title="Guardian Score" message="Your security and trust rating from 0-100, calculated based on account verification level, biometric setup, 2FA enrollment, hallmark completions, and security best practices. A higher score unlocks premium features and builds trust with other ecosystem members." size={14} />
+            </View>
             <Text style={[styles.statValue, { color: scoreColor }]}>{guardianScore}</Text>
             <Text style={styles.statSub}>Security Rating</Text>
           </GlassCard>
@@ -199,6 +206,7 @@ export default function ProfileScreen() {
           <>
             <View style={styles.sectionHeader}>
               <GradientText text="Subscription" style={styles.sectionTitle} />
+              <InfoBubble title="Subscription" message="Your active Trust Layer subscription plan. Subscriptions unlock premium features like unlimited API calls, advanced staking pools, priority support, and enhanced storage across the ecosystem." />
             </View>
             <GlassCard glow>
               <View style={styles.subscriptionRow}>
@@ -218,6 +226,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Identity" style={styles.sectionTitle} />
+          <InfoBubble title="Identity" message="Your verified Trust Layer identity. Your .tlid address is your universal identity across all 35 ecosystem apps, serving as both your blockchain address and display name." />
         </View>
         <GlassCard>
           <View style={styles.identityRow}>
@@ -238,6 +247,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Settings" style={styles.sectionTitle} />
+          <InfoBubble title="Settings" message="Manage your account preferences including notifications, biometric authentication, SMS two-factor authentication, security PIN, language, and display settings." />
         </View>
         <GlassCard>
           <SettingRow
@@ -288,6 +298,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Business & Affiliate" style={styles.sectionTitle} />
+          <InfoBubble title="Business & Affiliate" message="Manage your Stripe business dashboard for accepting payments, and access the affiliate program to earn SIG by referring new users to the Trust Layer ecosystem." />
         </View>
         <GlassCard>
           <SettingRow
@@ -309,6 +320,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Linked Apps" style={styles.sectionTitle} />
+          <InfoBubble title="Linked Apps" message="Ecosystem apps connected to your Trust Layer account. Connected apps share your verified identity and can interact with your wallet. You can manage connections at any time." />
         </View>
         <GlassCard>
           <LinkedAppItem name="TrustVault" connected />
@@ -324,6 +336,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Trust Timeline" style={styles.sectionTitle} />
+          <InfoBubble title="Trust Timeline" message="A chronological record of your identity milestones and security events. Hallmarks are permanent, on-chain verifications (like email, phone, KYC). Trust Stamps are activity records (logins, settings changes). Both contribute to your Guardian Score." />
           <Pressable onPress={() => router.push("/hallmark-detail")} hitSlop={8}>
             <Text style={styles.viewAllLink}>View All</Text>
           </Pressable>
@@ -618,7 +631,11 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   sectionHeader: {
-    marginTop: 4,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    marginTop: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
