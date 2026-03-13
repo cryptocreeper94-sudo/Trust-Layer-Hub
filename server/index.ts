@@ -271,7 +271,7 @@ function configureExpoAndLanding(app: express.Application) {
     app.use(express.static(webExportDir));
 
     // SPA fallback: serve index.html for any non-API, non-asset routes
-    app.get("*", (req: Request, res: Response, next: NextFunction) => {
+    app.get("/{*splat}", (req: Request, res: Response, next: NextFunction) => {
       if (req.path.startsWith("/api")) return next();
       const indexPath = path.join(webExportDir, "index.html");
       if (fs.existsSync(indexPath)) {
