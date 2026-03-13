@@ -1,0 +1,43 @@
+# Render Blueprint — Trust Layer Hub (trusthub.tlid.io)
+services:
+  - type: web
+    name: trust-layer-hub
+    runtime: node
+    region: ohio
+    plan: free
+    branch: main
+    repo: https://github.com/cryptocreeper94-sudo/Trust-Layer-Hub
+    buildCommand: bash scripts/render-build.sh
+    startCommand: bash scripts/render-start.sh
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: ELEVEN_LABS_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: HELIUS_API_KEY
+        sync: false
+      - key: PHANTOM_SECRET_KEY
+        sync: false

@@ -21,6 +21,9 @@ function setupCors(app: express.Application) {
   app.use((req, res, next) => {
     const origins = new Set<string>();
 
+    // Production domain
+    origins.add("https://trusthub.tlid.io");
+
     if (process.env.REPLIT_DEV_DOMAIN) {
       origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
     }
@@ -29,6 +32,11 @@ function setupCors(app: express.Application) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
         origins.add(`https://${d.trim()}`);
       });
+    }
+
+    // Allow Render deploy URL
+    if (process.env.RENDER_EXTERNAL_URL) {
+      origins.add(process.env.RENDER_EXTERNAL_URL);
     }
 
     const origin = req.header("origin");
@@ -255,6 +263,23 @@ function configureExpoAndLanding(app: express.Application) {
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "public")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
+
+  // Serve Expo web export in production (built by render-build.sh)
+  const webExportDir = path.resolve(process.cwd(), "dist", "web");
+  if (fs.existsSync(webExportDir)) {
+    log("Serving Expo web export from dist/web");
+    app.use(express.static(webExportDir));
+
+    // SPA fallback: serve index.html for any non-API, non-asset routes
+    app.get("*", (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith("/api")) return next();
+      const indexPath = path.join(webExportDir, "index.html");
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+      next();
+    });
+  }
 
   log("Expo routing: Checking expo-platform header on / and /manifest");
 }

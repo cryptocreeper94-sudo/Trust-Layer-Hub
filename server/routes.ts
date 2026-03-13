@@ -20,6 +20,11 @@ import { registerDeveloperPortalRoutes } from "./developer-portal";
 import { registerBlogRoutes } from "./blog";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check for Render
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   registerBlockchainRoutes(app);
   registerAuthRoutes(app);
   registerAIRoutes(app);
