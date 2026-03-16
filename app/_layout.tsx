@@ -87,6 +87,12 @@ function RootLayoutNav() {
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
         <Stack.Screen name="forgot-username" options={{ headerShown: false }} />
+        <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="blog" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="blog-post" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="support" options={{ presentation: "modal", headerShown: false }} />
+        <Stack.Screen name="scanner" options={{ presentation: "modal", headerShown: false }} />
       </Stack>
     </>
   );

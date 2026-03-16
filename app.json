@@ -2,6 +2,7 @@
   "expo": {
     "name": "Trust Layer",
     "slug": "trust-layer-hub",
+    "owner": "darkwavestudios",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,6 +20,13 @@
     },
     "android": {
       "package": "io.trustlayer.hub",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.CAMERA"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#0c1224",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +46,7 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://trusthub.tlid.io"
         }
       ],
       "expo-font",

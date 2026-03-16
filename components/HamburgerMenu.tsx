@@ -82,14 +82,15 @@ export function HamburgerMenu({ visible, onClose }: HamburgerMenuProps) {
       route: "/multisig",
       condition: isMultisig,
     },
+    { icon: "notifications", label: "Notifications", route: "/notifications" },
     { icon: "podium", label: "Leaderboard", route: "/leaderboard" },
-    { icon: "newspaper", label: "Blog", externalUrl: "https://trusthub.tlid.io/blog" },
+    { icon: "newspaper", label: "Blog", route: "/blog" },
     { icon: "card", label: "Stripe Dashboard", route: "/stripe-dashboard" },
-    { icon: "scan", label: "Guardian Scanner" },
+    { icon: "scan", label: "Guardian Scanner", route: "/scanner" },
     { icon: "ribbon", label: "Hallmark" },
     { icon: "code-slash", label: "Developer Portal", externalUrl: "https://developers.tlid.io" },
-    { icon: "settings", label: "Settings" },
-    { icon: "help-circle", label: "Support" },
+    { icon: "settings", label: "Settings", route: "/settings" },
+    { icon: "help-circle", label: "Support", route: "/support" },
   ];
 
   const visibleItems = menuItems.filter(
