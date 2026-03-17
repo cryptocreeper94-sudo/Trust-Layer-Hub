@@ -893,7 +893,26 @@ We define **cognitive distance** (CD) as a measurable metric quantifying the tot
 
 **CD(L, I) = Σ wᵢ · Tᵢ(L, I)**
 
-where each **Tᵢ** represents a distinct transformation dimension (scored 0–5) and **wᵢ** is its weight (default equal weighting; adjustable for context).
+where each **Tᵢ** represents a distinct transformation dimension (scored 0–5) and **wᵢ** is its weight.
+
+#### Default Weights
+
+We propose two weight configurations:
+
+**Baseline (W₀):** All weights set to 1.0 — the unweighted sum, serving as the null hypothesis.
+
+**Proposed Calibration (W₁):** Weights derived from HCI literature on error cost and cognitive load (Sweller, 1988; Wickens, 2008):
+
+| Dimension | Symbol | W₀ | W₁ | Rationale |
+|-----------|--------|:--:|:--:|-----------|
+| Lexical | w₁ | 1.0 | 1.0 | Low cost — vocabulary lookup is routine |
+| Syntactic | w₂ | 1.0 | 1.0 | Low cost — mechanical, pattern-based |
+| Structural | w₃ | 1.0 | 1.2 | Moderate — requires architectural thinking |
+| Semantic | w₄ | 1.0 | 1.5 | High — demands domain expertise; most common source of logic errors |
+| Representational | w₅ | 1.0 | 1.0 | Low cost — modality conversion is well-practiced |
+| Meta-cognitive | w₆ | 1.0 | 1.8 | Highest — debugging the translation consumes 30–50% of development time (Ko et al., 2006) |
+
+These weights are initial proposals pending formal calibration via between-subjects user studies.
 
 #### The 6 Transformation Dimensions
 
@@ -910,15 +929,15 @@ where each **Tᵢ** represents a distinct transformation dimension (scored 0–5
 
 For the canonical intent: *"get all users who signed up this month and show their names"*
 
-| Language | Era | T₁ | T₂ | T₃ | T₄ | T₅ | T₆ | CD (sum) |
-|----------|-----|----|----|----|----|----|----|----------|
-| Assembly | 1950s | 5 | 5 | 5 | 5 | 1 | 5 | **26** |
-| C | 1978 | 4 | 4 | 4 | 4 | 1 | 4 | **21** |
-| Python | 1991 | 2 | 2 | 3 | 3 | 1 | 2 | **13** |
-| JavaScript (ES6+) | 2015 | 3 | 3 | 3 | 3 | 1 | 3 | **16** |
-| AI Agent (Copilot/ChatGPT) | 2024 | 1 | 0 | 1 | 2 | 2 | 3 | **9** |
-| Lume (text, English Mode) | 2026 | 0 | 0 | 0 | 1 | 1 | 0 | **2** |
-| Lume (voice) | 2026 | 0 | 0 | 0 | 1 | 0 | 0 | **1** |
+| Language | Era | T₁ | T₂ | T₃ | T₄ | T₅ | T₆ | CD₀ (W₀) | CD₁ (W₁) |
+|----------|-----|----|----|----|----|----|----|:---------:|:---------:|
+| Assembly | 1950s | 5 | 4 | 5 | 5 | 1 | 5 | **25** | **33.8** |
+| C | 1978 | 4 | 4 | 4 | 4 | 1 | 4 | **21** | **28.0** |
+| Python | 1991 | 2 | 2 | 3 | 3 | 1 | 2 | **13** | **17.7** |
+| JavaScript (ES6+) | 2015 | 3 | 3 | 3 | 3 | 1 | 3 | **16** | **21.5** |
+| AI Agent (Copilot/ChatGPT) | 2024 | 1 | 0 | 1 | 2 | 2 | 3 | **9** | **13.6** |
+| Lume (text, English Mode) | 2026 | 0 | 0 | 0 | 1 | 1 | 0 | **2** | **2.5** |
+| Lume (voice) | 2026 | 0 | 0 | 0 | 1 | 0 | 0 | **1** | **1.5** |
 
 Key observations:
 - The progression from Assembly (CD=26) to Lume Voice (CD=1) follows a clear monotonic reduction across language generations.
