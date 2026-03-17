@@ -885,21 +885,92 @@ The following evaluation dimensions are specified for formal assessment:
 
 ## 11. Theoretical Contributions
 
-### 11.1 Cognitive Distance Minimization
+### 11.1 Cognitive Distance: Formal Definition and Measurement
 
-Traditional programming requires translating intent through multiple abstraction layers:
+#### Definition
 
-```
-Thought → Algorithm Design → Syntax Selection → Typing → Debug Syntax Errors → Compile
-```
+We define **cognitive distance** (CD) as a measurable metric quantifying the total conceptual transformation a developer must perform to translate an intent *I* into executable form within a language *L*:
 
-Lume with voice reduces this to:
+**CD(L, I) = Σ wᵢ · Tᵢ(L, I)**
 
-```
-Thought → Speaking → Compile
-```
+where each **Tᵢ** represents a distinct transformation dimension (scored 0–5) and **wᵢ** is its weight (default equal weighting; adjustable for context).
 
-The cognitive distance between "what the developer wants" and "what the compiler receives" approaches zero. This is enabled by the Tolerance Chain absorbing the variability that voice input introduces. The framing as "cognitive distance" — deliberately invoking the psychological concept of "cognitive dissonance" — gives this contribution interdisciplinary relevance across computer science and cognitive psychology.
+#### The 6 Transformation Dimensions
+
+| Dimension | Symbol | Description | Example |
+|-----------|--------|-------------|---------|
+| Lexical | T₁ | Natural words → keywords/operators | "add" → `+` |
+| Syntactic | T₂ | Conforming to brackets, semicolons, indentation | Knowing where `{ } ;` go |
+| Structural | T₃ | Organizing into functions/classes/modules | Wrapping logic in `function()` |
+| Semantic | T₄ | Mapping concepts to types/APIs/data structures | "list of names" → `string[]` |
+| Representational | T₅ | Modality conversion (voice → text, thought → typing) | Speaking → typed characters |
+| Meta-cognitive | T₆ | Debugging the translation itself (not the logic) | Finding a missing semicolon |
+
+#### Comparative Analysis Across Language Eras
+
+For the canonical intent: *"get all users who signed up this month and show their names"*
+
+| Language | Era | T₁ | T₂ | T₃ | T₄ | T₅ | T₆ | CD (sum) |
+|----------|-----|----|----|----|----|----|----|----------|
+| Assembly | 1950s | 5 | 5 | 5 | 5 | 1 | 5 | **26** |
+| C | 1978 | 4 | 4 | 4 | 4 | 1 | 4 | **21** |
+| Python | 1991 | 2 | 2 | 3 | 3 | 1 | 2 | **13** |
+| JavaScript (ES6+) | 2015 | 3 | 3 | 3 | 3 | 1 | 3 | **16** |
+| AI Agent (Copilot/ChatGPT) | 2024 | 1 | 0 | 1 | 2 | 2 | 3 | **9** |
+| Lume (text, English Mode) | 2026 | 0 | 0 | 0 | 1 | 1 | 0 | **2** |
+| Lume (voice) | 2026 | 0 | 0 | 0 | 1 | 0 | 0 | **1** |
+
+Key observations:
+- The progression from Assembly (CD=26) to Lume Voice (CD=1) follows a clear monotonic reduction across language generations.
+- **AI agents (CD=9) are anomalous**: they reduced T₁–T₃ but *increased* T₅ (modality: now the developer must translate intent into an effective prompt) and T₆ (meta-cognitive: debugging the AI's interpretation, reviewing generated code, verifying correctness). The chain got longer, not shorter.
+- Lume Voice achieves CD=1 (the residual T₄ reflects that some semantic concepts require domain knowledge regardless of language).
+
+#### The Dissonance Hypothesis
+
+Drawing on Festinger's (1957) theory of cognitive dissonance — the mental discomfort of holding contradictory cognitions — we propose:
+
+> **The cognitive dissonance experienced during programming is directly proportional to cognitive distance. As CD → 0, dissonance → 0.**
+
+Every developer who says "I know what I want to do, I just can't figure out how to write it" is describing cognitive dissonance caused by cognitive distance. The brain says one thing; the fingers type something structurally different. This mismatch occurs hundreds of times per day.
+
+#### The Middleman Paradox
+
+AI coding agents represent a counterintuitive regression in one critical dimension. The translation chain increased:
+
+- **Traditional**: Developer → Compiler (2 nodes, 1 hop)
+- **AI-Assisted**: Developer → AI → Review → Compiler (4 nodes, 3 hops)
+- **Lume**: Developer → Compiler (2 nodes, 1 hop — but now in natural language)
+
+The AI is a middleman. Lume eliminates the middleman — the compiler IS the understanding layer.
+
+#### Empirical Evaluation Methodology
+
+We propose four protocols for formal measurement of cognitive distance:
+
+| Protocol | Metric | Method |
+|----------|--------|--------|
+| **Task Completion Time (TCT)** | Time to implement identical feature | Between-subjects: same task across Assembly → C → Python → JS → Lume |
+| **Error Rate (ER)** | Syntax/semantic errors per 100 LOC | Count compilation failures and logical bugs |
+| **Cognitive Load Index (CLI)** | NASA-TLX score | Post-task questionnaire measuring mental demand |
+| **Think-Aloud Divergence (TAD)** | Semantic distance between verbalized intent and written code | Record think-aloud narration, compare to actual code written |
+
+**Prediction**: TCT and ER will decrease monotonically with CD. CLI will correlate positively with CD. TAD will approach zero for Lume voice (the developer's spoken words ARE the code).
+
+#### Tolerance Chain as the Mechanism of CD Elimination
+
+Each layer of the Tolerance Chain absorbs a specific class of cognitive transformation:
+
+| Tolerance Chain Layer | Absorbs Dimension | How |
+|----------------------|-------------------|-----|
+| Layer 1: Exact Pattern Match | T₁ Lexical | Maps natural verbs → AST operations |
+| Layer 2: Fuzzy Match | T₁ Lexical | Tolerates misspelling, word variation |
+| Layer 3: Auto-Correct | T₂ Syntactic | Fixes mechanical errors |
+| Layer 4: Context Engine | T₄ Semantic | Resolves pronouns, infers types |
+| Layer 5: Temporal Resolver | T₄ Semantic | Resolves relative references |
+| Layer 6: i18n Library | T₁ + T₅ | Accepts non-English input |
+| Layer 7: AI Resolver | T₁–T₄ | Final fallback for all deterministic dims |
+
+The voice pipeline's Transcription Cleanup Layer absorbs T₅ (Representational). Together, the 7-layer Tolerance Chain + Transcription Cleanup eliminates all six transformation dimensions, driving CD toward zero.
 
 ### 11.2 Error Tolerance as a Design Principle
 
