@@ -1,10 +1,11 @@
 # LUME: Eliminating Cognitive Distance — An AI-Native Programming Language with Natural Language Compilation, Voice Input, and Certified Security
 
-**Authors:** Jason (Trust Layer / DarkWave Systems Collective)
+**Author:** Jason Andrews
 
-**Affiliation:** DarkWave Systems Collective (DWSC) — team@dwsc.io
+**Affiliation:** DarkWave Studios LLC / Trust Layer Ecosystem
+DarkWave Systems Collective (DWSC) — Research & Engineering Division — team@dwsc.io
 
-**Contact:** lume-lang.com | lume-lang.org
+**Contact:** lume-lang.com | lume-lang.org | dwtl.io
 
 **Keywords:** programming languages, natural language processing, voice-to-code, compiler security, cognitive distance, intent resolution, AI-native computation, accessibility
 
