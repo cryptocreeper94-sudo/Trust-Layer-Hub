@@ -1302,6 +1302,63 @@ Developer B: "remove the header and use a sidebar"
 - Resolution preserves the Context Stack for both developers
 - The Resolution Manifest supports multi-author entries and collaborative compile-lock files
 
+### 11.12 Recency-Frequency-Type (RFT) Model for Anaphora Resolution
+
+Building on the Context Stack (§4.10), the RFT model enhances pronoun resolution with three-dimensional scoring:
+
+```
+Score(entity) = α·Recency(entity) + β·Frequency(entity) + γ·TypeMatch(entity, verb)
+
+Where:
+  α = 0.5  (most recent reference carries highest weight)
+  β = 0.3  (frequently-referenced entities are preferred)
+  γ = 0.2  (type compatibility acts as a filter)
+```
+
+**Recency:** Tracks the last 5 referenced entities in a sliding window, with exponential decay. **Frequency:** Weights entities by total usage count within the current scope. **Type Matching:** Cross-references action verbs with variable types — "delete" is valid for Collection/File/Record but not Boolean/Number. If the highest-scoring entity has TypeMatch = 0, the compiler triggers `DisambiguationRequired` rather than guessing. This positions Lume as a **Contextual Anchor** system.
+
+### 11.13 Formal Experimental Design
+
+To provide empirical proof that Lume minimizes Cognitive Distance, we propose three controlled studies:
+
+**Study A — Task Completion Time (TCT):** Measure Intent-to-Execution speed across four groups: Python (manual), Python + GitHub Copilot, Lume English Mode (text), and Lume Voice Mode. Task: build a CRUD API. Hypothesis: Lume reduces TCT by 40-60% vs. Python, 20-30% vs. Copilot.
+
+**Study B — Silent Error Rate:** Give participants deliberately ambiguous prompts. Measure how many times Copilot generates wrong code silently vs. how many times Lume triggers `DisambiguationRequired`. Hypothesis: Lume produces 0 silent errors; Copilot's silent error rate scales with prompt ambiguity.
+
+**Study C — NASA-TLX (Hart & Staveland, 1988):** Subjective cognitive load measurement. Hypothesis: as CD → 0, all NASA-TLX subscales (Mental Demand, Frustration, Effort, Performance) trend toward minimum, validating the Dissonance Hypothesis.
+
+### 11.14 Semantic Invariant Certificates — Full-Chain Integrity
+
+The security certificate must bind the entire compilation chain:
+
+```
+Certificate = SHA-256(Input_English + Resolved_AST + Compiled_JavaScript)
+```
+
+This creates a tamper-evident chain: modifying any of the three artifacts invalidates the certificate. The certificate is embedded in compiled output:
+
+```javascript
+// LUME-CERT: sha256:a3f8b2c1... | Intent: QUERY | Risk: LOW | Chain: VALID
+const result = await db.query('SELECT * FROM users');
+```
+
+**CI/CD Headless Policy:** In CI/CD environments, any instruction with confidence C < 0.85 triggers a hard `RESOLUTION_ERROR` rather than a best-guess. Interactive mode: 0.6 < C < 0.85 → pause for human disambiguation; C ≥ 0.85 → auto-resolve. Configure via `lume build --headless --min-confidence=0.85`.
+
+### 11.15 Auditory Mode — Fully Hands-Free Programming
+
+Lume's voice pipeline provides Voice → Text → Code. Auditory Mode completes the loop with **compiler-to-developer speech output** via Web Speech API (`SpeechSynthesis`), making programming entirely auditory:
+
+```
+Developer (speaks): "Get all the users who signed up this month"
+Lume (speaks back): "I understood: query the users collection,
+  filtering by signup date in the current month.
+  Confidence: 97 percent. Shall I compile?"
+Developer (speaks): "Yes"
+Lume (speaks back): "Compiled successfully."
+```
+
+This makes Lume the **first programming language usable with eyes closed** — fully hands-free, fully accessible. CD for Auditory Mode = 0 across all dimensions. For developers with visual impairments, motor disabilities, or hands-occupied scenarios, Auditory Mode transforms programming from a keyboard-dependent activity to a conversational one.
+
 ---
 
 ## 12. Limitations and Future Work
