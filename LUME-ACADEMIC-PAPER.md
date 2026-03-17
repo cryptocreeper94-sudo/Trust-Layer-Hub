@@ -1539,4 +1539,27 @@ Ko, A. J., Abraham, R., Beckwith, L., et al. (2011). The state of the art in end
 
 ---
 
+## Appendix D: TrustGen — Domain-Specific Lume Deployment
+
+TrustGen 3D, the Trust Layer ecosystem's AI-powered 3D creation studio, embeds a full Lume integration that compiles English Mode intent not to JavaScript, but to **3D engine API calls**. This proves Lume's architecture operates as an **intent compilation framework** — analogous to LLVM's frontend-agnostic IR, but at the natural language level.
+
+**Domain Module:** `LumeEngine.ts` (700+ lines) registers 16 verbs across 6 categories (scene, animation, camera, audio, pipeline, query) with 80+ aliases.
+
+**IDE Features:**
+- Full 4-mode Lume IDE: REPL, Script Editor, Voice Direction, Verb Reference
+- Monaco Editor with custom `lume` language (Monarch tokenizer): AI keywords in purple bold, English verbs in green italic
+- Adaptive Voice Profiles: per-session dialect learning, filler word filtering, accent corrections, dialect confidence scoring (0–100%)
+- Review Mode: human-in-the-loop command approval gate (⚡ Auto / 🔒 Review toggle)
+
+**Example compilation:**
+```
+"place a wooden desk in the center"
+→ Intent: { verb: 'place', object: 'desk', material: 'wood', position: 'center' }
+→ Engine call: scene.addObject({ shape: 'table', material: 'wood', position: [0,0,0] })
+```
+
+The CD score for TrustGen domain commands is identical to general-purpose Lume — the user's experience is invariant to the compilation target. This establishes Lume as a language that can target any domain through pluggable domain modules.
+
+---
+
 *Submitted for consideration. Correspondence: team@dwsc.io*
