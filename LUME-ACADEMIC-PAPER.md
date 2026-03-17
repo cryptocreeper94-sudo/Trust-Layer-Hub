@@ -589,6 +589,23 @@ This "certified at birth" paradigm — code that is provably security-verified f
 
 This config is project-level, committed to version control, and lockable by team leads.
 
+### 6.6 Differentiation from Existing Safety Systems
+
+A natural objection is that compiler-integrated security is not novel — Rust guarantees memory safety, and Ada/SPARK provides formal verification. The distinction is precise:
+
+| Axis | Rust | Ada / SPARK | ESLint / Snyk | **Lume** |
+|------|------|-------------|---------------|----------|
+| **What is checked** | Memory safety (ownership, lifetimes, borrowing) | Formal correctness against specifications | Code patterns post-compilation | **Developer intent** (natural language + AST semantics) |
+| **When** | Compile time (type checking) | Compile time + proof obligations | After compilation (CI/CD) | **During compilation** (each AST node as it is created) |
+| **Against what** | Type system rules | Mathematical contracts | Known vulnerability patterns | **The developer's stated intent** vs. the operation's semantic effect |
+| **Scope** | Memory bugs only — does not detect logic errors, data exfiltration, or privilege escalation | Functional correctness — requires manual spec writing | Known CVEs and code smells — reactive, pattern-based | **11 threat categories** including semantic camouflage, intent-aware risk, and NL injection |
+| **Output** | Safe binary (no certificate) | Proven correctness (formal proofs) | Warning reports | **Tamper-evident certificate** embedded in compiled output |
+| **Mandatory** | Yes (language-level) | Optional (SPARK subset) | Optional (must be installed) | **Yes** (built into compiler, cannot be skipped) |
+
+**The key insight:** Rust prevents unsafe *memory operations*. Ada/SPARK proves code matches a *formal specification the developer wrote*. ESLint catches *known bad patterns* in code that already exists. Lume catches *dangerous intent* — it knows the developer said "delete all user records" and can distinguish that from "delete expired session tokens" because it has access to the original English instruction, not just the generated `DELETE FROM` query.
+
+These are complementary, not competing, paradigms. Rust and Lume could coexist — a future Lume backend targeting Rust output would benefit from both intent-aware security (Lume) and memory safety (Rust). But the specific combination of **semantic intent scanning at compilation time with mandatory enforcement and tamper-evident certification** is, to our knowledge, novel.
+
 ---
 
 ## 7. Self-Sustaining Runtime (Milestone 6)
