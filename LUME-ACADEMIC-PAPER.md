@@ -248,7 +248,7 @@ The Intent Resolver feeds AST nodes directly to the Transpiler. No modifications
 
 **Layer A: Pattern Matching (deterministic, offline, no AI)**
 
-A library of 102 regex-based patterns maps common English phrases to AST nodes. Representative patterns:
+A library of 114+ regex-based patterns maps common English phrases to AST nodes. Representative patterns:
 
 | Pattern Category | Example Input | AST Node Type |
 |-----------------|--------------|---------------|
@@ -1381,6 +1381,76 @@ This makes Lume the **first programming language usable with eyes closed** — f
 6. **Formal verification integration** — extending the security certificate to include formal proofs of specific properties
 7. **Self-modifying programs** — controlled self-modification with safety guardrails (type signature preservation, intent block validation, mutation depth limits)
 8. **Adaptive Voice Profiles** — per-user dialect learning inserted at Layer 1.5 of the Tolerance Chain. The system records each user's unique colloquialisms ("gimme" → "get," "toss" → "delete"), accent-specific transcription artifacts, and filler words. Candidate mappings auto-promote to confirmed status after 5 consistent uses. This transforms the compiler from a static tool into a personalized interaction partner: the more a user programs with Lume, the better the compiler understands them. Partially implemented as `voice-profile.js` in `src/intent-resolver/`. Includes a Dialect Confidence score (sigmoid-based, asymptotic to 1.0) and integration with the Self-Evolving runtime layer for long-term pattern analysis.
+
+---
+
+## 12.5 Vertical Applications — From Language to Platform
+
+A programming language that only compiles general-purpose code remains a tool. A language that extends into domain-specific workflows becomes a **platform**. Lume's 5 vertical applications demonstrate that the English Mode + Tolerance Chain architecture generalizes across DevOps, testing, configuration, education, and accessibility — each implemented as first-class language constructs, not library wrappers.
+
+### 12.5.1 Deploy Engine — Deployment as a Language Keyword
+
+Traditional deployment requires shell scripts, CI/CD YAML, and platform-specific CLIs — each adding transformation dimensions. Lume collapses the entire deployment pipeline into a single keyword:
+
+```lume
+deploy to render from "main"
+deploy status
+deploy rollback
+```
+
+The Deploy Engine (`deploy-engine.js`, 272 lines) integrates with the self-healing pipeline — a failed deployment triggers automatic rollback and recovery. CD for deployment = 0: the developer speaks their intent, the compiler handles the infrastructure.
+
+### 12.5.2 Verify Keyword — Natural Language Assertions
+
+The `verify` keyword eliminates assertion library syntax entirely:
+
+```
+// Traditional (Jest/Mocha)                    // Lume Standard Mode
+expect(response.status).toBe(200);             verify response.status is 200
+expect(users).not.toHaveLength(0);             verify users is not empty
+assert.strictEqual(count, 10);                 verify count is greater than 5
+```
+
+`verify` is implemented at the compiler level — it tokenizes through the lexer, parses into `VerifyStatement` AST nodes, and transpiles to JavaScript assertions with human-readable error messages:
+
+```
+✗ Verify failed: expected 404 to equal 200
+✗ Verify failed: expected [] to not be empty
+```
+
+### 12.5.3 Config Language — Configuration as Code
+
+```lume
+config database = postgres at "db.example.com" port 5432
+config cache = redis at "cache.internal" port 6379
+config smtp = smtp at env("MAIL_HOST") port 587
+```
+
+The Config Engine (`config-engine.js`, 278 lines) replaces YAML/TOML/JSON with typed, validated configuration blocks that support environment variable integration via `env()`.
+
+### 12.5.4 Education Mode — Beginner-Tuned Tolerance Chain
+
+Education Mode widens the Tolerance Chain for commands that would be too ambiguous for production:
+
+```lume
+make a big red circle
+add a button that says hello
+make the background green
+```
+
+Error messages use friendly language instead of technical stack traces:
+
+```
+🎨 I'm not sure what you'd like to draw.
+   Try something like: "draw a red circle" or "make a blue square"
+   Available shapes: circle, square, triangle, rectangle, star, line
+```
+
+### 12.5.5 Enhanced Accessibility — Complete Eyes-Free Pipeline
+
+Building on Auditory Mode (§8), the accessibility vertical adds spoken errors, voice-navigable code reading, spoken deploy status, spoken verification results, and spoken help commands — completing the eyes-free development cycle.
+
+**Academic Significance:** The vertical applications prove Lume's cognitive distance minimization is **not domain-specific**. The same architecture applies across DevOps, testing, configuration, education, and accessibility. This positions Lume as an **intent compilation platform**, not merely a programming language.
 
 ---
 
