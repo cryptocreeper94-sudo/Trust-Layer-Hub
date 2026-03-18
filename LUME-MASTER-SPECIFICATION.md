@@ -86,7 +86,7 @@ For typed input, the pipeline starts at "Text Input." For standard Lume syntax (
 | Metric | Value |
 |--------|-------|
 | Compiler milestones | 13 |
-| Test suite | 552 tests |
+| Test suite | 2,149 tests |
 | Acceptance criteria | 305 total |
 | Pattern Library patterns | 102 (Layer A) |
 | Supported languages | 10 (Milestone 8) |
@@ -1934,7 +1934,7 @@ lume/
   bin/
     lume.js              # CLI entry point
   tests/
-    unit/                # 552 tests
+    unit/                # 2,149 tests
     integration/
 ```
 
