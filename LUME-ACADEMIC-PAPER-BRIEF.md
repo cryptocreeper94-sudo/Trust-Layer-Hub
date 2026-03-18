@@ -631,7 +631,7 @@ The "certified at birth" paradigm — code that is provably security-verified fr
 | Metric | Value |
 |--------|-------|
 | Compiler milestones | 15 |
-| Test suite | 2,149+ tests (0 failures) |
+| Test suite | 2,149 tests (0 failures) |
 | Pattern Library patterns | 102+ |
 | Homophone pairs | 10 |
 | Filler words | 20 |
