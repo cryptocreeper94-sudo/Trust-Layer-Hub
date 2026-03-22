@@ -22,6 +22,7 @@ export const CATEGORIES = [
   "Publishing",
   "Food & Hospitality",
   "Developer Tools",
+  "Sports & Odds",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -39,6 +40,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
   Publishing: "book-outline",
   "Food & Hospitality": "restaurant-outline",
   "Developer Tools": "code-slash-outline",
+  "Sports & Odds": "stats-chart-outline",
 };
 
 export const ECOSYSTEM_APPS: EcosystemApp[] = [
@@ -401,5 +403,15 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Research", "Academic", "Engineering", "Lume"],
     icon: "flask",
+  },
+  {
+    id: 37,
+    name: "LumeLine",
+    hook: "See the Line. Read the Game.",
+    description: "Odds intelligence platform that tracks 47+ bookmakers in real-time, scores their accuracy, detects line manipulation and collusion, and generates ML-powered consensus predictions with confidence scoring. Built entirely in Lume.",
+    url: "https://lumeline.bet",
+    category: "Sports & Odds",
+    tags: ["Sports", "ML", "Analytics", "Lume"],
+    icon: "stats-chart",
   },
 ];
