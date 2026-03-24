@@ -23,6 +23,7 @@ export const CATEGORIES = [
   "Food & Hospitality",
   "Developer Tools",
   "Sports & Odds",
+  "Marketing",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -41,6 +42,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
   "Food & Hospitality": "restaurant-outline",
   "Developer Tools": "code-slash-outline",
   "Sports & Odds": "stats-chart-outline",
+  Marketing: "megaphone-outline",
 };
 
 export const ECOSYSTEM_APPS: EcosystemApp[] = [
@@ -76,13 +78,13 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
   },
   {
     id: 4,
-    name: "TLID.io",
-    hook: "Your Blockchain Identity Name",
-    description: "Blockchain domain service for Trust Layer IDs. Claim your .tlid identity name — a blockchain-verified, human-readable address tied to your trust profile.",
-    url: "https://tlid.io",
-    category: "Core",
-    tags: ["Identity", "Domains", "Blockchain", "Naming"],
-    icon: "finger-print",
+    name: "SignalCast",
+    hook: "One Signal. Every Platform.",
+    description: "AI-powered social media automation engine with 9 platform connectors (X/Twitter, Facebook, Instagram, Discord, Telegram, Nextdoor, LinkedIn, Reddit, Pinterest). Unified scheduler, embeddable widget, TrustGen and TrustVault integration. Tiered subscriptions from $29–$99/mo.",
+    url: "https://signalcast.ad",
+    category: "Marketing",
+    tags: ["Marketing", "Social Media", "Automation", "AI", "Advertising"],
+    icon: "megaphone",
   },
   {
     id: 5,

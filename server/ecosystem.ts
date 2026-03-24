@@ -172,6 +172,7 @@ export function registerEcosystemRoutes(app: Express): void {
         { id: "orbit", name: "ORBIT Staffing", prefix: "OR", domain: "orbitstaffing.io", status: "active" },
         { id: "brewandboard", name: "Brew & Board", prefix: "BB", domain: "brewandboard.coffee", status: "active" },
         { id: "thevoid", name: "THE VOID", prefix: "VE", domain: "intothevoid.app", status: "active" },
+        { id: "signalcast", name: "SignalCast", prefix: "SI", domain: "signalcast.ad", status: "active" },
       ],
     });
   });
