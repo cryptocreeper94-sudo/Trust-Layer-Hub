@@ -17,10 +17,14 @@ import { queryClient } from "@/lib/query-client";
 import { AuthProvider } from "@/lib/auth-context";
 
 SplashScreen.preventAutoHideAsync();
+import { PresaleBanner } from "@/components/PresaleBanner";
+import { EcosystemAccountHub } from "@/components/EcosystemAccountHub";
 
 function RootLayoutNav() {
   return (
     <>
+      <PresaleBanner />
+      <EcosystemAccountHub />
       <StatusBar style="light" />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

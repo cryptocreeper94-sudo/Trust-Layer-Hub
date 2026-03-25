@@ -1,6 +1,10 @@
 # LUME: Eliminating Cognitive Distance — An AI-Native Programming Language with Natural Language Compilation, Voice Input, and Certified Security
 ## COMPLETE TECHNICAL BRIEF FOR ACADEMIC PAPER AUTHORSHIP
 
+**Author:** Jason Andrews
+**Affiliation:** DarkWave Studios LLC / Trust Layer Ecosystem — DarkWave Systems Collective (DWSC)
+**Contact:** lume-lang.com | lume-lang.org | dwtl.io
+
 ---
 
 ## 1. ABSTRACT
@@ -128,6 +132,41 @@ When a line of English input doesn't match any pattern directly, it passes throu
 7. **AI Resolver (Layer B)** — Falls back to an LLM (GPT-4o-mini) for intent classification when all deterministic layers fail
 
 Each layer reports a confidence score (0.0–1.0). The first layer to exceed the confidence threshold (default 0.85) produces the AST node. This is logged for deterministic reproducibility via compile-lock files.
+
+### 3.4 Anaphora Resolution and the Context Stack
+
+In English Mode, developers naturally use pronouns and relative references: "show **it**", "delete **them**", "sort **that result**". A naive compiler would reject these as ambiguous. Lume introduces a **Context Stack** — a temporal state machine that tracks referential context across instructions.
+
+**Context Stack Specification:**
+
+The stack maintains state for the previous **5 instructions** with two primary registers:
+
+- `LastSubject` — The most recent singular entity referenced (e.g., `currentUser`, `orderTotal`)
+- `LastCollection` — The most recent plural entity referenced (e.g., `activeUsers`, `searchResults`)
+
+**Resolution Rules:**
+
+| Pronoun | Resolution | Example |
+|---------|------------|--------|
+| "it" / "this" | `LastSubject` | "get the user" → "show it" resolves to `show(user)` |
+| "them" / "those" | `LastCollection` | "get all users" → "delete them" resolves to `delete(users)` |
+| "that result" / "the output" | Return value of last expression | "calculate the total" → "display that result" |
+| "the previous" / "the last one" | Temporal Resolver (stack index -1) | "get the first item" → "now get the previous" |
+
+**Disambiguation Protocol:**
+
+If the stack is ambiguous (e.g., both `LastSubject` and `LastCollection` were set in the same instruction), the compiler emits a `DisambiguationRequired` warning:
+
+```
+⚠ DisambiguationRequired at line 4:
+  "delete them" — ambiguous reference.
+  Did you mean:
+    (a) delete activeUsers    [LastCollection, set at line 2]
+    (b) delete expiredTokens   [LastCollection, set at line 1]
+  Clarify with: "delete the active users" or "delete the expired tokens"
+```
+
+The Context Stack is bounded (5 instructions) to prevent stale references from causing silent errors. If a pronoun references a subject beyond the stack window, the compiler requires explicit naming. This transforms English's greatest weakness (ambiguity) into a structured, deterministic feature.
 
 ---
 
@@ -336,6 +375,43 @@ A reviewer may object that built-in compiler security is not novel, citing Rust'
 
 These are complementary, not competing, paradigms. But only Lume operates on **semantic intent at compilation time with mandatory enforcement and tamper-evident certification**. That specific combination is novel.
 
+### 5.6 Negative-Constraint Scanner (Closing the Semantic Gap)
+
+The "Certified at Birth" claim raises a critical question: *How do we know the generated code actually matches the developer's intent?* If a user says "Show the user's name" (a read-only display operation) but the compiler generates an AST node that also exfiltrates the email address via a network call, the security certificate is a lie.
+
+Lume addresses this with a **Negative-Constraint Scanner** — a verification layer that checks not just what each AST node *does*, but what it *doesn't do*.
+
+**Intent Classification:**
+
+Every English instruction is classified into an **intent category** during parsing:
+
+| Intent Category | Permitted Side Effects | Forbidden Side Effects |
+|----------------|----------------------|----------------------|
+| Display / Read | Screen output, logging | Network, file write, database mutation |
+| Calculate | Memory (local variables) | Network, file system, database |
+| Store / Save | Database write, file write | Network egress, privilege escalation |
+| Delete | Targeted resource removal | Cascade deletion beyond scope, network |
+| Send / Transmit | Network egress (scoped) | File system, unauthorized endpoints |
+
+**Scanning Protocol:**
+
+For each AST node generated from English:
+
+1. **Classify** the original instruction's intent category
+2. **Traverse** the generated AST subtree
+3. **Verify** that no child node invokes a forbidden side effect for that category
+4. If a mismatch is found, emit `SemanticMismatchError`:
+
+```
+✗ SemanticMismatchError at line 7:
+  Intent: "show the user's name" → classified as [Display/Read]
+  Generated AST contains: fetch('https://external.api/log', {body: user.email})
+  Violation: [Display/Read] intent generated [Network] side effect.
+  This instruction will not compile until the semantic mismatch is resolved.
+```
+
+This transforms the security certificate from a *compilation attestation* into a *semantic attestation*: the certificate proves not just that the code compiled, but that the code's behavior is consistent with the developer's stated intent.
+
 ---
 
 ## 6. CLI INTERFACE
@@ -527,6 +603,22 @@ The AI is a **middleman**. It reduces T₁–T₃ (the developer doesn't write s
 
 Lume eliminates the middleman. The compiler IS the understanding layer. The developer's natural language goes directly into the compilation pipeline with no intermediary.
 
+**Error Recovery: Chain of Custody Comparison**
+
+The strongest argument for Lume over AI agents is not generation quality — it is what happens when something goes wrong:
+
+| Failure Scenario | AI Agent (Copilot/ChatGPT) | Lume |
+|-----------------|---------------------------|------|
+| **Wrong code generated** | Developer must read, understand, and debug code they didn't write (High CD) | Compiler stops and asks for clarification (Zero Silent Errors) |
+| **Subtle logic error** | AI produces code that passes syntax checks but fails at runtime. Developer must trace unfamiliar patterns | Semantic scanner catches intent mismatch at compile time (SemanticMismatchError) |
+| **Ambiguous intent** | AI guesses silently. Developer may never know it guessed wrong | Compiler emits DisambiguationRequired; refuses to proceed until resolved |
+| **Security vulnerability** | Vulnerability ships to production. Discovered by external scanners (if configured) days/weeks later | Guardian Scanner blocks compilation. Vulnerability never enters the codebase |
+| **Regression detection** | Developer must manually verify output correctness | Resolution Manifest locks intent-to-AST mappings; drift is detected automatically |
+
+**The critical distinction:** AI agents fail *silently* — the human must find the mistake in code they didn't write (maximum cognitive distance). Lume fails *loudly* — the compiler refuses to produce output until the ambiguity is resolved (zero cognitive distance, because there is no code to debug).
+
+This justifies the T₆ (meta-cognitive) weight in the CD formula: debugging AI-generated code requires the developer to reverse-engineer someone else's (the AI's) thought process, a uniquely taxing cognitive operation that Lume eliminates entirely.
+
 #### 8.1.7 Empirical Evaluation Methodology
 
 We propose measuring CD empirically through three experimental protocols:
@@ -609,6 +701,496 @@ Lume inverts this by making security a compiler-level concern:
 
 The "certified at birth" paradigm — code that is provably security-verified from the moment it is compiled — has no precedent in any existing programming language.
 
+### 8.6 Ambiguity Resolution Protocol and the Resolution Manifest
+
+The single biggest threat to Lume's credibility is **non-determinism**. If "get the users" compiles to `SELECT * FROM users` today but the AI model updates tomorrow and the same input produces `DELETE FROM users`, the language is a failure. Lume's entire architecture must guarantee **strict determinism** — the same input must produce the same output indefinitely.
+
+**Canonical Lume Syntax (CLS):**
+
+Every English-mode instruction, once successfully resolved, maps to a **Canonical Lume Syntax** expression — a deterministic intermediate representation that is independent of the AI model version, tolerance chain weights, or runtime environment. CLS is the ground truth.
+
+```
+// English input:
+get all the users who signed up this month
+
+// Canonical Lume Syntax (CLS):
+QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)
+
+// Generated JavaScript:
+const result = await db.query('SELECT * FROM users WHERE created_at >= DATE_TRUNC(\'month\', CURRENT_DATE)');
+```
+
+**The Resolution Manifest (`lume-lock.json`):**
+
+Anchored to the concept of `package-lock.json`, Lume generates a **Resolution Manifest** that locks every intent-to-code mapping:
+
+```json
+{
+  "manifestVersion": "1.0",
+  "created": "2025-03-17T14:30:00Z",
+  "compiler": "lume@0.4.2",
+  "entries": [
+    {
+      "line": 1,
+      "source": "get all the users who signed up this month",
+      "sourceType": "text",
+      "cls": "QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)",
+      "resolvedBy": "ExactPatternMatch",
+      "confidence": 0.97,
+      "astHash": "sha256:a3f8b2c1...",
+      "outputHash": "sha256:9e4d1f0a..."
+    },
+    {
+      "line": 2,
+      "source": "show their names and emails",
+      "sourceType": "text",
+      "cls": "PROJECT LastCollection[name, email] -> DISPLAY",
+      "resolvedBy": "ContextEngine",
+      "confidence": 0.92,
+      "contextRef": { "LastCollection": "users", "stackDepth": 1 },
+      "astHash": "sha256:b7c3e5d2...",
+      "outputHash": "sha256:f1a2b3c4..."
+    }
+  ]
+}
+```
+
+**Voice-Specific Guarantees:**
+
+If the input source is voice, the manifest stores the **cleaned text**, not the raw audio:
+
+```json
+{
+  "sourceType": "voice",
+  "rawTranscription": "get all the users who signed up this month uhh",
+  "cleanedText": "get all the users who signed up this month",
+  "cleanupApplied": ["filler_removal"],
+  "cls": "QUERY users WHERE created_at >= MONTH_START(CURRENT_DATE)"
+}
+```
+
+This ensures that the build is **reproducible 10 years from now** — even if the voice recognition engine changes, the manifest preserves the exact cleaned input and the CLS it resolved to.
+
+**Determinism Guarantees:**
+
+| Property | Mechanism |
+|----------|----------|
+| Same text → same AST | CLS is deterministic; manifest locks the mapping |
+| Same voice → same AST | Cleaned text is stored; re-compilation uses text, not audio |
+| AI model updates | Layer B results are cached in manifest; re-compilation uses the cache |
+| CI/CD (Headless) | C < 0.85 → `RESOLUTION_ERROR` (no guessing in production builds) |
+| Interactive Mode | 0.6 < C < 0.85 → pause for human disambiguation; C ≥ 0.85 → auto-resolve |
+
+**Headless Build Policy:**
+
+In CI/CD environments where no human is available to disambiguate, Lume v0.9 enforces a **strict resolution policy**: any instruction that cannot be cleanly resolved via patterns or an existing `lume.lock` manifest cache triggers a hard AST error rather than a best-guess resolution. This prevents silent semantic errors from reaching production and perfectly isolates runtime environments from external API latency. The CI pipeline can be configured via `lume build --strict`.
+| Compiler version changes | Manifest records compiler version; warnings on version mismatch |
+| Drift detection | `lume verify` compares current resolution against manifest; reports any divergence |
+
+### 8.7 Review Mode — HCI Transparency Layer
+
+To close the trust gap between developer intent and compiler output, Lume provides a **Review Mode** where the compiler shows the developer exactly what it understood before executing:
+
+```
+$ lume compile app.lume --review
+
+  Line 1: "get all the users who signed up this month"
+  ├─ Intent: QUERY on collection 'users'
+  ├─ Filter: created_at >= start of current month
+  ├─ Resolved by: ExactPatternMatch (confidence: 0.97)
+  └─ Output: const result = await db.query('SELECT * ...');
+  
+  ✓ Approve?  [y]es / [n]o / [e]dit
+```
+
+In Review Mode, **no code is emitted until the developer confirms** each resolution. This provides a human-in-the-loop verification step without adding cognitive distance — the developer reviews the compiler's understanding in plain English, not in generated code.
+
+### 8.8 DOM Intent Model — Cognitive Distance Applied to UI
+
+Traditional frontend development requires learning HTML, CSS, JavaScript DOM APIs, and often a framework (React, Vue, etc.). Each layer adds transformation dimensions:
+
+```
+Designer's Intent → HTML structure → CSS styling → JS behavior → Framework abstractions
+                  T₁ (Lexical)    T₂ (Syntactic)  T₃ (Structural)  T₅ (Representational)
+```
+
+Lume collapses this entire chain. The `dom` standard library module allows developers to express UI intent directly:
+
+```lume
+dom.create("section", {
+  className: "glass-card",
+  children: [
+    dom.create("h2", { text: "Welcome", className: "gradient-text" }),
+    dom.create("p", { text: "Built entirely with Lume" })
+  ]
+})
+```
+
+With `dom.inject_css()`, `dom.animate()`, `dom.reveal_on_scroll()`, and `dom.on()`, the entire frontend stack — structure, styling, animation, and interactivity — is expressed in Lume syntax. No HTML files, no CSS preprocessors, no build tools.
+
+**CD Mapping for UI Development:**
+
+| Dimension | Traditional Web Dev | Lume DOM Model |
+|-----------|-------------------|----------------|
+| T₁ (Lexical) | HTML tags, CSS selectors | `dom.create(tag, opts)` |
+| T₂ (Syntactic) | CSS property syntax | `styles: { color: "#06b6d4" }` |
+| T₃ (Structural) | Component tree, state management | `dom.mount()`, `state.reactive()` |
+| T₅ (Representational) | Framework abstractions (JSX, hooks) | None — direct DOM |
+| T₆ (Meta-cognitive) | Debugging React re-renders, hook deps | `state.bind()` — explicit reactivity |
+
+### 8.9 Verbal State Machines
+
+The `state` standard library module introduces declarative state machines and reactive values:
+
+```lume
+let page_state = state.machine({
+  initial: "loading",
+  states: {
+    loading: { on: { LOADED: "ready", ERROR: "failed" } },
+    ready:   { on: { REFRESH: "loading" } },
+    failed:  { on: { RETRY: "loading" } }
+  }
+})
+
+page_state.send("LOADED")
+show page_state.current  // → "ready"
+```
+
+Combined with English Mode, state transitions will be expressible verbally (future milestone):
+
+```
+create a state machine called page_state
+  it starts in loading
+  when it loads successfully, go to ready
+  when it fails, go to failed
+  from ready, refresh goes back to loading
+```
+
+This eliminates T₃ (structural) and T₄ (semantic) distance for state management — the developer describes behavior, not implementation.
+
+### 8.10 Collaborative Intent — Multi-Developer Compilation (Roadmap)
+
+Milestone 12 envisions **collaborative compilation** — multiple developers writing Lume simultaneously, with the compiler resolving conflicting intents:
+
+```
+Developer A: "add a login form to the header"
+Developer B: "remove the header and use a sidebar"
+
+⚠ ConflictDetected:
+  Developer A references "header" (line 3)
+  Developer B removes "header" (line 5)
+  Resolution required before compilation.
+  Options:
+    (a) Keep header + login form [Developer A's intent]
+    (b) Replace header with sidebar + login form [Merge]
+    (c) Reject — ask both developers to clarify
+```
+
+**Key Design Principles:**
+- Intent-level conflict detection (not just text-level merge conflicts)
+- The compiler understands WHAT each developer wants, not just WHAT they typed
+- Conflicts are expressed in natural language, not diff hunks
+- Resolution preserves the Context Stack for both developers
+- The Resolution Manifest supports multi-author entries and collaborative compile-lock files
+
+### 8.11 Recency-Frequency-Type (RFT) Model for Anaphora Resolution
+
+Building on the Context Stack (§3.4/§4.10), the RFT model enhances pronoun resolution with three-dimensional scoring:
+
+```
+Score(entity) = α·Recency(entity) + β·Frequency(entity) + γ·TypeMatch(entity, verb)
+
+Where:
+  α = 0.5  (most recent reference carries highest weight)
+  β = 0.3  (frequently-referenced entities are preferred)
+  γ = 0.2  (type compatibility acts as a filter)
+```
+
+**Recency:** Tracks the last 5 referenced entities in a sliding window, with exponential decay. Entity referenced 1 instruction ago scores 1.0; entity referenced 5 instructions ago scores 0.2.
+
+**Frequency:** Weights entities by total usage count within the current scope. An entity used 10 times is more likely the referent than one used once.
+
+**Type Matching:** Cross-references action verbs with variable types. This prevents semantic nonsense:
+
+| Verb | Valid Types | Invalid Types |
+|------|-------------|---------------|
+| "delete" | Collection, File, Record | Boolean, Number |
+| "sort" | Collection, List | String, Boolean |
+| "send" | Message, Request, File | Number, Boolean |
+| "show" | Any displayable | void, undefined |
+| "calculate" | Number, Collection | File, Boolean |
+
+If the highest-scoring entity has TypeMatch = 0 (incompatible verb-type pair), the compiler triggers `DisambiguationRequired` rather than guessing. This positions Lume as a **Contextual Anchor** system — fundamentally different from stateless NLP-to-code translators.
+
+### 8.12 Formal Experimental Design
+
+To provide empirical proof that Lume minimizes Cognitive Distance, we propose three controlled studies:
+
+**Study A — Task Completion Time (TCT): Intent-to-Execution Speed**
+
+| Group | Tool | Task |
+|-------|------|------|
+| Control A | Python (manual) | Build a CRUD API for a user database |
+| Control B | Python + GitHub Copilot | Same task, AI-assisted |
+| Experimental | Lume English Mode (text) | Same task, natural language |
+| Experimental+ | Lume Voice Mode | Same task, voice input |
+
+**Metrics:** Time from reading the spec to first passing test. Hypothesis: Lume reduces TCT by 40-60% vs. Python, 20-30% vs. Copilot.
+
+**Study B — Silent Error Rate: The "Wrong Guess" Problem**
+
+Give participants deliberately ambiguous prompts (e.g., "update the user", "delete that record", "show the results").
+
+| Tool | Metric |
+|------|--------|
+| GitHub Copilot | Count: how many times the AI generates wrong code without warning |
+| Lume | Count: how many times the compiler triggers a `DisambiguationRequired` event |
+
+**Hypothesis:** Lume produces 0 silent errors (every ambiguity is caught). Copilot produces silent errors at a rate proportional to prompt ambiguity because it has no disambiguation mechanism — it always guesses.
+
+**Study C — NASA-TLX: Cognitive Load Measurement**
+
+Using the NASA Task Load Index (Hart & Staveland, 1988) — the gold standard for subjective cognitive load measurement — to validate the Dissonance Hypothesis.
+
+| Subscale | Hypothesis |
+|----------|------------|
+| Mental Demand | Lume < Python (fewer transformations = less mental load) |
+| Frustration | Lume ≈ 0 (no "why doesn't this work" moments) |
+| Effort | Lume < Copilot (no review/edit cycle for wrong guesses) |
+| Performance | Lume ≥ Python (equal or higher self-rated success) |
+
+**Independent Variable:** CD score (number of transformation dimensions required)
+**Dependent Variable:** NASA-TLX weighted score
+**Prediction:** As CD → 0, all NASA-TLX subscales trend toward minimum.
+
+### 8.13 Semantic Invariant Certificates — Full-Chain Integrity
+
+The "Certified at Birth" claim requires that the security certificate covers the entire compilation chain, not just the output JavaScript. The certificate hash must bind three artifacts together:
+
+```
+Certificate = SHA-256(
+  Input_English +
+  Resolved_AST +
+  Compiled_JavaScript
+)
+```
+
+This creates a **tamper-evident chain of intent**:
+
+1. If the English input is modified → certificate invalidates
+2. If the AST is modified (e.g., injection attack) → certificate invalidates
+3. If the compiled JS is modified post-compilation → certificate invalidates
+
+The certificate is embedded in the compiled output as a comment:
+
+```javascript
+// LUME-CERT: sha256:a3f8b2c1... | Intent: QUERY | Risk: LOW | Chain: VALID
+const result = await db.query('SELECT * FROM users');
+```
+
+Runtime verification can check `LUME-CERT` against the original manifest entry, ensuring that no step in the pipeline has been tampered with. This is the **Semantic Invariant Test** — not a linter, but a cryptographic proof of intent-to-execution integrity.
+
+### 8.14 Auditory Mode — Fully Hands-Free Programming
+
+Lume's voice pipeline already provides Voice → Text → Code. Auditory Mode completes the loop by adding **compiler-to-developer speech output**, making programming entirely auditory:
+
+```
+Developer (speaks): "Get all the users who signed up this month"
+
+Lume (speaks back): "I understood: query the users collection,
+  filtering by signup date in the current month.
+  Confidence: 97 percent. Shall I compile?"
+
+Developer (speaks): "Yes"
+
+Lume (speaks back): "Compiled successfully. One line resolved
+  by exact pattern match."
+```
+
+**Implementation:**
+- Input: Web Speech API (`SpeechRecognition`) — already in the voice pipeline
+- Output: Web Speech API (`SpeechSynthesis`) — zero-dependency browser TTS
+- Review Mode (§8.7) provides the verification content; Auditory Mode provides the delivery mechanism
+- Voice commands for approval: "yes", "no", "read it back", "undo", "explain"
+
+**Academic Significance:**
+
+Auditory Mode makes Lume the **first programming language usable with eyes closed** — fully hands-free, fully accessible. This eliminates not just cognitive distance but **physical distance** from the development process. For developers with visual impairments, motor disabilities, or hands-occupied scenarios (e.g., field engineering), Auditory Mode transforms programming from a keyboard-dependent activity to a conversational one.
+
+CD for Auditory Mode = 0 across all dimensions — the developer speaks their intent, hears confirmation, speaks approval. No screens, no keyboards, no translation.
+
+### 8.15 ADAPTIVE VOICE PROFILES
+
+**Problem:** Even with the Tolerance Chain, every developer speaks differently. "Gimme" for "get," "toss" for "delete," "spin up" for "create." Regional accents cause consistent transcription artifacts ("roit" for "right"). Filler words vary per person ("y'know," "basically," "right so"). A static pattern library cannot anticipate every user's dialect.
+
+**Solution:** The Adaptive Voice Profile is a per-user learning layer inserted at **Layer 1.5** of the Tolerance Chain — after exact pattern matching but before fuzzy match. It operates on three axes:
+
+**Axis 1 — Dialect Mapping**
+Every successful resolution where the user's phrasing differs from the canonical pattern is recorded as a candidate mapping. After 5 consistent uses (configurable threshold), the candidate is auto-promoted to a confirmed mapping:
+
+```json
+{
+  "userId": "jason",
+  "confirmed": {
+    "gimme": { "target": "get", "uses": 12, "confidence": 0.95 },
+    "toss": { "target": "delete", "uses": 7, "confidence": 0.93 },
+    "spin up": { "target": "create", "uses": 9, "confidence": 0.97 }
+  },
+  "candidates": {
+    "yeet": { "target": "remove", "count": 3 }
+  },
+  "dialectConfidence": 0.87
+}
+```
+
+**Axis 2 — Accent Correction**
+Consistent transcription errors (caused by the user's accent interacting with the speech-to-text engine) are stored per-user. "Roit" → "right," "dat" → "that." These corrections are applied *before* the Tolerance Chain even begins, reducing false-positive fuzzy matches.
+
+**Axis 3 — Filler Word Personalization**
+The system maintains a per-user list of filler words that are stripped during preprocessing. Generic fillers ("um," "uh") are handled by the voice pipeline. Adaptive fillers ("y'know," "basically," "right so," "like") are learned per-user and added over time.
+
+**Integration with Self-Evolving Runtime (Layer 4):**
+The profile module feeds into the Self-Evolving layer's pattern learning. The evolver can detect trends like "this user's vocabulary has shifted — they now say 'toss' for both 'delete' and 'discard' — propose disambiguation rule." The approval workflow (`proposeDialectMapping()` → `autoApply()`) ensures no mapping is applied without consistent evidence.
+
+**Dialect Confidence Score:**
+A sigmoid-based metric tracking how well the system knows the user:
+
+$$\text{DC}(u) = 1 - e^{-0.01 \cdot R_u - 0.1 \cdot C_u}$$
+
+where $R_u$ is total resolutions and $C_u$ is confirmed mappings. DC starts near 0 for new users and asymptotically approaches 1.0 as the system learns their patterns.
+
+**Implementation:** `voice-profile.js` in `src/intent-resolver/`. Profiles stored at `~/.lume/profiles/{userId}.json`. The module is instantiated by the compiler on startup and its `resolve()` method is called at Layer 1.5 before the fuzzy match layer.
+
+**Academic Significance:**
+The Adaptive Voice Profile is the first instance of a compiler that learns its user's **idiolect** — the unique linguistic fingerprint of an individual. This goes beyond NLP normalization (which treats all users identically) and into personalized human-computer interaction. Over time, the compiler becomes *more efficient* for each individual user, reducing cognitive distance further. The CD score for a long-term user approaches 0 even faster than for a new user — the compiler adapts to you, not the other way around.
+
+### 8.16 TRUSTGEN: DOMAIN-SPECIFIC LUME DEPLOYMENT
+
+**Problem:** A programming language that only compiles to JavaScript is a transpiler. A *true* language must demonstrate that its intent model can target any domain — 3D engines, animation pipelines, audio synthesis — without modification to the core compiler.
+
+**Solution: TrustGen 3D as Lume Domain Compiler**
+
+TrustGen — the Trust Layer ecosystem's AI-powered 3D creation studio — embeds a full Lume integration that compiles English Mode intent not to JavaScript, but to **3D engine API calls**:
+
+```
+"place a wooden desk in the center"
+→ Intent: { verb: 'place', object: 'desk', material: 'wood', position: 'center' }
+→ Engine call: scene.addObject({ shape: 'table', material: 'wood', position: [0,0,0] })
+```
+
+The TrustGen domain module (`LumeEngine.ts`, 700+ lines) registers 16 verbs across 6 categories — scene composition, animation, camera direction, audio/narration, pipeline automation, and scene queries — with 80+ aliases. Each verb maps to a domain-specific handler that translates Lume intent into TrustGen engine calls.
+
+**Key features of the TrustGen domain deployment:**
+
+- **Full Lume Script IDE:** 4-mode panel — REPL (command-by-command), Script (multi-line), Voice Direction (speech → scene), and Verb Reference
+- **Monaco Editor Integration:** Custom `lume` language registered with Monarch tokenizer: AI keywords (`ask`, `think`, `generate`) in purple bold, English Mode verbs (`place`, `animate`, `narrate`) in green italic, standard keywords in cyan
+- **Adaptive Voice Profiles:** Per-session dialect learning with filler word filtering, accent corrections, and dialect confidence scoring (0–100%) — persisted to localStorage
+- **Review Mode:** Human-in-the-loop command approval gate — toggle between ⚡ Auto (immediate execution) and 🔒 Review (approve/reject modal showing engine call + args before execution)
+
+**Academic Significance:**
+
+TrustGen proves Lume's **domain-agnostic intent model**. The same English Mode syntax that generates JavaScript code also directs 3D scenes, controls cameras, and triggers AI narration. The compiler's architecture (Intent → Domain Module → Target API) is analogous to LLVM's frontend-agnostic IR — but operating at the *natural language* level rather than the machine code level.
+
+This establishes Lume not as a transpiler-to-JavaScript but as an **intent compilation framework** that can target any domain through pluggable domain modules. The CD score for TrustGen domain commands is identical to the CD score for general-purpose Lume — the user's experience is invariant to the compilation target.
+
+---
+
+### 8.17 VERTICAL APPLICATIONS — From Language to Platform
+
+**Problem:** A programming language that only compiles general-purpose code remains a tool. A language that extends into domain-specific workflows becomes a **platform**. Lume's 5 vertical applications prove that the English Mode + Tolerance Chain architecture generalizes across DevOps, testing, configuration management, education, and accessibility — each implemented as first-class language constructs, not library wrappers.
+
+#### 8.17.1 Deploy Engine — Deployment as a Language Keyword
+
+Traditional deployment requires shell scripts, CI/CD YAML, and platform-specific CLIs. Each adds transformation dimensions:
+
+```
+Developer Intent → Shell Script → CI Config → Platform CLI → Running Service
+                 T₁ (Lexical)    T₃ (Structural)  T₅ (Representational)
+```
+
+Lume collapses this with `deploy` as a first-class keyword:
+
+```lume
+deploy to render from "main"
+deploy status
+deploy rollback
+```
+
+The Deploy Engine (`deploy-engine.js`, 272 lines) integrates with the self-healing pipeline — a failed deployment triggers automatic rollback and recovery.
+
+#### 8.17.2 Verify Keyword — Natural Language Assertions
+
+Traditional assertion libraries impose syntactic overhead that obscures test intent:
+
+```
+// Traditional (Jest/Mocha)
+expect(response.status).toBe(200);
+expect(users).not.toHaveLength(0);
+assert.strictEqual(count, 10);
+
+// Lume Standard Mode
+verify response.status is 200
+verify users is not empty
+verify count is greater than 5
+```
+
+The `verify` keyword compiles to human-readable error messages:
+
+```
+✗ Verify failed: expected 404 to equal 200
+✗ Verify failed: expected [] to not be empty
+```
+
+**CD Mapping:** `verify X is Y` requires **zero** transformation dimensions — the developer writes the exact assertion they intend, in the exact language they would describe it to a colleague.
+
+#### 8.17.3 Config Language — Configuration as Code
+
+Lume replaces YAML/TOML/JSON configuration files with typed, validated configuration blocks:
+
+```lume
+config database = postgres at "db.example.com" port 5432
+config cache = redis at "cache.internal" port 6379
+config smtp = smtp at env("MAIL_HOST") port 587
+```
+
+Environment variable integration via `env()` provides runtime safety with compile-time validation. The Config Engine (`config-engine.js`, 278 lines) generates typed JavaScript objects with validation guards.
+
+#### 8.17.4 Education Mode — Beginner-Tuned Tolerance Chain
+
+Education Mode widens the Tolerance Chain to accept natural language commands that would be too ambiguous for production code:
+
+```lume
+make a big red circle
+add a button that says hello
+make the background green
+```
+
+These compile to canvas/DOM operations. Error messages use friendly language:
+
+```
+// Traditional error:
+// SyntaxError: Unexpected token 'a' at line 1, column 6
+
+// Lume Education Mode error:
+// 🎨 I'm not sure what you'd like to draw.
+//    Try something like: "draw a red circle" or "make a blue square"
+//    Available shapes: circle, square, triangle, rectangle, star, line
+```
+
+#### 8.17.5 Enhanced Accessibility — Complete Eyes-Free Pipeline
+
+Building on Auditory Mode (§8.14), the accessibility vertical completes the eyes-free programming cycle:
+
+- **Spoken errors:** Plain English error descriptions via TTS
+- **Voice navigation:** "Read me the function called process_data"
+- **Spoken deploy status:** "Deployment to render completed successfully"
+- **Spoken verification results:** "All 5 verify statements passed"
+- **Spoken help:** "Available commands: deploy, verify, config, draw, test"
+
+**Academic Significance:**
+
+The 5 vertical applications demonstrate that Lume's cognitive distance minimization is **not domain-specific** — the same architectural principle (English Mode → Tolerance Chain → deterministic compilation) applies to DevOps, testing, configuration, education, and accessibility. This positions Lume as an **intent compilation platform**, not merely a programming language.
+
 ---
 
 ## 9. IMPLEMENTATION METRICS
@@ -619,20 +1201,26 @@ The "certified at birth" paradigm — code that is provably security-verified fr
 | Voice Config Loader | 70 | `src/intent-resolver/voice-config.js` |
 | CLI Voice Command | 190 | `bin/lume.js` (within 1,020-line CLI) |
 | Playground Mic Integration | 65 | `website/src/pages/PlaygroundPage.jsx` |
-| Pattern Library | 102+ patterns | `src/intent-resolver/pattern-library.js` |
+| Pattern Library | 114+ patterns | `src/intent-resolver/pattern-library.js` |
 | Intent Resolver (full) | ~1,200 | `src/intent-resolver/index.js` + sub-modules |
 | Auto-Correct Layer | ~300 | `src/intent-resolver/auto-correct.js` |
 | Fuzzy Matcher | ~200 | `src/intent-resolver/fuzzy-matcher.js` |
+| Deploy Engine | ~272 | `src/intent-resolver/deploy-engine.js` |
+| Config Engine | ~278 | `src/intent-resolver/config-engine.js` |
+| Education Mode | ~361 | `src/intent-resolver/education-mode.js` |
+| Test Framework | ~344 | `src/intent-resolver/test-framework.js` |
 | Lexer | ~400 | `src/lexer.js` |
 | Parser | ~800 | `src/parser.js` |
 | Transpiler | ~821 | `src/transpiler.js` |
-| **Total compiler** | **~12,000+** | All source files |
+| TrustGen Domain Module | ~700 | `LumeEngine.ts` + `LumeScriptPanel.tsx` |
+| **Total compiler** | **~15,000+** | All source files |
 
 | Metric | Value |
 |--------|-------|
 | Compiler milestones | 15 |
 | Test suite | 2,149 tests (0 failures) |
-| Pattern Library patterns | 102+ |
+| Pattern Library patterns | 114+ |
+| Synonym rings | 30+ |
 | Homophone pairs | 10 |
 | Filler words | 20 |
 | Spoken punctuation patterns | 12 |

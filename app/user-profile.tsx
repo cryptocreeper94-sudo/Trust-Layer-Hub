@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -93,19 +94,27 @@ export default function UserProfileScreen() {
                 style={styles.avatarGradientRing}
               />
               <View style={styles.avatarRing}>
-                <View style={styles.avatar}>
-                  <View style={styles.avatarGlow} />
-                  <Text style={styles.avatarText}>
-                    {getInitials(profile.username)}
-                  </Text>
-                </View>
+                {profile.avatarUrl ? (
+                  <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatar}>
+                    <View style={styles.avatarGlow} />
+                    <Text style={styles.avatarText}>
+                      {getInitials(profile.displayName || profile.username)}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
 
             <GradientText
-              text={profile.username}
+              text={profile.displayName || profile.username}
               style={styles.username}
             />
+
+            {profile.bio && (
+              <Text style={styles.bioText}>{profile.bio}</Text>
+            )}
 
             <View style={styles.tlidBadge} testID="user-profile-tlid">
               <LinearGradient
@@ -125,6 +134,15 @@ export default function UserProfileScreen() {
             <Text style={styles.memberSince}>
               Member since {formatDate(profile.memberSince)}
             </Text>
+
+            <Pressable
+              style={styles.editProfileBtn}
+              onPress={() => router.push("/profile-editor")}
+              hitSlop={8}
+            >
+              <Ionicons name="pencil" size={14} color={Colors.primary} />
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </Pressable>
           </View>
 
           <GlassCard style={styles.statsCard}>
@@ -380,5 +398,36 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "Inter_500Medium",
     color: Colors.textTertiary,
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  bioText: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    color: Colors.textSecondary,
+    textAlign: "center" as const,
+    lineHeight: 20,
+    maxWidth: 300,
+    marginBottom: 8,
+  },
+  editProfileBtn: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.15)",
+    backgroundColor: "rgba(0,255,255,0.04)",
+  },
+  editProfileText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: Colors.primary,
   },
 });

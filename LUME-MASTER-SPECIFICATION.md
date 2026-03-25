@@ -60,6 +60,7 @@ For typed input, the pipeline starts at "Text Input." For standard Lume syntax (
 | 11 | Reverse Mode | SPEC COMPLETE | Code-to-language: explain existing code in any human language. |
 | 12 | Collaborative Intent | SPEC COMPLETE | Multi-developer, multi-language; AST-level diffing. |
 | 13 | Zero-Dependency Runtime | SPEC COMPLETE | Standalone executables via Bun compile; cross-compilation. |
+| 14 | v0.9 Architecture Remediation | COMPLETE | Deterministic compilation, Zod type safety, AST cost capping. |
 
 ### Gap Resolutions Summary
 
@@ -582,7 +583,7 @@ optimize:
         log_all_changes: true
 ```
 
-Safety: type signatures preserved, intent tests must pass, all mutations logged with rollback, `max_mutations_per_day` prevents loops.
+Safety: type signatures preserved, intent tests must pass, all mutations logged with rollback, `max_mutations_per_day` prevents loops. Note: as of v0.9, `@auto-rewrite` uses true AST mutations by spawning an asynchronous `lume build` sub-process to generate actual replacement JavaScript, rather than just returning configuration overrides.
 
 ### 6.4 Layer 4: Self-Evolving
 
@@ -737,13 +738,13 @@ when the submit button is clicked:
 Step 1: EXACT PATTERN MATCH (Layer A)
 Step 2: FUZZY PATTERN MATCH (Levenshtein distance >= 85%)
 Step 3: GRAMMAR-TOLERANT PATTERN MATCH (word-bag matching)
-Step 4: AI RESOLUTION — HIGH CONFIDENCE (>= 80%, apply silently)
-Step 5: AI RESOLUTION — LOW CONFIDENCE (50-79%, ask for confirmation)
-Step 6: AI RESOLUTION — VERY LOW CONFIDENCE (<50%, show multiple options)
+Step 4: LUME.LOCK MANIFEST CACHE MATCH (reproducible deterministic lookup)
+Step 5: ZOD TYPED AI RESOLUTION — HIGH CONFIDENCE (locks to manifest permanently)
+Step 6: AI RESOLUTION — LOW CONFIDENCE (asks for confirmation before locking)
 Step 7: UNRESOLVABLE (clear error, suggestions, never crash)
 ```
 
-**Golden rule: NEVER SILENTLY GUESS.** If the system isn't confident, it asks.
+**Golden rule: NEVER SILENTLY GUESS.** If the system isn't confident, it asks. All successful high-confidence resolutions are locked strictly into the `lume.lock` Resolution Manifest to guarantee 100% downstream determinism and bypass upstream NLP lag.
 
 **Fuzzy matching capabilities:**
 1. Levenshtein distance — character-level edit distance

@@ -4,6 +4,9 @@ import { apiGet } from "@/lib/api";
 interface PublicProfile {
   username: string;
   firstName: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
   tlid: string;
   memberSince: string;
   emailVerified: boolean;

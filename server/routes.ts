@@ -19,6 +19,7 @@ import { registerBlockchainRoutes } from "./blockchain";
 import { registerDeveloperPortalRoutes } from "./developer-portal";
 import { registerBlogRoutes } from "./blog";
 import { registerEcosystemRoutes } from "./ecosystem";
+import { registerProfileRoutes } from "./profile";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check for Render
@@ -45,6 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerDeveloperPortalRoutes(app);
   registerBlogRoutes(app);
   registerEcosystemRoutes(app);
+  registerProfileRoutes(app);
 
   const httpServer = createServer(app);
 
