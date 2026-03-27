@@ -4,7 +4,7 @@ services:
     name: trust-layer-hub
     runtime: node
     region: ohio
-    plan: free
+    plan: starter
     branch: main
     repo: https://github.com/cryptocreeper94-sudo/Trust-Layer-Hub
     buildCommand: bash scripts/render-build.sh
@@ -37,7 +37,13 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
-      - key: HELIUS_API_KEY
+      - key: TRUST_LAYER_API_URL
         sync: false
-      - key: PHANTOM_SECRET_KEY
+      - key: TRUST_LAYER_API_KEY
+        sync: false
+      - key: PLAID_ENV
+        sync: false
+      - key: PLAID_CLIENT_ID
+        sync: false
+      - key: PLAID_SECRET
         sync: false

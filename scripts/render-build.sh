@@ -10,7 +10,7 @@ NODE_ENV=development npm install --legacy-peer-deps || npm install --force
 
 # Build web export using Expo
 echo "🌐 Building Expo web export..."
-npx expo export:web --output-dir dist/web 2>/dev/null || npx expo export --platform web --output-dir dist/web 2>/dev/null || {
+npx expo export:web --output-dir dist/web || npx expo export --platform web --output-dir dist/web || {
   echo "⚠️  Expo web export not available, using static landing page..."
   mkdir -p dist/web
   cp web/index.html dist/web/index.html

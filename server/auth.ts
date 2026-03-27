@@ -1,12 +1,37 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 import { db } from "./db";
 import { users, verificationCodes, sessions } from "./db/schema";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { sendVerificationEmail, sendPasswordResetEmail, sendUsernameRecoveryEmail } from "./services/resend";
 import { sendSMS2FACode, isTwilioConfigured } from "./services/twilio";
 import { generateTrustHubHallmark, createTrustStamp } from "./hallmark";
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: "Too many registration attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: "Too many password reset requests. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -68,7 +93,7 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
 }
 
 export function registerAuthRoutes(app: Express): void {
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
+  app.post("/api/auth/register", registerLimiter, async (req: Request, res: Response) => {
     try {
       const { email, username, password, firstName, phone } = req.body;
 
@@ -185,7 +210,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  app.post("/api/auth/login", loginLimiter, async (req: Request, res: Response) => {
     try {
       const { email, password, rememberMe } = req.body;
 
@@ -691,12 +716,14 @@ export function registerAuthRoutes(app: Express): void {
           await generateTrustHubHallmark(newUser.id);
           await createTrustStamp(newUser.id, "account", "sso_registration", { source: "ecosystem_sso" });
         } catch {}
-      } else if (ecosystemHash && existingUser.uniqueHash !== ecosystemHash) {
+      } else if (ecosystemHash && !existingUser.uniqueHash) {
         await db
           .update(users)
           .set({ uniqueHash: ecosystemHash })
           .where(eq(users.id, existingUser.id));
         existingUser = { ...existingUser, uniqueHash: ecosystemHash };
+      } else if (ecosystemHash && existingUser.uniqueHash !== ecosystemHash) {
+        console.warn(`[SSO] Attempted uniqueHash change for user ${existingUser.id} — blocked (immutable)`);
       }
 
       const sessionToken = generateToken();
@@ -733,7 +760,7 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+  app.post("/api/auth/forgot-password", forgotPasswordLimiter, async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
 

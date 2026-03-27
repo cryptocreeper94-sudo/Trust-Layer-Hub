@@ -5,14 +5,64 @@ import { hallmarks, trustStamps, trusthubCounter } from "./db/schema";
 import { eq, sql } from "drizzle-orm";
 import { authenticateToken } from "./auth";
 
+const TRUST_LAYER_API_URL = process.env.TRUST_LAYER_API_URL || "https://dwtl.io";
+const TRUST_LAYER_API_KEY = process.env.TRUST_LAYER_API_KEY || "";
+
+if (!TRUST_LAYER_API_KEY) {
+  console.warn("[Hallmark] ⚠️  TRUST_LAYER_API_KEY not set — hallmarks will be SIMULATED (not anchored on-chain)");
+} else {
+  console.log("[Hallmark] ✅ Mode: LIVE — anchoring to Trust Layer chain at", TRUST_LAYER_API_URL);
+}
+
 function generateSHA256(data: string): string {
   return crypto.createHash("sha256").update(data).digest("hex");
 }
 
-function simulateBlockchain(): { txHash: string; blockHeight: string } {
-  const txHash = "0x" + crypto.randomBytes(32).toString("hex");
-  const blockHeight = Math.floor(1000000 + Math.random() * 9000000).toString();
-  return { txHash, blockHeight };
+async function submitToTrustLayer(dataHash: string, appId: string, category: string): Promise<{ txHash: string; blockHeight: string }> {
+  if (!TRUST_LAYER_API_KEY) {
+    const txHash = "SIMULATED:0x" + crypto.randomBytes(32).toString("hex");
+    const blockHeight = "SIMULATED:" + Math.floor(1000000 + Math.random() * 9000000).toString();
+    return { txHash, blockHeight };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch(`${TRUST_LAYER_API_URL}/api/hash/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": TRUST_LAYER_API_KEY,
+      },
+      body: JSON.stringify({ dataHash: "0x" + dataHash, category, appId }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText);
+      console.error(`[Hallmark] Trust Layer API ${res.status}: ${text}`);
+      return {
+        txHash: "SIMULATED:0x" + crypto.randomBytes(32).toString("hex"),
+        blockHeight: "SIMULATED:API_ERROR",
+      };
+    }
+
+    const result = await res.json();
+    console.log(`[Hallmark] ✅ Anchored on-chain: tx=${(result.txHash || "").slice(0, 18)}... block=${result.blockHeight}`);
+    return {
+      txHash: result.txHash,
+      blockHeight: result.blockHeight?.toString() || "0",
+    };
+  } catch (err: any) {
+    console.error("[Hallmark] Trust Layer API error:", err?.message);
+    return {
+      txHash: "SIMULATED:0x" + crypto.randomBytes(32).toString("hex"),
+      blockHeight: "SIMULATED:UNREACHABLE",
+    };
+  }
 }
 
 async function getNextSequence(): Promise<number> {
@@ -50,7 +100,7 @@ export async function generateTrustHubHallmark(params: HallmarkParams) {
   });
 
   const dataHash = generateSHA256(payload);
-  const { txHash, blockHeight } = simulateBlockchain();
+  const { txHash, blockHeight } = await submitToTrustLayer(dataHash, params.appId || "trusthub", "hallmark");
 
   const verificationUrl = `/api/hallmark/${thId}/verify`;
 
