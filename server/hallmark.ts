@@ -139,7 +139,7 @@ export async function createTrustStamp(params: TrustStampParams) {
   });
 
   const dataHash = generateSHA256(payload);
-  const { txHash, blockHeight } = simulateBlockchain();
+  const { txHash, blockHeight } = await submitToTrustLayer(dataHash, "trusthub", params.category);
 
   const [stamp] = await db
     .insert(trustStamps)
