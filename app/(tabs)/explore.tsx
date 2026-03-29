@@ -7,26 +7,27 @@ import {
   TextInput,
   Pressable,
   Platform,
-  FlatList,
   useWindowDimensions,
+  ImageBackground,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Colors from "@/constants/colors";
-import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { EmptyState } from "@/components/EmptyState";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { InfoBubble } from "@/components/InfoBubble";
+import { Carousel } from "@/components/Carousel";
 import { ECOSYSTEM_APPS, CATEGORIES, type Category, type EcosystemApp } from "@/constants/ecosystem-apps";
+import { KenBurnsBackground } from "@/components/KenBurnsBackground";
 
 function CategoryTab({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <Pressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();
       }}
       style={[styles.categoryTab, active && styles.categoryTabActive]}
@@ -38,25 +39,42 @@ function CategoryTab({ label, active, onPress }: { label: string; active: boolea
   );
 }
 
-function AppGridCard({ app }: { app: EcosystemApp }) {
+function CinematicAppCard({ app, cardWidth }: { app: EcosystemApp; cardWidth: number }) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.appGridItem, pressed && { opacity: 0.8 }]}
+      style={({ pressed }) => [styles.appGridItem, { width: cardWidth }, pressed && { opacity: 0.8 }]}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push({ pathname: "/app-detail", params: { id: String(app.id) } });
       }}
     >
-      <GlassCard innerStyle={styles.appCardInner}>
-        <View style={styles.appIconContainer}>
-          <Ionicons name={app.icon as any} size={26} color={Colors.primary} />
-        </View>
-        <Text style={styles.appName} numberOfLines={1}>{app.name}</Text>
-        <Text style={styles.appHook} numberOfLines={2}>{app.hook}</Text>
-        <View style={styles.appCategoryBadge}>
-          <Text style={styles.appCategoryText}>{app.category}</Text>
-        </View>
-      </GlassCard>
+      <View style={styles.cardContainer}>
+        {/* The photorealistic Image properly loaded through the bundle */}
+        <ImageBackground 
+          source={app.image} 
+          style={styles.imageBackground}
+          imageStyle={styles.imageBackgroundStyle}
+        >
+          {/* A gradient overlay so the text pops perfectly over the complex image */}
+          <View style={styles.darkGradientOverlay} />
+          
+          <View style={styles.appCardInner}>
+            <View style={styles.topRow}>
+              <View style={styles.appIconContainer}>
+                <Ionicons name={app.icon as any} size={22} color={Colors.primary} />
+              </View>
+              <View style={styles.appCategoryBadge}>
+                <Text style={styles.appCategoryText}>{app.category}</Text>
+              </View>
+            </View>
+
+            <View style={styles.bottomInfo}>
+              <Text style={styles.appName} numberOfLines={1}>{app.name}</Text>
+              <Text style={styles.appHook} numberOfLines={2}>{app.hook}</Text>
+            </View>
+          </View>
+        </ImageBackground>
+      </View>
     </Pressable>
   );
 }
@@ -66,7 +84,11 @@ export default function ExploreScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
-  const numColumns = isDesktop && width >= 1024 ? 3 : 2;
+  
+  // Carousel width optimization
+  const contentWidth = isDesktop ? Math.min(width, 960) : width;
+  const cardWidth = Math.round(contentWidth * 0.85);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
 
@@ -86,62 +108,96 @@ export default function ExploreScreen() {
     return apps;
   }, [search, selectedCategory]);
 
+  // Group apps by category for rendering the breathtaking carousels
+  const categoriesToRender = useMemo(() => {
+    if (search.trim()) {
+      return [{ category: "Search Results", apps: filteredApps }];
+    }
+    if (selectedCategory !== "All") {
+      return [{ category: selectedCategory, apps: filteredApps }];
+    }
+    // "All" view: generate isolated carousels per category
+    return CATEGORIES.filter(c => c !== "All").map(c => ({
+      category: c,
+      apps: ECOSYSTEM_APPS.filter(a => a.category === c)
+    })).filter(g => g.apps.length > 0);
+  }, [filteredApps, search, selectedCategory]);
+
   return (
     <View style={styles.container}>
-      <BackgroundGlow />
-      <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
-        <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 8 }}>
-          <GradientText text="Explore" style={styles.screenTitle} />
-          <InfoBubble title="Explore" message="Browse the complete Trust Layer ecosystem of 35 interconnected apps spanning DeFi, governance, identity, social, gaming, AI, and more. Each app uses your Trust Layer ID for seamless cross-app identity. Use the search bar or category tabs to find apps." size={18} />
-        </View>
-        <Text style={styles.subtitle}>35 Apps. One Ecosystem.</Text>
+      {/* 
+        User requested the slideshow run ONLY locally behind the landing (index.tsx),
+        so we leave Explore as a gorgeous pure Void Black background. 
+        It isolates the stunning images on the cards itself. 
+      */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.background }]} />
+      
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
+          <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 8 }}>
+            <GradientText text="Explore" style={styles.screenTitle} />
+            <InfoBubble title="Explore" message="Browse the complete Trust Layer ecosystem of 37 interconnected apps spanning DeFi, governance, identity, social, gaming, AI, and more." size={18} />
+          </View>
+          <Text style={styles.subtitle}>37 Apps. One Ecosystem.</Text>
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={18} color={Colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search apps..."
-            placeholderTextColor={Colors.textMuted}
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="search"
-          />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
-            </Pressable>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={18} color={Colors.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search apps..."
+              placeholderTextColor={Colors.textMuted}
+              value={search}
+              onChangeText={setSearch}
+              returnKeyType="search"
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch("")}>
+                <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+              </Pressable>
+            )}
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesRow}
+          >
+            {CATEGORIES.map(cat => (
+              <CategoryTab
+                key={cat}
+                label={cat}
+                active={selectedCategory === cat}
+                onPress={() => setSelectedCategory(cat)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={[styles.contentLayout, { maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
+          {categoriesToRender.length === 0 ? (
+             <EmptyState icon="search" title="No apps found" subtitle="Try a different search term" />
+          ) : (
+            categoriesToRender.map((group, idx) => (
+              <View key={group.category} style={styles.categoryBlock}>
+                <View style={styles.categoryHeader}>
+                  <Text style={styles.categoryTitle}>{group.category}</Text>
+                  <View style={styles.categoryLine} />
+                </View>
+                
+                <View style={styles.carouselBreakout}>
+                  <Carousel itemWidth={cardWidth}>
+                    {group.apps.map(app => (
+                      <CinematicAppCard key={app.id} app={app} cardWidth={cardWidth} />
+                    ))}
+                  </Carousel>
+                </View>
+              </View>
+            ))
           )}
         </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesRow}
-        >
-          {CATEGORIES.map(cat => (
-            <CategoryTab
-              key={cat}
-              label={cat}
-              active={selectedCategory === cat}
-              onPress={() => setSelectedCategory(cat)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
-      <FlatList
-        key={numColumns}
-        data={filteredApps}
-        keyExtractor={item => String(item.id)}
-        numColumns={numColumns}
-        contentContainerStyle={[styles.gridContent, { maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}
-        columnWrapperStyle={styles.gridRow}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => <AppGridCard app={item} />}
-        ListEmptyComponent={
-          <EmptyState icon="search" title="No apps found" subtitle="Try a different search term" />
-        }
-      />
+      </ScrollView>
     </View>
   );
 }
@@ -165,7 +221,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     marginTop: 2,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   searchContainer: {
     flexDirection: "row" as const,
@@ -177,7 +233,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.06)",
-    marginBottom: 14,
+    marginBottom: 16,
   },
   searchInput: {
     flex: 1,
@@ -188,6 +244,7 @@ const styles = StyleSheet.create({
   categoriesRow: {
     gap: 8,
     paddingRight: 16,
+    paddingBottom: 16,
   },
   categoryTab: {
     paddingHorizontal: 16,
@@ -209,58 +266,109 @@ const styles = StyleSheet.create({
   categoryTabTextActive: {
     color: Colors.primary,
   },
-  gridContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
+  contentLayout: {
     paddingBottom: 100,
   },
-  gridRow: {
-    gap: 12,
+  categoryBlock: {
+    marginBottom: 24,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     marginBottom: 12,
+    gap: 12,
   },
-  appGridItem: {
-    flex: 1,
-  },
-  appCardInner: {
-    alignItems: "center" as const,
-    paddingVertical: 20,
-    paddingHorizontal: 12,
-  },
-  appIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "rgba(0,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(0,255,255,0.1)",
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    marginBottom: 10,
-  },
-  appName: {
-    fontSize: 14,
+  categoryTitle: {
+    fontSize: 18,
     color: Colors.textPrimary,
     fontFamily: "Inter_600SemiBold",
-    textAlign: "center" as const,
-    marginBottom: 4,
   },
-  appHook: {
-    fontSize: 11,
-    color: Colors.textTertiary,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center" as const,
-    marginBottom: 8,
-    lineHeight: 16,
+  categoryLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  carouselBreakout: {
+    marginLeft: 16, // Indent for the carousel scroll boundary
+  },
+  appGridItem: {
+    height: 220,
+  },
+  cardContainer: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: "rgba(12,18,36,0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  imageBackground: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  imageBackgroundStyle: {
+    borderRadius: 20, // Match container exactly
+    opacity: 0.85,    // Mute the image very slightly so it doesn't overpower UI
+  },
+  darkGradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(6, 6, 10, 0.55)', // Custom dimming overlay for Void Black adherence
+  },
+  appCardInner: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  appIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.6)", // Deep glass background behind the icon
+    borderWidth: 1,
+    borderColor: "rgba(0,255,255,0.25)", // Heavy cyan border for the icon container
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   appCategoryBadge: {
-    backgroundColor: "rgba(147,51,234,0.12)",
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: "rgba(255,255,255,0.1)", // Semi-transparent pill
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+    backdropFilter: 'blur(10px)',
   },
   appCategoryText: {
     fontSize: 10,
-    color: Colors.secondary,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: 'uppercase',
+  },
+  bottomInfo: {
+    marginTop: 'auto',
+  },
+  appName: {
+    fontSize: 22,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_700Bold",
+    marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
+  },
+  appHook: {
+    fontSize: 13,
+    color: Colors.textSecondary,
     fontFamily: "Inter_500Medium",
+    lineHeight: 18,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
 });

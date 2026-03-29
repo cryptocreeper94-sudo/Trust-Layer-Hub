@@ -25,7 +25,7 @@ import { InfoBubble } from "@/components/InfoBubble";
 import { GradientButton } from "@/components/GradientButton";
 import QRCode from "react-native-qrcode-svg";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
-import { usePlaidAccounts, useUnlinkAccount, useCreateLinkToken, useExchangePlaidToken } from "@/hooks/usePlaidAccounts";
+import { usePlaidAccounts, useUnlinkAccount, useCreateLinkToken, useExchangePlaidToken, useTransferPlaidFunds } from "@/hooks/usePlaidAccounts";
 import { useExternalWallets, useConnectWallet, useDisconnectWallet, getExternalWalletsTotalUsd } from "@/hooks/useExternalWallets";
 import { useStakingInfo, useStake, useUnstake, useClaimRewards, useLiquidStake, useLiquidUnstake } from "@/hooks/useStaking";
 import { useSendTokens, useReceiveInfo, useSwapTokens } from "@/hooks/useWalletActions";
@@ -615,6 +615,111 @@ function StakeModal({ visible, onClose, initialMode }: { visible: boolean; onClo
   );
 }
 
+function TransferModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { data: accounts } = usePlaidAccounts();
+  const transferMutation = useTransferPlaidFunds();
+  const [amount, setAmount] = useState("");
+  const [direction, setDirection] = useState<"deposit" | "withdraw">("deposit");
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+
+  // Default to first account if none selected
+  React.useEffect(() => {
+    if (accounts && accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].id);
+    }
+  }, [accounts, selectedAccountId]);
+
+  const handleTransfer = () => {
+    const num = parseFloat(amount);
+    if (!num || num <= 0 || !selectedAccountId) {
+      Alert.alert("Invalid Input", "Please enter a valid amount and select an account.");
+      return;
+    }
+    
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    transferMutation.mutate(
+      { fromAccountId: selectedAccountId, toApp: "TrustVault", amount: num, direction },
+      {
+        onSuccess: (data) => {
+          Alert.alert("Transfer Initiated", data.message || `Transfer of $${num} is processing.`);
+          setAmount("");
+          onClose();
+        },
+        onError: () => Alert.alert("Error", "Transfer failed. Please try again."),
+      }
+    );
+  };
+
+  return (
+    <BottomSheetModal visible={visible} onClose={onClose} title="Transfer Fiat">
+      <View style={styles.stakeModeTabs}>
+        <Pressable
+          style={[styles.stakeModeTab, direction === "deposit" && { borderBottomColor: Colors.success }]}
+          onPress={() => setDirection("deposit")}
+        >
+          <Text style={[styles.stakeModeTabText, direction === "deposit" && { color: Colors.success }]}>Deposit</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.stakeModeTab, direction === "withdraw" && { borderBottomColor: Colors.secondary }]}
+          onPress={() => setDirection("withdraw")}
+        >
+          <Text style={[styles.stakeModeTabText, direction === "withdraw" && { color: Colors.secondary }]}>Withdraw</Text>
+        </Pressable>
+      </View>
+      
+      <Text style={styles.inputLabel}>Amount (USD)</Text>
+      <TextInput
+        style={styles.modalInput}
+        placeholder="0.00"
+        placeholderTextColor={Colors.textMuted}
+        value={amount}
+        onChangeText={setAmount}
+        keyboardType="decimal-pad"
+        testID="transfer-amount-input"
+      />
+
+      <Text style={styles.inputLabel}>Bank Account</Text>
+      {accounts && accounts.length > 0 ? (
+        <ScrollView style={{ maxHeight: 150, marginBottom: 16 }}>
+          {accounts.map(acc => (
+            <Pressable
+              key={acc.id}
+              style={[
+                styles.linkedRow, 
+                { marginTop: 8, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.05)" },
+                selectedAccountId === acc.id && { borderColor: Colors.success, backgroundColor: "rgba(16,185,129,0.05)" }
+              ]}
+              onPress={() => { setSelectedAccountId(acc.id); Haptics.selectionAsync(); }}
+            >
+              <View style={[styles.linkedIcon, { backgroundColor: "rgba(16,185,129,0.12)" }]}>
+                <Ionicons name="business" size={16} color={Colors.success} />
+              </View>
+              <View style={styles.linkedInfo}>
+                <Text style={styles.linkedName}>{acc.institutionName}</Text>
+                <Text style={styles.linkedMeta}>****{acc.accountMask}</Text>
+              </View>
+              {selectedAccountId === acc.id && (
+                <Ionicons name="checkmark-circle" size={18} color={Colors.success} style={{ paddingRight: 4 }} />
+              )}
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={[styles.emptySection, { paddingVertical: 16 }]}>
+          <Text style={styles.emptySubtext}>Link a bank account first to transfer funds.</Text>
+        </View>
+      )}
+
+      <GradientButton
+        title={direction === "deposit" ? "Deposit to Wallet" : "Withdraw to Bank"}
+        onPress={handleTransfer}
+        colors={direction === "deposit" ? ["#10b981", "#059669"] : [Colors.secondary, "#7e22ce"]}
+        testID="transfer-confirm-button"
+      />
+    </BottomSheetModal>
+  );
+}
+
 function ConnectWalletModal({
   visible,
   onClose,
@@ -684,6 +789,7 @@ export default function WalletScreen() {
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [showStakeModal, setShowStakeModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedWalletId, setExpandedWalletId] = useState<number | null>(null);
   const [stakeInitialMode, setStakeInitialMode] = useState<"stake" | "unstake">("stake");
@@ -893,6 +999,13 @@ export default function WalletScreen() {
 
         <View style={styles.quickActionsRow}>
           <QuickActionButton
+            icon="cash-outline"
+            label="Transfer"
+            color={Colors.success}
+            onPress={() => setShowTransferModal(true)}
+            testID="quick-transfer"
+          />
+          <QuickActionButton
             icon="arrow-up-outline"
             label="Send"
             color={Colors.primary}
@@ -902,23 +1015,16 @@ export default function WalletScreen() {
           <QuickActionButton
             icon="arrow-down-outline"
             label="Receive"
-            color={Colors.success}
+            color={Colors.secondary}
             onPress={() => setShowReceiveModal(true)}
             testID="quick-receive"
           />
           <QuickActionButton
             icon="swap-horizontal-outline"
             label="Swap"
-            color={Colors.secondary}
+            color={Colors.textPrimary}
             onPress={() => setShowSwapModal(true)}
             testID="quick-swap"
-          />
-          <QuickActionButton
-            icon="lock-closed-outline"
-            label="Stake"
-            color="#f59e0b"
-            onPress={() => { setStakeInitialMode("stake"); setShowStakeModal(true); }}
-            testID="quick-stake"
           />
         </View>
 
@@ -1167,14 +1273,26 @@ export default function WalletScreen() {
               <Text style={styles.emptySubtext}>Connect your bank to see all balances in one place</Text>
             </View>
           )}
-          <Pressable
-            style={styles.connectButton}
-            onPress={handleLinkBank}
-            testID="link-bank-button"
-          >
-            <Ionicons name="add-circle" size={20} color={Colors.success} />
-            <Text style={styles.connectButtonText}>Link Bank Account</Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable
+              style={[styles.connectButton, { flex: 1 }]}
+              onPress={handleLinkBank}
+              testID="link-bank-button"
+            >
+              <Ionicons name="add-circle" size={20} color={Colors.success} />
+              <Text style={styles.connectButtonText}>Link Bank</Text>
+            </Pressable>
+            {(plaidAccounts || []).length > 0 && (
+              <Pressable
+                style={[styles.connectButton, { flex: 1, backgroundColor: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }]}
+                onPress={() => setShowTransferModal(true)}
+                testID="transfer-fiat-button"
+              >
+                <Ionicons name="cash-outline" size={20} color={Colors.success} />
+                <Text style={[styles.connectButtonText, { color: Colors.success, opacity: 1 }]}>Transfer</Text>
+              </Pressable>
+            )}
+          </View>
         </GlassCard>
 
         <View style={styles.sectionHeader}>
@@ -1298,6 +1416,7 @@ export default function WalletScreen() {
       <ReceiveModal visible={showReceiveModal} onClose={() => setShowReceiveModal(false)} />
       <SwapModal visible={showSwapModal} onClose={() => setShowSwapModal(false)} />
       <StakeModal visible={showStakeModal} onClose={() => setShowStakeModal(false)} initialMode={stakeInitialMode} />
+      <TransferModal visible={showTransferModal} onClose={() => setShowTransferModal(false)} />
       <BottomSheetModal visible={showLiquidModal} onClose={() => setShowLiquidModal(false)} title={liquidMode === "mint" ? "Mint stSIG" : "Redeem SIG"}>
         <View style={styles.liquidModalContent}>
           <View style={styles.liquidModeRow}>

@@ -26,6 +26,11 @@ export function GlassCard({
   const hasFlex = style && (style as any).flex;
   const blurIntensity = intensity === "low" ? 25 : intensity === "high" ? 60 : 40;
 
+  const isAndroid = Platform.OS === "android";
+
+  const GlassSurface = isAndroid ? View : BlurView;
+  const surfaceProps = isAndroid ? {} : { intensity: blurIntensity, tint: "dark" as const };
+
   const content = (
     <View style={[styles.wrapper, style]}>
       {glow && (
@@ -36,7 +41,7 @@ export function GlassCard({
           style={styles.glowBorder}
         />
       )}
-      <BlurView intensity={blurIntensity} tint="dark" style={[styles.card, hasFlex && { flex: 1 }, glow && styles.cardGlow]}>
+      <GlassSurface {...surfaceProps} style={[styles.card, isAndroid && styles.androidCardFallBack, hasFlex && { flex: 1 }, glow && styles.cardGlow]}>
         <LinearGradient
           colors={["rgba(255,255,255,0.03)", "transparent"]}
           start={{ x: 0, y: 0 }}
@@ -46,7 +51,7 @@ export function GlassCard({
         <View style={[styles.cardInner, hasFlex && { flex: 1 }, innerStyle]}>
           {children}
         </View>
-      </BlurView>
+      </GlassSurface>
     </View>
   );
 
@@ -78,11 +83,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.07)",
   },
+  androidCardFallBack: {
+    backgroundColor: "rgba(6, 6, 10, 0.95)",
+  },
   cardGlow: {
     borderColor: "rgba(0,255,255,0.12)",
   },
   cardInner: {
-    backgroundColor: "rgba(12,18,36,0.6)",
+    backgroundColor: "rgba(6, 6, 10, 0.6)",
     padding: 16,
   },
 });

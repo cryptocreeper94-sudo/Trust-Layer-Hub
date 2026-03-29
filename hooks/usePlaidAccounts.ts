@@ -63,6 +63,19 @@ export function useUnlinkAccount() {
   });
 }
 
+export function useTransferPlaidFunds() {
+  return useMutation({
+    mutationFn: async (data: { fromAccountId: number; toApp: string; amount: number; direction: "deposit" | "withdraw" }) => {
+      return apiPost<{ message: string; txHash: string; txId: string }>("/api/plaid/transfer", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["balance"] });
+      queryClient.invalidateQueries({ queryKey: ["plaid-accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+  });
+}
+
 export function usePlaidTransactions(accountId: number | null) {
   return useQuery({
     queryKey: ["plaid-transactions", accountId],

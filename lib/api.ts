@@ -7,11 +7,12 @@ const TOKEN_KEY = "tl_session_token";
 const CHAT_TOKEN_KEY = "tl_chat_token";
 
 export function getBaseUrl(): string {
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (domain) {
-    return `https://${domain}`;
+  // Respect explicit overrides for testing
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
   }
-  return "http://localhost:5000";
+  // Hardcoded production endpoint to guarantee Play Store nexus connectivity
+  return "https://api.dwtl.io"; 
 }
 
 async function getStore() {

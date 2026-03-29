@@ -23,6 +23,7 @@ import { InfoBubble } from "@/components/InfoBubble";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { FEATURED_APP_IDS } from "@/constants/mock-data";
 import { ECOSYSTEM_APPS } from "@/constants/ecosystem-apps";
+import { KenBurnsBackground } from "@/components/KenBurnsBackground";
 import { useAuth } from "@/lib/auth-context";
 import { useBalance, useShellBalance, useDwcBag, useTransactions } from "@/hooks/useBalance";
 import { useWorldNews } from "@/hooks/useWorldNews";
@@ -282,6 +283,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <KenBurnsBackground 
+        images={[
+          require('@/assets/images/hub_ecosystem_globe.jpg'),
+          require('@/assets/images/hub_ai_tools.jpg'),
+          require('@/assets/images/hub_smart_contract.jpg'),
+          require('@/assets/images/hub_home_overview.jpg')
+        ]} 
+        duration={8000} 
+        overlayOpacity={[0.6, 0.95]} 
+      />
       <BackgroundGlow />
       <WelcomeModal />
       <ScrollView

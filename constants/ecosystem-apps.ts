@@ -55,6 +55,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Blockchain", "L1", "Core", "Infrastructure"],
     icon: "shield-checkmark",
+    image: require("@/assets/images/hub_identity_security.jpg"),
   },
   {
     id: 2,
@@ -65,6 +66,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Real Estate", "Agents", "Listings", "Trust Scores"],
     icon: "home",
+    image: require("@/assets/images/cc_settings_config.jpg"),
   },
   {
     id: 3,
@@ -75,6 +77,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "DeFi",
     tags: ["Wallet", "Multi-Sig", "Finance", "Security"],
     icon: "wallet",
+    image: require("@/assets/images/hub_wallet_tokens.jpg"),
   },
   {
     id: 4,
@@ -85,6 +88,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Marketing",
     tags: ["Marketing", "Social Media", "Automation", "AI", "Advertising"],
     icon: "megaphone",
+    image: require("@/assets/images/cc_marketing_content.jpg"),
   },
   {
     id: 5,
@@ -95,6 +99,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Identity", "Premium", "Membership", "Blockchain"],
     icon: "planet",
+    image: require("@/assets/images/hub_membership_vip.jpg"),
   },
   {
     id: 6,
@@ -105,6 +110,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Community", "Chat", "Social", "Messaging"],
     icon: "chatbubbles",
+    image: require("@/assets/images/hub_chat_messaging.jpg"),
   },
   {
     id: 7,
@@ -115,6 +121,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Development", "Architecture", "IDE", "Blockchain"],
     icon: "code-slash",
+    image: require("@/assets/images/cc_developer_tools.jpg"),
   },
   {
     id: 8,
@@ -125,6 +132,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Security",
     tags: ["Security", "Enterprise", "Monitoring", "Compliance"],
     icon: "shield",
+    image: require("@/assets/images/cc_security_shield.jpg"),
   },
   {
     id: 9,
@@ -135,6 +143,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Security",
     tags: ["Security", "AI", "Verification", "Multi-Chain"],
     icon: "scan",
+    image: require("@/assets/images/hub_guardian_sentinel.jpg"),
   },
   {
     id: 10,
@@ -145,6 +154,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "DeFi",
     tags: ["DeFi", "Security", "Trading", "AI"],
     icon: "eye",
+    image: require("@/assets/images/cc_analytics_dashboard.jpg"),
   },
   {
     id: 11,
@@ -155,6 +165,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "AI Trading",
     tags: ["AI", "Trading", "Analytics", "Automation"],
     icon: "bar-chart",
+    image: require("@/assets/images/hub_trading_defi.jpg"),
   },
   {
     id: 12,
@@ -165,6 +176,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "AI Trading",
     tags: ["AI", "Trading", "Predictions", "Automation"],
     icon: "flash",
+    image: require("@/assets/images/hub_portfolio_chart.jpg"),
   },
   {
     id: 13,
@@ -185,6 +197,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Gaming",
     tags: ["Gaming", "Simulation", "AI", "Social"],
     icon: "globe",
+    image: require("@/assets/images/hub_chronicles_game.jpg"),
   },
   {
     id: 15,
@@ -195,6 +208,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Gaming",
     tags: ["Gaming", "Blockchain", "Fair", "Entertainment"],
     icon: "game-controller",
+    image: require("@/assets/images/hub_slots_casino.jpg"),
   },
   {
     id: 16,
@@ -205,6 +219,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Gaming",
     tags: ["Gaming", "3D", "Sports", "Golf"],
     icon: "golf",
+    image: require("@/assets/images/hub_retro_space.jpg"),
   },
   {
     id: 17,
@@ -215,6 +230,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Gaming",
     tags: ["Golf", "Sports", "AI", "Swing Analysis"],
     icon: "flag",
+    image: require("@/assets/images/hub_dice_chance.jpg"),
   },
   {
     id: 18,
@@ -225,6 +241,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Enterprise",
     tags: ["HR", "Payroll", "Enterprise", "Compliance"],
     icon: "people",
+    image: require("@/assets/images/cc_users_community.jpg"),
   },
   {
     id: 19,
@@ -235,6 +252,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Enterprise",
     tags: ["Enterprise", "Operations", "Security", "Geofencing"],
     icon: "compass",
+    image: require("@/assets/images/hub_governance_vote.jpg"),
   },
   {
     id: 20,
@@ -245,6 +263,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Automotive",
     tags: ["Auto", "IoT", "Maintenance"],
     icon: "construct",
+    image: require("@/assets/images/hub_smart_contract.jpg"),
   },
   {
     id: 21,
@@ -255,6 +274,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Automotive",
     tags: ["Auto", "B2B", "Inventory", "Fleet"],
     icon: "car",
+    image: require("@/assets/images/hub_liquidity_pool.jpg"),
   },
   {
     id: 22,
@@ -265,6 +285,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Automotive",
     tags: ["Automotive", "Marketplace", "Verification"],
     icon: "speedometer",
+    image: require("@/assets/images/hub_bridge_chains.jpg"),
   },
   {
     id: 23,
@@ -275,6 +296,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Automotive",
     tags: ["Transportation", "Logistics", "Drivers"],
     icon: "navigate",
+    image: require("@/assets/images/hub_referral_network.jpg"),
   },
   {
     id: 24,
@@ -285,6 +307,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Health & Services",
     tags: ["Health", "Wellness", "Ayurveda", "AI"],
     icon: "leaf",
+    image: require("@/assets/images/hub_learn_explore.jpg"),
   },
   {
     id: 25,
@@ -295,6 +318,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Health & Services",
     tags: ["Outdoors", "AI", "Recreation", "Nature"],
     icon: "trail-sign",
+    image: require("@/assets/images/hub_quest_compass.jpg"),
   },
   {
     id: 26,
@@ -305,6 +329,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Health & Services",
     tags: ["Arborist", "CRM", "Business", "Scheduling"],
     icon: "flower",
+    image: require("@/assets/images/hub_ecosystem_globe.jpg"),
   },
   {
     id: 27,
@@ -315,6 +340,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Health & Services",
     tags: ["Services", "Scheduling", "CRM", "Contractors"],
     icon: "color-palette",
+    image: require("@/assets/images/hub_nft_gallery.jpg"),
   },
   {
     id: 28,
@@ -355,6 +381,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Food & Hospitality",
     tags: ["Food", "Delivery", "Local", "Ordering"],
     icon: "fast-food",
+    image: require("@/assets/images/hub_community_social.jpg"),
   },
   {
     id: 32,
@@ -375,6 +402,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Studios", "Development", "Creative", "Blockchain"],
     icon: "diamond",
+    image: require("@/assets/images/hub_home_overview.jpg"),
   },
   {
     id: 34,
@@ -385,6 +413,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["AI", "3D", "Animation", "Creative"],
     icon: "cube",
+    image: require("@/assets/images/hub_ai_tools.jpg"),
   },
   {
     id: 35,
@@ -395,6 +424,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Developer Tools",
     tags: ["Language", "AI", "Developer", "Compiler"],
     icon: "bulb",
+    image: require("@/assets/images/cc_blockchain_network.jpg"),
   },
   {
     id: 36,
@@ -405,6 +435,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Research", "Academic", "Engineering", "Lume"],
     icon: "flask",
+    image: require("@/assets/images/hub_explorer_blocks.jpg"),
   },
   {
     id: 37,

@@ -1,7 +1,7 @@
 const Colors = {
-  background: "#0c1224",
-  surface: "rgba(12, 18, 36, 0.65)",
-  surfaceSolid: "#0f1730",
+  background: "#06060a",
+  surface: "rgba(6, 6, 10, 0.65)",
+  surfaceSolid: "#06060a",
   primary: "#00ffff",
   secondary: "#9333ea",
   accent: "#00ffff",

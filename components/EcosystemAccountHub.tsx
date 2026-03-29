@@ -7,6 +7,7 @@ import {
   View, Text, TouchableOpacity, ScrollView, Modal, Linking,
   Platform, StyleSheet, Dimensions,
 } from 'react-native';
+import { getSessionToken, buildAppLaunchUrl } from '../lib/api';
 
 const SSO = 'https://dwtl.io';
 const PRE = 'https://dwtl.io/presale';
@@ -49,8 +50,14 @@ function getLocalUser() {
 function ini(n:string):string { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
 
 function Row({ icon, title, subtitle, badge, badgeColor, url }: any) {
+  const handlePress = async () => {
+    const token = await getSessionToken();
+    const finalUrl = buildAppLaunchUrl(url, token);
+    Linking.openURL(finalUrl);
+  };
+
   return (
-    <TouchableOpacity style={s.row} onPress={() => Linking.openURL(url)} activeOpacity={0.7}>
+    <TouchableOpacity style={s.row} onPress={handlePress} activeOpacity={0.7}>
       <View style={s.rowIcon}><Text style={{ fontSize: 14 }}>{icon}</Text></View>
       <View style={s.rowContent}>
         <Text style={s.rowTitle}>{title}</Text>
@@ -120,7 +127,10 @@ export function EcosystemAccountHub() {
               <Text style={s.bonusTimer}>⏱ {tl}</Text>
               <TouchableOpacity
                 style={[s.bonusCta, { backgroundColor: bonus.ac }]}
-                onPress={() => Linking.openURL(`${bonus.url}?bonus=${bonus.id}`)}
+                onPress={async () => {
+                  const token = await getSessionToken();
+                  Linking.openURL(buildAppLaunchUrl(`${bonus.url}?bonus=${bonus.id}`, token));
+                }}
                 activeOpacity={0.8}
               >
                 <Text style={s.bonusCtaText}>🚀 Refer & Earn</Text>
@@ -144,7 +154,15 @@ export function EcosystemAccountHub() {
                 <Section label="Ecosystem Apps">
                   <View style={s.appsGrid}>
                     {APPS.map(app => (
-                      <TouchableOpacity key={app.name} style={s.appBadge} onPress={() => Linking.openURL(app.url)} activeOpacity={0.7}>
+                      <TouchableOpacity 
+                        key={app.name} 
+                        style={s.appBadge} 
+                        onPress={async () => {
+                          const token = await getSessionToken();
+                          Linking.openURL(buildAppLaunchUrl(app.url, token));
+                        }} 
+                        activeOpacity={0.7}
+                      >
                         <Text style={{ fontSize: 12 }}>{app.icon}</Text>
                         <Text style={s.appBadgeText}>{app.name}</Text>
                       </TouchableOpacity>
@@ -171,7 +189,10 @@ export function EcosystemAccountHub() {
                 <Section label="Explore the Ecosystem">
                   <View style={s.appsGrid}>
                     {APPS.map(app => (
-                      <TouchableOpacity key={app.name} style={s.appBadge} onPress={() => Linking.openURL(app.url)} activeOpacity={0.7}>
+                      <TouchableOpacity key={app.name} style={s.appBadge} onPress={async () => {
+                        const token = await getSessionToken();
+                        Linking.openURL(buildAppLaunchUrl(app.url, token));
+                      }} activeOpacity={0.7}>
                         <Text style={{ fontSize: 12 }}>{app.icon}</Text>
                         <Text style={s.appBadgeText}>{app.name}</Text>
                       </TouchableOpacity>
