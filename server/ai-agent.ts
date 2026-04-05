@@ -31,7 +31,9 @@ Lume (App #35) — AI-Native Programming Language:
 - The 7-layer Tolerance Chain ensures progressive trust verification from syntax through deployment
 - AI-Native Primitives: \`ask\`, \`think\`, and \`generate\` are first-class language keywords for AI operations
 - Self-Sustaining Runtime: Lume programs can self-optimize, self-heal, and adapt at runtime
-- Key stats: 15 milestones, 2,149 tests, 305 acceptance criteria, ~14,000 lines of code
+- Key stats: 13 milestones + expansion block, 2,266 tests (0 failures), 82 source modules, 60 test files, 305 acceptance criteria
+- v1.1.0 Expansion: Deterministic Inference Rulebook (LDIR, 31 rules), Ed25519 Trust Certificates (LTC), Synthetic Organism Runtime (SOR), Multi-Agent Protocol (LMADP)
+- Zenodo DOI: 10.5281/zenodo.19430898
 - Learn more at lume-lang.com (main site) and lume-lang.org (documentation & academic paper)
 
 Core ecosystem apps include: PulseChain Bridge, NexGen DEX, SynthVault, AnchorStake, Trust Layer DAO, ChainForge, SentinelAI, Lume, and more.
