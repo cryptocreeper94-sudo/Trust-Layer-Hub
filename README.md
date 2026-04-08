@@ -1,5 +1,7 @@
 # Trust Layer Hub
 
+> 🔒 **Patent Pending:** The core deterministic governance capabilities (Lume-V) within this repository are protected under U.S. Provisional Patent Application **No. 64/032,339** (Filed April 7, 2026).
+
 Mobile companion app for the Trust Layer ecosystem — manage identity, view SIG token balance, access ecosystem apps, and receive push notifications.
 
 **Live:** [trusthub.tlid.io](https://trusthub.tlid.io)
@@ -29,3 +31,4 @@ trust-layer-hub/
 npm install
 npx expo start
 ```
+
