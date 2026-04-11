@@ -47,7 +47,7 @@ const FEATURES: FeatureRow[] = [
   },
   {
     icon: "apps",
-    title: "37-App Ecosystem",
+    title: "38-App Ecosystem",
     desc: "DeFi, governance, chat, scanning, and more — all under one Trust Layer ID",
     color: "#f59e0b",
   },
@@ -142,7 +142,7 @@ export function WelcomeModal() {
                 <Text style={styles.descText}>
                   Welcome to the unified hub for the Trust Layer protocol ecosystem.
                   Create your free account to unlock your native wallet, DeFi staking,
-                  affiliate rewards, and access to 37 integrated blockchain applications.
+                  affiliate rewards, and access to 38 integrated blockchain applications.
                 </Text>
               </View>
 

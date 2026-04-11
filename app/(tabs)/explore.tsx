@@ -138,9 +138,9 @@ export default function ExploreScreen() {
         <View style={[styles.headerSection, { paddingTop: insets.top + webTopInset + 12, maxWidth: isDesktop ? 960 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
           <View style={{ flexDirection: "row" as const, alignItems: "center" as const, gap: 8 }}>
             <GradientText text="Explore" style={styles.screenTitle} />
-            <InfoBubble title="Explore" message="Browse the complete Trust Layer ecosystem of 37 interconnected apps spanning DeFi, governance, identity, social, gaming, AI, and more." size={18} />
+            <InfoBubble title="Explore" message="Browse the complete Trust Layer ecosystem of 38 interconnected apps spanning DeFi, governance, identity, social, gaming, AI, and more." size={18} />
           </View>
-          <Text style={styles.subtitle}>37 Apps. One Ecosystem.</Text>
+          <Text style={styles.subtitle}>38 Apps. One Ecosystem.</Text>
 
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={18} color={Colors.textMuted} />

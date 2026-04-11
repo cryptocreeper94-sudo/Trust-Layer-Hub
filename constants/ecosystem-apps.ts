@@ -447,4 +447,14 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     tags: ["Sports", "ML", "Analytics", "Lume"],
     icon: "stats-chart",
   },
+  {
+    id: 38,
+    name: "TLID",
+    hook: "Your Ecosystem Domain Registrar",
+    description: "Trust Layer Identity Domain registrar and management platform. Register, manage, and verify .tlid.io subdomains for ecosystem applications with blockchain-anchored DNS and identity verification.",
+    url: "https://tlid.io",
+    category: "Core",
+    tags: ["Identity", "DNS", "Registrar", "Infrastructure"],
+    icon: "globe",
+  },
 ];
