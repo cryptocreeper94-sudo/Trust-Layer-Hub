@@ -1373,7 +1373,7 @@ export default function WalletScreen() {
         <View style={styles.sectionHeader}>
           <Ionicons name="shield-checkmark" size={18} color={Colors.primary} />
           <GradientText text="Identity" style={styles.sectionTitle} />
-          <InfoBubble title="Identity" message="Your Trust Layer ID is your unique, blockchain-verified identity. It serves as your universal login across all 35 ecosystem apps and is linked to your on-chain wallet." />
+          <InfoBubble title="Identity" message="Your Trust Layer ID is your unique, blockchain-verified identity. It serves as your universal login across all 38 ecosystem apps and is linked to your on-chain wallet." />
         </View>
         <GlassCard>
           <View style={styles.idRow}>

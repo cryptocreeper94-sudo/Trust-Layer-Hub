@@ -20,8 +20,8 @@ import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 
 const FAQ_ITEMS = [
-  { q: "What is Trust Layer?", a: "Trust Layer is a unified blockchain ecosystem of 35 interconnected applications spanning DeFi, security, gaming, AI, enterprise, and more. All apps share a single identity through TrustLink SSO." },
-  { q: "How do I get a Trust Layer ID?", a: "Sign up through the Hub app or any ecosystem app. Your Trust Layer ID (TLID) is created during registration and works across all 35 apps." },
+  { q: "What is Trust Layer?", a: "Trust Layer is a unified blockchain ecosystem of 37 interconnected applications spanning DeFi, security, gaming, AI, enterprise, and more. All apps share a single identity through TrustLink SSO." },
+  { q: "How do I get a Trust Layer ID?", a: "Sign up through the Hub app or any ecosystem app. Your Trust Layer ID (TLID) is created during registration and works across all 37 apps." },
   { q: "What is Signal (SIG)?", a: "SIG is the native asset of the Trust Layer ecosystem. It powers transactions, governance, staking, and access across all apps. 1 SIG = $0.01 at launch." },
   { q: "How do Shells work?", a: "Shells are micro-tokens (1 Shell = $0.001) earned through ecosystem activity: daily logins, completing quests, referrals, and app interactions. They cannot be purchased directly." },
   { q: "What is staking and how do I stake?", a: "Staking locks your SIG to earn rewards. Navigate to the Wallet tab, select Staking, choose your lock period (flexible to 180 days), and confirm. APY ranges from 8% to 30%." },

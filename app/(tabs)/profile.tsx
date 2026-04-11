@@ -226,7 +226,7 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Identity" style={styles.sectionTitle} />
-          <InfoBubble title="Identity" message="Your verified Trust Layer identity. Your .tlid address is your universal identity across all 35 ecosystem apps, serving as both your blockchain address and display name." />
+          <InfoBubble title="Identity" message="Your verified Trust Layer identity. Your .tlid address is your universal identity across all 38 ecosystem apps, serving as both your blockchain address and display name." />
         </View>
         <GlassCard>
           <View style={styles.identityRow}>

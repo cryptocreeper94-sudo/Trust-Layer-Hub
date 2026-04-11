@@ -28,7 +28,7 @@ interface Notification {
 }
 
 const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: "1", type: "system", title: "Welcome to Trust Layer Hub!", message: "Your account is set up and ready. Explore 35 ecosystem apps.", time: "Just now", read: false },
+  { id: "1", type: "system", title: "Welcome to Trust Layer Hub!", message: "Your account is set up and ready. Explore 38 ecosystem apps.", time: "Just now", read: false },
   { id: "2", type: "security", title: "Login from new device", message: "A new login was detected from Windows 11 · Chrome.", time: "2m ago", read: false },
   { id: "3", type: "transaction", title: "Staking Rewards", message: "You earned 12.5 SIG from staking rewards.", time: "1h ago", read: false },
   { id: "4", type: "social", title: "New Follower", message: "darkwave_builder started following you.", time: "3h ago", read: true },
