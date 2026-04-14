@@ -45,6 +45,23 @@ export const CATEGORY_ICONS: Record<string, string> = {
   Marketing: "megaphone-outline",
 };
 
+export const CATEGORY_COLORS: Record<string, string> = {
+  All: "#00ffff",
+  Core: "#00ffff",
+  Security: "#ef4444",
+  DeFi: "#10b981",
+  "AI Trading": "#f59e0b",
+  Gaming: "#ec4899",
+  Enterprise: "#6366f1",
+  Automotive: "#f97316",
+  "Health & Services": "#14b8a6",
+  Publishing: "#a78bfa",
+  "Food & Hospitality": "#fb923c",
+  "Developer Tools": "#22d3ee",
+  "Sports & Odds": "#34d399",
+  Marketing: "#f472b6",
+};
+
 export const ECOSYSTEM_APPS: EcosystemApp[] = [
   {
     id: 1,

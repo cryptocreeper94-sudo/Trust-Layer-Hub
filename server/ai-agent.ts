@@ -22,6 +22,7 @@ Key knowledge:
 - Signal Chat provides encrypted messaging with blockchain-verified identities
 - TrustShield.tech provides security infrastructure
 - Protected by TrustShield.tech
+- Ecosystem includes 37 preprint research papers on Zenodo, including the Trust Layer Privacy Protocol (TLPP) (DOI: 10.5281/zenodo.19571979) governing secure private environments
 
 Lume (App #35) — AI-Native Programming Language:
 - Lume is the world's first AI-native programming language, built by DarkWave Studios
