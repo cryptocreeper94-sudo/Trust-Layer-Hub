@@ -15,17 +15,19 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider } from "@/lib/auth-context";
+import { ThemeProvider, useThemeColors } from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
 import { PresaleBanner } from "@/components/PresaleBanner";
 import { EcosystemAccountHub } from "@/components/EcosystemAccountHub";
 
 function RootLayoutNav() {
+  const { isDark } = useThemeColors();
   return (
     <>
       <PresaleBanner />
       <EcosystemAccountHub />
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
@@ -146,9 +148,11 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <GestureHandlerRootView>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
+          <ThemeProvider>
+            <GestureHandlerRootView>
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

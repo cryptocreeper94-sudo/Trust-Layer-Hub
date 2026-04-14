@@ -3,6 +3,7 @@ import { View, StyleSheet, ViewStyle, Platform } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useThemeColors } from "@/constants/colors";
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -24,12 +25,13 @@ export function GlassCard({
   intensity = "medium",
 }: GlassCardProps) {
   const hasFlex = style && (style as any).flex;
+  const { colors, isDark } = useThemeColors();
   const blurIntensity = intensity === "low" ? 25 : intensity === "high" ? 60 : 40;
 
   const isAndroid = Platform.OS === "android";
 
   const GlassSurface = isAndroid ? View : BlurView;
-  const surfaceProps = isAndroid ? {} : { intensity: blurIntensity, tint: "dark" as const };
+  const surfaceProps = isAndroid ? {} : { intensity: blurIntensity, tint: (isDark ? "dark" : "light") as any };
 
   const content = (
     <View style={[styles.wrapper, style]}>
@@ -41,14 +43,25 @@ export function GlassCard({
           style={styles.glowBorder}
         />
       )}
-      <GlassSurface {...surfaceProps} style={[styles.card, isAndroid && styles.androidCardFallBack, hasFlex && { flex: 1 }, glow && styles.cardGlow]}>
+      <GlassSurface {...surfaceProps} style={[
+        styles.card,
+        isAndroid && (isDark ? styles.androidCardFallBack : { backgroundColor: "rgba(255,255,255,0.92)" }),
+        hasFlex && { flex: 1 },
+        glow && styles.cardGlow,
+        !isDark && { borderColor: "rgba(0,0,0,0.08)" },
+      ]}>
         <LinearGradient
-          colors={["rgba(255,255,255,0.03)", "transparent"]}
+          colors={isDark ? ["rgba(255,255,255,0.03)", "transparent"] : ["rgba(255,255,255,0.6)", "rgba(255,255,255,0.3)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <View style={[styles.cardInner, hasFlex && { flex: 1 }, innerStyle]}>
+        <View style={[
+          styles.cardInner,
+          hasFlex && { flex: 1 },
+          !isDark && { backgroundColor: "rgba(255,255,255,0.75)" },
+          innerStyle,
+        ]}>
           {children}
         </View>
       </GlassSurface>

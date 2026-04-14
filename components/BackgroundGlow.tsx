@@ -1,10 +1,13 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useThemeColors } from "@/constants/colors";
 
 export function BackgroundGlow() {
+  const { isDark } = useThemeColors();
+  const opacity = isDark ? 1 : 0.3;
   return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: "none", opacity }]}>
       <LinearGradient
         colors={["rgba(0,255,255,0.08)", "rgba(0,255,255,0.02)", "transparent"]}
         style={styles.orbTopLeft}

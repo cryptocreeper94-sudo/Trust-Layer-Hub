@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import Colors from "@/constants/colors";
+import Colors, { useThemeColors } from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
@@ -219,6 +219,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
+  const { colors, isDark } = useThemeColors();
   const isDesktop = Platform.OS === "web" && width >= 768;
   const { user, isAuthenticated } = useAuth();
   const { data: balance } = useBalance();
@@ -282,7 +283,7 @@ export default function HomeScreen() {
   }, [zipInput]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <KenBurnsBackground 
         images={[
           require('@/assets/images/hub_ecosystem_globe.jpg'),
@@ -311,7 +312,7 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting} testID="home-greeting">{greeting},</Text>
+            <Text style={[styles.greeting, { color: colors.textTertiary }]} testID="home-greeting">{greeting},</Text>
             <GradientText text={firstName} style={styles.username} />
           </View>
           <Pressable
@@ -333,11 +334,11 @@ export default function HomeScreen() {
 
         <GlassCard glow delay={100}>
           <View style={styles.balanceHeader}>
-            <Text style={styles.balanceLabel}>Portfolio Value</Text>
+            <Text style={[styles.balanceLabel, { color: colors.textTertiary }]}>Portfolio Value</Text>
             <InfoBubble title="Portfolio Value" message="Your total holdings across SIG, Shells, and stSIG converted to USD. SIG is the native token ($0.01), Shells are micro-tokens ($0.001) earned through ecosystem activity, and stSIG represents your staked SIG." />
             <View style={styles.balanceLiveDot} />
           </View>
-          <Text style={styles.balanceValue}>
+          <Text style={[styles.balanceValue, { color: colors.textPrimary }]}>
             ${portfolioValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </Text>
           <View style={styles.balanceRow}>

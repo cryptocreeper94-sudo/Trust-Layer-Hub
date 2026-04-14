@@ -2,7 +2,7 @@ import React from "react";
 import { Text, TextStyle, Platform, View } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import Colors from "@/constants/colors";
+import Colors, { useThemeColors } from "@/constants/colors";
 
 interface GradientTextProps {
   text: string;
@@ -10,8 +10,9 @@ interface GradientTextProps {
   colors?: readonly string[];
 }
 
-export function GradientText({ text, style, colors }: GradientTextProps) {
-  const gradientColors = colors || Colors.gradientCyanPurple;
+export function GradientText({ text, style, colors: propColors }: GradientTextProps) {
+  const { colors: themeColors } = useThemeColors();
+  const gradientColors = propColors || themeColors.gradientCyanPurple;
 
   if (Platform.OS === "web") {
     return (

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import Colors from "@/constants/colors";
+import Colors, { useThemeColors } from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
@@ -67,6 +67,7 @@ export default function SettingsScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === "web" && width >= 768;
+  const { colors, mode, setMode, isDark } = useThemeColors();
   const { user, logout } = useAuth();
 
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -177,6 +178,42 @@ export default function SettingsScreen() {
           <SettingRow icon="mail" label="Email" value={email} onPress={() => {}} />
           <View style={styles.divider} />
           <SettingRow icon="shield-checkmark" label="Trust Layer ID" value={trustLayerId} showChevron={false} />
+        </GlassCard>
+
+        {/* Appearance */}
+        <SectionHeader title="APPEARANCE" />
+        <GlassCard>
+          <View style={styles.settingRow}>
+            <View style={styles.settingIcon}>
+              <Ionicons name={isDark ? "moon" : "sunny"} size={18} color={colors.primary} />
+            </View>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Theme</Text>
+              <Text style={[styles.settingValue, { color: colors.textTertiary }]}>Switch between dark and light mode</Text>
+            </View>
+          </View>
+          <View style={styles.themeRow}>
+            {(["dark", "light", "system"] as const).map((opt) => (
+              <Pressable
+                key={opt}
+                style={[styles.themeBtn, mode === opt && { backgroundColor: colors.primary + "22", borderColor: colors.primary }]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setMode(opt);
+                }}
+                testID={`theme-${opt}`}
+              >
+                <Ionicons
+                  name={opt === "dark" ? "moon" : opt === "light" ? "sunny" : "phone-portrait"}
+                  size={16}
+                  color={mode === opt ? colors.primary : colors.textTertiary}
+                />
+                <Text style={[styles.themeBtnText, { color: mode === opt ? colors.primary : colors.textSecondary }]}>
+                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </GlassCard>
 
         {/* Notifications */}
@@ -371,5 +408,27 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "rgba(255,255,255,0.06)",
     marginLeft: 52,
+  },
+  themeRow: {
+    flexDirection: "row" as const,
+    gap: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 8,
+  },
+  themeBtn: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+  },
+  themeBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
   },
 });

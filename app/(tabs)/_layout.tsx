@@ -7,7 +7,7 @@ import { Platform, StyleSheet, View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "@/constants/colors";
+import Colors, { useThemeColors } from "@/constants/colors";
 import { HamburgerMenu } from "@/components/HamburgerMenu";
 import { useAuth } from "@/lib/auth-context";
 
@@ -41,30 +41,31 @@ function NativeTabLayout() {
 function TabBarBackground() {
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
+  const { isDark } = useThemeColors();
 
   if (isIOS) {
     return (
       <View style={StyleSheet.absoluteFill}>
-        <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
         <LinearGradient
-          colors={["rgba(12,18,36,0.5)", "rgba(12,18,36,0.85)"]}
+          colors={isDark ? ["rgba(12,18,36,0.5)", "rgba(12,18,36,0.85)"] : ["rgba(245,247,250,0.6)", "rgba(245,247,250,0.9)"]}
           style={StyleSheet.absoluteFill}
         />
-        <View style={tabBarStyles.topBorder} />
+        <View style={[tabBarStyles.topBorder, !isDark && { backgroundColor: "rgba(0,0,0,0.06)" }]} />
       </View>
     );
   }
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(12,18,36,0.95)" }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? "rgba(12,18,36,0.95)" : "rgba(245,247,250,0.97)" }]} />
       <LinearGradient
-        colors={["rgba(0,255,255,0.04)", "transparent"]}
+        colors={isDark ? ["rgba(0,255,255,0.04)", "transparent"] : ["rgba(8,145,178,0.04)", "transparent"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={[StyleSheet.absoluteFill, { height: 1 }]}
       />
-      <View style={tabBarStyles.topBorder} />
+      <View style={[tabBarStyles.topBorder, !isDark && { backgroundColor: "rgba(0,0,0,0.06)" }]} />
     </View>
   );
 }
@@ -89,13 +90,14 @@ function ActiveTabIcon({ name, color, size, focused }: { name: string; color: st
 
 function ClassicTabLayout({ isDevMode }: { isDevMode: boolean }) {
   const isWeb = Platform.OS === "web";
+  const { colors } = useThemeColors();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.tabInactive,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
           position: "absolute" as const,
           backgroundColor: "transparent",
@@ -174,17 +176,18 @@ function FloatingMenuButton({ onPress }: { onPress: () => void }) {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const topPos = insets.top + webTopInset + 10;
+  const { colors, isDark } = useThemeColors();
 
   return (
     <Pressable
       onPress={onPress}
-      style={[tabBarStyles.floatingMenuBtn, { top: topPos }]}
+      style={[tabBarStyles.floatingMenuBtn, { top: topPos }, !isDark && { borderColor: "rgba(8,145,178,0.2)" }]}
       testID="hamburger-button"
     >
-      <BlurView intensity={40} tint="dark" style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(12,18,36,0.6)" }]} />
+      <BlurView intensity={40} tint={isDark ? "dark" : "light"} style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: isDark ? "rgba(12,18,36,0.6)" : "rgba(255,255,255,0.7)" }]} />
       </BlurView>
-      <Ionicons name="menu" size={22} color={Colors.textPrimary} />
+      <Ionicons name="menu" size={22} color={colors.textPrimary} />
     </Pressable>
   );
 }
