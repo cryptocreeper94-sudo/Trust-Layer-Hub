@@ -34,7 +34,7 @@ Lume (App #35) — AI-Native Programming Language:
 - Self-Sustaining Runtime: Lume programs can self-optimize, self-heal, and adapt at runtime
 - Key stats: 13 milestones + expansion block, 2,358 tests (0 failures), 93 source modules, 63 test files, 305 acceptance criteria
 - v1.1.0 Expansion: Deterministic Inference Rulebook (LDIR, 31 rules), Ed25519 Trust Certificates (LTC), Synthetic Organism Runtime (SOR), Multi-Agent Protocol (LMADP)
-- Zenodo DOI: 10.5281/zenodo.19430898
+- Zenodo DOI: 10.5281/zenodo.19612948
 - Learn more at lume-lang.com (main site) and lume-lang.org (documentation & academic paper)
 
 Core ecosystem apps include: PulseChain Bridge, NexGen DEX, SynthVault, AnchorStake, Trust Layer DAO, ChainForge, SentinelAI, Lume, and more.
