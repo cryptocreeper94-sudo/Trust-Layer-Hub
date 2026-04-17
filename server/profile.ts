@@ -206,4 +206,101 @@ export function registerProfileRoutes(app: Express): void {
       res.status(500).json({ error: "Failed to check username." });
     }
   });
+
+  /**
+   * GET /api/user/ecosystem-identity
+   * 
+   * Returns the full identity blob for the EcosystemAccountHub V3 widget.
+   * Called by all ecosystem apps to hydrate the user panel with live data.
+   * CORS-open to all *.tlid.io and ecosystem domains.
+   */
+  app.get("/api/user/ecosystem-identity", authenticateToken, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+
+      // Set CORS for ecosystem-wide access
+      const origin = req.headers.origin || "";
+      const allowed = [
+        "https://dwtl.io", "https://lume-lang.org", "https://lume-lang.com",
+        "https://dwsc.io", "https://darkwavestudios.io", "https://signalcast.tlid.io",
+        "https://trustgen.tlid.io", "https://chronicles.tlid.io", "https://trusthub.tlid.io",
+        "https://tlid.io", "https://darkwavepulse.io",
+      ];
+      if (allowed.includes(origin) || origin.endsWith(".tlid.io")) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+      }
+
+      // Fetch affiliate stats
+      let affiliateStats = { totalReferrals: 0, convertedReferrals: 0, totalEarnings: 0 };
+      let affiliateTier = { name: "Base", commissionRate: 10 };
+      try {
+        const { affiliateReferrals, affiliateCommissions } = await import("./db/schema");
+        const referrals = await db
+          .select()
+          .from(affiliateReferrals)
+          .where(eq(affiliateReferrals.referrerId, user.id));
+        const commissions = await db
+          .select()
+          .from(affiliateCommissions)
+          .where(eq(affiliateCommissions.referrerId, user.id));
+
+        const converted = referrals.filter((r: any) => r.status === "converted").length;
+        const totalEarned = commissions.reduce((s: number, c: any) => s + parseFloat(c.amount || "0"), 0);
+
+        affiliateStats = {
+          totalReferrals: referrals.length,
+          convertedReferrals: converted,
+          totalEarnings: totalEarned,
+        };
+
+        const TIERS = [
+          { name: "Base", minReferrals: 0, commissionRate: 10 },
+          { name: "Silver", minReferrals: 5, commissionRate: 12.5 },
+          { name: "Gold", minReferrals: 15, commissionRate: 15 },
+          { name: "Platinum", minReferrals: 30, commissionRate: 17.5 },
+          { name: "Diamond", minReferrals: 50, commissionRate: 20 },
+        ];
+        let tier = TIERS[0];
+        for (const t of TIERS) { if (converted >= t.minReferrals) tier = t; }
+        affiliateTier = { name: tier.name, commissionRate: tier.commissionRate };
+      } catch {}
+
+      // Determine member tier from role
+      const memberTier = user.role === "admin" ? "founder"
+        : user.role === "premium" ? "premium"
+        : user.role === "founder" ? "founder"
+        : user.emailVerified ? "standard"
+        : "free";
+
+      const tlid = `${user.username}.tlid`;
+      const referralLink = `https://trusthub.tlid.io/ref/${user.uniqueHash}`;
+
+      res.json({
+        id: user.id.toString(),
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        displayName: user.displayName || user.firstName || user.username,
+        avatarUrl: user.avatarUrl || null,
+        bio: user.bio || null,
+        uniqueHash: user.uniqueHash,
+        tlid,
+        referralCode: user.uniqueHash,
+        referralLink,
+        affiliateTier,
+        affiliateStats,
+        memberTier,
+        presaleBalance: 0, // Future: query presale contract
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
+        role: user.role || "user",
+        profileUrl: `https://trusthub.tlid.io/profile-editor`,
+        trustHubUrl: "https://trusthub.tlid.io",
+      });
+    } catch (error: any) {
+      console.error("Ecosystem identity error:", error?.message);
+      res.status(500).json({ error: "Failed to load ecosystem identity." });
+    }
+  });
 }
