@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust Layer Ecosystem — 42 Apps, One Operating System</title>
+<meta name="description" content="Explore the Trust Layer ecosystem — 42 interconnected apps powered by Lume-OS. DeFi, Social, Security, AI, Gaming, and more.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#050510;color:#e0e0e0;overflow:hidden;height:100vh;width:100vw}
+#canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
+.header{position:fixed;top:0;left:0;right:0;z-index:10;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(5,5,16,0.8);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,255,200,0.1)}
+.header h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#00ffc8,#00b4d8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .stats{font-size:13px;color:rgba(255,255,255,0.5)}
+.header .stats span{color:#00ffc8;font-weight:600}
+.tooltip{position:fixed;z-index:20;background:rgba(10,10,30,0.95);backdrop-filter:blur(20px);border:1px solid rgba(0,255,200,0.3);border-radius:12px;padding:16px 20px;max-width:320px;pointer-events:none;opacity:0;transition:opacity 0.2s;box-shadow:0 8px 32px rgba(0,0,0,0.6)}
+.tooltip.visible{opacity:1}
+.tooltip h3{font-size:15px;font-weight:700;margin-bottom:4px;color:#fff}
+.tooltip .domain{font-size:12px;color:#00ffc8;margin-bottom:8px}
+.tooltip p{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.4}
+.tooltip .category{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-top:8px}
+.legend{position:fixed;bottom:20px;left:20px;z-index:10;display:flex;flex-wrap:wrap;gap:12px;background:rgba(5,5,16,0.8);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.6)}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.center-label{position:fixed;z-index:5;pointer-events:none;text-align:center}
+.cta{position:fixed;bottom:20px;right:20px;z-index:10;background:linear-gradient(135deg,#00ffc8,#00b4d8);color:#050510;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,255,200,0.4)}
+@media(max-width:768px){.legend{bottom:60px;left:10px;right:10px}.header h1{font-size:14px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>TRUST LAYER ECOSYSTEM</h1>
+  <div class="stats"><span>42</span> Apps · <span>42</span> Services · <span>71</span> Papers · <span>1</span> OS</div>
+</div>
+<canvas id="canvas"></canvas>
+<div class="tooltip" id="tooltip"></div>
+<div class="legend" id="legend"></div>
+<a href="https://dwtl.io" class="cta">Enter the Ecosystem →</a>
+
+<script>
+const CATEGORIES = {
+  core:     { label: "Core / OS",      color: "#00ffc8" },
+  defi:     { label: "DeFi & Trading", color: "#00b4d8" },
+  security: { label: "Security",       color: "#ff3366" },
+  social:   { label: "Social & Media", color: "#a855f7" },
+  consumer: { label: "Consumer Apps",  color: "#22d3ee" },
+  business: { label: "Business SaaS",  color: "#f59e0b" },
+  gaming:   { label: "Gaming",         color: "#10b981" },
+  creative: { label: "Creative & Publishing", color: "#ec4899" },
+};
+
+const APPS = [
+  // Core
+  { id:"lume-os", name:"Lume-OS", domain:"lume-cortex.com", cat:"core", desc:"Deterministic meta-operating system. The host.", r:28, center:true },
+  { id:"lume", name:"Lume", domain:"lume-lang.org", cat:"core", desc:"Deterministic natural-language programming language v1.1.0" },
+  { id:"trust-layer", name:"Trust Layer", domain:"dwtl.io", cat:"core", desc:"SSO, identity, and ecosystem gateway" },
+  { id:"tlid", name:"TLID.io", domain:"tlid.io", cat:"core", desc:"Identity and subdomain routing" },
+  { id:"axiom", name:"Axiom", domain:"axiom.tlid.io", cat:"core", desc:"69,000+ topic cognitive kernel with deterministic knowledge engine" },
+  { id:"dwsc", name:"DWSC", domain:"dwsc.io", cat:"core", desc:"DarkWave Systems Collective portal" },
+  // DeFi
+  { id:"pulse", name:"Pulse", domain:"darkwavepulse.com", cat:"defi", desc:"AI-powered crypto analysis and market predictions" },
+  { id:"strikeagent", name:"StrikeAgent", domain:"strikeagent.io", cat:"defi", desc:"42 backend services. 42 futures. One strike." },
+  { id:"trustvault", name:"TrustVault", domain:"trustvault.tlid.io", cat:"defi", desc:"Encrypted digital asset vault" },
+  { id:"tradeworks", name:"TradeWorks AI", domain:"tradeworksai.io", cat:"defi", desc:"AI trading infrastructure" },
+  { id:"lumeline", name:"LumeLine", domain:"lumeline.app", cat:"defi", desc:"Sports betting odds intelligence" },
+  // Security
+  { id:"trustshield", name:"TrustShield", domain:"trustshield.tech", cat:"security", desc:"Ecosystem-wide security monitoring" },
+  { id:"guardian-scanner", name:"Guardian Scanner", domain:"guardianscanner.tlid.io", cat:"security", desc:"Wallet threat detection" },
+  { id:"guardian-screener", name:"Guardian Screener", domain:"guardianscreener.tlid.io", cat:"security", desc:"Smart contract analysis" },
+  // Social & Media
+  { id:"signalchat", name:"Signal Chat", domain:"signalchat.tlid.io", cat:"social", desc:"Encrypted real-time messaging" },
+  { id:"signalcast", name:"SignalCast", domain:"signalcast.tlid.io", cat:"social", desc:"AI social media automation" },
+  { id:"chronicles", name:"Chronicles", domain:"yourlegacy.io", cat:"social", desc:"Legacy storytelling platform" },
+  // Consumer
+  { id:"garagebot", name:"GarageBot", domain:"garagebot.io", cat:"consumer", desc:"AI auto parts search across 104+ retailers" },
+  { id:"thevoid", name:"THE VOID", domain:"intothevoid.app", cat:"consumer", desc:"Cathartic venting with 5 AI personalities" },
+  { id:"vedasolus", name:"VedaSolus", domain:"vedasolus.io", cat:"consumer", desc:"Natural health and holistic wellness" },
+  { id:"verdara", name:"Verdara", domain:"verdara.tlid.io", cat:"consumer", desc:"Outdoor recreation super-app with gear comparison" },
+  { id:"driverconnect", name:"TL Driver Connect", domain:"tldriverconnect.com", cat:"consumer", desc:"GPS, mileage, receipts for drivers" },
+  { id:"trusthome", name:"TrustHome", domain:"trusthome.tlid.io", cat:"consumer", desc:"Real estate insights" },
+  { id:"happyeats", name:"Happy Eats", domain:"happyeats.app", cat:"consumer", desc:"Food delivery — Lebanon, TN" },
+  { id:"brewandboard", name:"Brew & Board", domain:"brewandboard.coffee", cat:"consumer", desc:"Craft coffee and board games" },
+  // Business SaaS
+  { id:"orbitstaffing", name:"ORBIT Staffing", domain:"orbitstaffing.io", cat:"business", desc:"HR suite, timekeeping, payroll, job marketplace" },
+  { id:"lotopspro", name:"Lot Ops Pro", domain:"lotopspro.io", cat:"business", desc:"Dealership operations platform" },
+  { id:"nashpaintpros", name:"Nash PaintPros", domain:"nashpaintpros.io", cat:"business", desc:"Painting contractors — Nashville" },
+  { id:"paintpros", name:"PaintPros", domain:"paintpros.io", cat:"business", desc:"Painting lead generation" },
+  { id:"arbora", name:"Arbora", domain:"arbora.tlid.io", cat:"business", desc:"Arborist business management" },
+  { id:"torque", name:"TORQUE", domain:"torque.tlid.io", cat:"business", desc:"Automotive marketplace" },
+  { id:"orby", name:"Orby Commander", domain:"getorby.io", cat:"business", desc:"Venue automation" },
+  { id:"darkwavestudios", name:"DarkWave Studios", domain:"darkwavestudios.io", cat:"business", desc:"Premium web development agency" },
+  // Gaming
+  { id:"bomber", name:"Bomber 3D", domain:"bombergolf.tlid.io", cat:"gaming", desc:"3D long drive contest game" },
+  { id:"trustgolf", name:"Trust Golf", domain:"trustgolf.app", cat:"gaming", desc:"Golf community and equipment" },
+  { id:"thearcade", name:"The Arcade", domain:"darkwavegames.io", cat:"gaming", desc:"Casual gaming platform" },
+  // Creative & Publishing
+  { id:"trustgen", name:"TrustGen 3D", domain:"trustgen.tlid.io", cat:"creative", desc:"AI-powered 3D asset generation" },
+  { id:"trustbook", name:"TrustBook", domain:"trustbook.tlid.io", cat:"creative", desc:"Digital publishing — 4 titles available" },
+  { id:"throughtheveil", name:"Through The Veil", domain:"throughtheveil.tlid.io", cat:"creative", desc:"Ebook with free 3-chapter preview" },
+  { id:"academy", name:"DarkWave Academy", domain:"academy.tlid.io", cat:"creative", desc:"Developer education and tutorials" },
+  { id:"studio", name:"DarkWave Studio", domain:"studio.tlid.io", cat:"creative", desc:"Lume Language IDE" },
+  { id:"strata", name:"Strata", domain:"strata.tlid.io", cat:"creative", desc:"Sovereign research registry" },
+];
+
+// Canvas setup
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let W, H, dpr;
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + "px"; canvas.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize(); window.addEventListener("resize", resize);
+
+// Build legend
+const legendEl = document.getElementById("legend");
+Object.entries(CATEGORIES).forEach(([k, v]) => {
+  legendEl.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${v.color}"></div>${v.label}</div>`;
+});
+
+// Physics simulation
+const nodes = APPS.map((app, i) => {
+  const angle = (i / APPS.length) * Math.PI * 2;
+  const dist = app.center ? 0 : 120 + Math.random() * 200;
+  return {
+    ...app,
+    x: W/2 + Math.cos(angle) * dist,
+    y: H/2 + Math.sin(angle) * dist,
+    vx: 0, vy: 0,
+    r: app.r || 14 + (app.cat === "core" ? 4 : 0),
+  };
+});
+
+const centerNode = nodes.find(n => n.center);
+let hoveredNode = null;
+let mouseX = 0, mouseY = 0;
+let dragging = null, dragOffX = 0, dragOffY = 0;
+
+function simulate() {
+  const cx = W/2, cy = H/2;
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    if (a === dragging) continue;
+    // Gravity toward center
+    const gcx = cx - a.x, gcy = cy - a.y;
+    const gd = Math.sqrt(gcx*gcx + gcy*gcy) || 1;
+    a.vx += (gcx / gd) * 0.15;
+    a.vy += (gcy / gd) * 0.15;
+    // Repulsion between nodes
+    for (let j = i+1; j < nodes.length; j++) {
+      const b = nodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d = Math.sqrt(dx*dx + dy*dy) || 1;
+      const minDist = a.r + b.r + 30;
+      if (d < minDist) {
+        const force = (minDist - d) / d * 0.5;
+        a.vx -= dx * force; a.vy -= dy * force;
+        if (b !== dragging) { b.vx += dx * force; b.vy += dy * force; }
+      }
+    }
+    // Category clustering
+    for (const b of nodes) {
+      if (a === b) continue;
+      if (a.cat === b.cat) {
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.sqrt(dx*dx + dy*dy) || 1;
+        if (d > 60 && d < 300) {
+          a.vx += (dx / d) * 0.03;
+          a.vy += (dy / d) * 0.03;
+        }
+      }
+    }
+    // Damping
+    a.vx *= 0.92; a.vy *= 0.92;
+    a.x += a.vx; a.y += a.vy;
+    // Bounds
+    a.x = Math.max(a.r+10, Math.min(W-a.r-10, a.x));
+    a.y = Math.max(a.r+60, Math.min(H-a.r-10, a.y));
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  // Connection lines to center
+  if (centerNode) {
+    for (const n of nodes) {
+      if (n === centerNode) continue;
+      const cat = CATEGORIES[n.cat];
+      ctx.beginPath();
+      ctx.moveTo(centerNode.x, centerNode.y);
+      ctx.lineTo(n.x, n.y);
+      ctx.strokeStyle = (hoveredNode === n) ? cat.color + "60" : cat.color + "15";
+      ctx.lineWidth = (hoveredNode === n) ? 1.5 : 0.5;
+      ctx.stroke();
+    }
+  }
+  // Same-category connections
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      if (nodes[i].cat === nodes[j].cat) {
+        const dx = nodes[j].x - nodes[i].x, dy = nodes[j].y - nodes[i].y;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if (d < 200) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = CATEGORIES[nodes[i].cat].color + "12";
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+  // Nodes
+  for (const n of nodes) {
+    const cat = CATEGORIES[n.cat];
+    const isHovered = (hoveredNode === n);
+    // Glow
+    if (isHovered || n.center) {
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 3);
+      grad.addColorStop(0, cat.color + "30");
+      grad.addColorStop(1, cat.color + "00");
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+    // Circle
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = isHovered ? cat.color + "40" : cat.color + "20";
+    ctx.fill();
+    ctx.strokeStyle = isHovered ? cat.color : cat.color + "80";
+    ctx.lineWidth = isHovered ? 2 : 1;
+    ctx.stroke();
+    // Label
+    ctx.fillStyle = isHovered ? "#fff" : "rgba(255,255,255,0.7)";
+    ctx.font = `${isHovered ? "600" : "400"} ${n.center ? 11 : 10}px Inter`;
+    ctx.textAlign = "center";
+    ctx.fillText(n.name, n.x, n.y + n.r + 14);
+  }
+}
+
+// Tooltip
+const tooltipEl = document.getElementById("tooltip");
+function updateTooltip() {
+  if (hoveredNode) {
+    const cat = CATEGORIES[hoveredNode.cat];
+    tooltipEl.innerHTML = `<h3>${hoveredNode.name}</h3><div class="domain">${hoveredNode.domain}</div><p>${hoveredNode.desc}</p><div class="category" style="background:${cat.color}20;color:${cat.color}">${cat.label}</div>`;
+    tooltipEl.classList.add("visible");
+    let tx = mouseX + 16, ty = mouseY - 10;
+    if (tx + 320 > W) tx = mouseX - 336;
+    if (ty + 150 > H) ty = mouseY - 150;
+    tooltipEl.style.left = tx + "px";
+    tooltipEl.style.top = ty + "px";
+  } else {
+    tooltipEl.classList.remove("visible");
+  }
+}
+
+// Mouse events
+canvas.addEventListener("mousemove", e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  if (dragging) {
+    dragging.x = mouseX - dragOffX;
+    dragging.y = mouseY - dragOffY;
+    dragging.vx = 0; dragging.vy = 0;
+    return;
+  }
+  hoveredNode = null;
+  for (const n of nodes) {
+    const dx = mouseX - n.x, dy = mouseY - n.y;
+    if (dx*dx + dy*dy < n.r*n.r) { hoveredNode = n; break; }
+  }
+  canvas.style.cursor = hoveredNode ? "pointer" : "default";
+  updateTooltip();
+});
+
+canvas.addEventListener("mousedown", e => {
+  for (const n of nodes) {
+    const dx = e.clientX - n.x, dy = e.clientY - n.y;
+    if (dx*dx + dy*dy < n.r*n.r) {
+      dragging = n; dragOffX = dx; dragOffY = dy;
+      canvas.style.cursor = "grabbing";
+      return;
+    }
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (dragging) { canvas.style.cursor = "default"; dragging = null; }
+});
+
+canvas.addEventListener("click", e => {
+  if (dragging) return;
+  for (const n of nodes) {
+    const dx = e.clientX - n.x, dy = e.clientY - n.y;
+    if (dx*dx + dy*dy < n.r*n.r) {
+      window.open("https://" + n.domain, "_blank");
+      return;
+    }
+  }
+});
+
+// Touch support
+canvas.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  mouseX = t.clientX; mouseY = t.clientY;
+  for (const n of nodes) {
+    const dx = mouseX - n.x, dy = mouseY - n.y;
+    if (dx*dx + dy*dy < (n.r+10)*(n.r+10)) {
+      hoveredNode = n; updateTooltip();
+      return;
+    }
+  }
+}, {passive:true});
+
+canvas.addEventListener("touchend", e => {
+  if (hoveredNode) {
+    window.open("https://" + hoveredNode.domain, "_blank");
+    hoveredNode = null; updateTooltip();
+  }
+});
+
+// Animation loop
+function loop() {
+  simulate();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

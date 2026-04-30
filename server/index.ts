@@ -261,6 +261,11 @@ function configureExpoAndLanding(app: express.Application) {
     }
   });
 
+  // Ecosystem map — interactive node graph of all 42 apps
+  app.get("/ecosystem", (_req: Request, res: Response) => {
+    res.sendFile(path.resolve(process.cwd(), "public", "ecosystem.html"));
+  });
+
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "public")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
