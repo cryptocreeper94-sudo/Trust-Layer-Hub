@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -602,7 +602,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Featured Apps" style={styles.sectionTitle} />
-          <InfoBubble title="Featured Apps" message="Highlighted applications from the Trust Layer ecosystem of 38 apps. These rotate based on popularity, new releases, and ecosystem updates. Tap any app to learn more." />
+          <InfoBubble title="Featured Apps" message="Highlighted applications from the Trust Layer ecosystem of 42 apps. These rotate based on popularity, new releases, and ecosystem updates. Tap any app to learn more." />
           <Pressable onPress={() => router.push("/(tabs)/explore")} testID="home-see-all-apps">
             <Text style={styles.seeAll}>See All</Text>
           </Pressable>
@@ -637,7 +637,7 @@ export default function HomeScreen() {
 
         <View style={styles.sectionHeader}>
           <GradientText text="Ecosystem Activity" style={styles.sectionTitle} />
-          <InfoBubble title="Ecosystem Activity" message="Live feed of platform-wide activity including new user registrations, hallmark verifications, staking events, and app interactions across the 38-app ecosystem." />
+          <InfoBubble title="Ecosystem Activity" message="Live feed of platform-wide activity including new user registrations, hallmark verifications, staking events, and app interactions across the 42-app ecosystem." />
           <Pressable onPress={() => router.push("/leaderboard")} hitSlop={8} testID="home-view-leaderboard">
             <Text style={styles.viewAllText}>View All</Text>
           </Pressable>
@@ -1486,3 +1486,4 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
 });
+
