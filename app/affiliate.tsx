@@ -27,7 +27,7 @@ const TIER_COLORS: Record<string, string> = {
   Base: Colors.textSecondary,
   Silver: "#94a3b8",
   Gold: "#f59e0b",
-  Platinum: "#a78bfa",
+  Platinum: "#38bdf8",
   Diamond: Colors.primary,
 };
 

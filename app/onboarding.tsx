@@ -104,7 +104,7 @@ export default function OnboardingScreen() {
       <View style={[styles.stepContainer, { width }]}>
         <View style={styles.stepCard}>
           <LinearGradient
-            colors={["rgba(0,255,255,0.08)", "rgba(147,51,234,0.06)", "transparent"]}
+            colors={["rgba(0,255,255,0.08)", "rgba(2,132,199,0.06)", "transparent"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.cardGradient}

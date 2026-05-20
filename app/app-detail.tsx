@@ -67,7 +67,7 @@ export default function AppDetailScreen() {
       >
         <View style={styles.iconSection}>
           <LinearGradient
-            colors={["rgba(0,255,255,0.12)", "rgba(147,51,234,0.12)"]}
+            colors={["rgba(0,255,255,0.12)", "rgba(2,132,199,0.12)"]}
             style={styles.iconGradient}
           >
             <View style={styles.iconInner}>
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   categoryBadge: {
-    backgroundColor: "rgba(147,51,234,0.15)",
+    backgroundColor: "rgba(2,132,199,0.15)",
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 4,

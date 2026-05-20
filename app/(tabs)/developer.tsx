@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   authRequired: {
-    backgroundColor: "rgba(147,51,234,0.12)",
+    backgroundColor: "rgba(2,132,199,0.12)",
   },
   authPublic: {
     backgroundColor: "rgba(255,255,255,0.04)",

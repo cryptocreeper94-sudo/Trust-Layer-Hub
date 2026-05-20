@@ -118,7 +118,7 @@ export default function UserProfileScreen() {
 
             <View style={styles.tlidBadge} testID="user-profile-tlid">
               <LinearGradient
-                colors={["rgba(0,255,255,0.12)", "rgba(147,51,234,0.08)"]}
+                colors={["rgba(0,255,255,0.12)", "rgba(2,132,199,0.08)"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFill}

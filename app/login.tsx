@@ -485,9 +485,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 16,
     borderRadius: 14,
-    backgroundColor: "rgba(147,51,234,0.08)",
+    backgroundColor: "rgba(2,132,199,0.08)",
     borderWidth: 1,
-    borderColor: "rgba(147,51,234,0.2)",
+    borderColor: "rgba(2,132,199,0.2)",
   },
   ssoButtonText: {
     fontSize: 15,

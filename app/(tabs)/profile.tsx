@@ -155,7 +155,7 @@ export default function ProfileScreen() {
         <View style={isDesktop ? { maxWidth: 720, width: "100%", alignSelf: "center" as const } : undefined}>
         <View style={styles.profileHeader}>
           <LinearGradient
-            colors={["rgba(0,255,255,0.15)", "rgba(147,51,234,0.15)"]}
+            colors={["rgba(0,255,255,0.15)", "rgba(2,132,199,0.15)"]}
             style={styles.avatarGradient}
           >
             <View style={styles.avatar}>
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.secondary,
     marginTop: 4,
     borderWidth: 2,
-    borderColor: "rgba(147,51,234,0.3)",
+    borderColor: "rgba(2,132,199,0.3)",
   },
   timelineDotHallmark: {
     backgroundColor: Colors.primary,

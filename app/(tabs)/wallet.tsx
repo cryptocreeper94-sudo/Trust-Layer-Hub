@@ -1049,7 +1049,7 @@ export default function WalletScreen() {
           </View>
           <View style={styles.divider} />
           <View style={styles.assetRow}>
-            <View style={[styles.assetIcon, { backgroundColor: "rgba(147,51,234,0.1)" }]}>
+            <View style={[styles.assetIcon, { backgroundColor: "rgba(2,132,199,0.1)" }]}>
               <Ionicons name="ellipse" size={18} color={Colors.secondary} />
             </View>
             <View style={styles.assetInfo}>
@@ -1196,7 +1196,7 @@ export default function WalletScreen() {
               onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setStakeInitialMode("unstake"); setShowStakeModal(true); }}
               testID="unstake-button"
             >
-              <LinearGradient colors={["rgba(147,51,234,0.12)", "rgba(147,51,234,0.04)"]} style={styles.actionBtnGradient}>
+              <LinearGradient colors={["rgba(2,132,199,0.12)", "rgba(2,132,199,0.04)"]} style={styles.actionBtnGradient}>
                 <Ionicons name="lock-open" size={16} color={Colors.secondary} />
                 <Text style={[styles.stakingActionText, { color: Colors.secondary }]}>Unstake</Text>
               </LinearGradient>
@@ -1231,7 +1231,7 @@ export default function WalletScreen() {
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setLiquidMode("mint"); setShowLiquidModal(true); }}
                 testID="liquid-mint-button"
               >
-                <LinearGradient colors={["rgba(0,255,255,0.12)", "rgba(147,51,234,0.08)"]} style={styles.actionBtnGradient}>
+                <LinearGradient colors={["rgba(0,255,255,0.12)", "rgba(2,132,199,0.08)"]} style={styles.actionBtnGradient}>
                   <Ionicons name="flash" size={16} color={Colors.primary} />
                   <Text style={[styles.stakingActionText, { color: Colors.primary }]}>Mint stSIG</Text>
                 </LinearGradient>
@@ -2493,9 +2493,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
-    backgroundColor: "rgba(147,51,234,0.1)",
+    backgroundColor: "rgba(2,132,199,0.1)",
     borderWidth: 1,
-    borderColor: "rgba(147,51,234,0.2)",
+    borderColor: "rgba(2,132,199,0.2)",
     alignSelf: "flex-start" as const,
     marginBottom: 6,
   },

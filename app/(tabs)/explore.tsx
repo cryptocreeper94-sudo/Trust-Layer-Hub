@@ -167,7 +167,7 @@ export default function ExploreScreen() {
         {/* Hero Header */}
         <View style={[styles.heroSection, { paddingTop: insets.top + webTopInset + 20 }]}>
           <LinearGradient
-            colors={["rgba(0,255,255,0.06)", "rgba(147,51,234,0.04)", "transparent"]}
+            colors={["rgba(0,255,255,0.06)", "rgba(2,132,199,0.04)", "transparent"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}

@@ -64,7 +64,7 @@ function NewsCard({ item, cardWidth }: { item: LatestNewsItem; cardWidth?: numbe
     item.category === "Regulation" ? Colors.warning :
     item.category === "Finance" ? Colors.success :
     item.category === "Technology" ? Colors.primary :
-    item.category === "Science" ? "#8b5cf6" :
+    item.category === "Science" ? "#0ea5e9" :
     item.category === "Local" ? "#f59e0b" :
     item.category === "Politics" ? "#ef4444" :
     item.category === "Entertainment" ? "#ec4899" :
@@ -106,7 +106,7 @@ function WorldNewsCard({ item, cardWidth }: { item: { id: string; title: string;
     item.category === "Technology" ? Colors.primary :
     item.category === "Blockchain" ? Colors.secondary :
     item.category === "Energy" ? "#f59e0b" :
-    item.category === "Science" ? "#8b5cf6" :
+    item.category === "Science" ? "#0ea5e9" :
     Colors.textSecondary;
 
   const timeAgo = getTimeAgo(item.publishedAt);
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   featuredAppCategoryBadge: {
-    backgroundColor: "rgba(147,51,234,0.12)",
+    backgroundColor: "rgba(2,132,199,0.12)",
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 2,

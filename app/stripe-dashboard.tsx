@@ -112,7 +112,7 @@ export default function StripeDashboardScreen() {
               <GradientButton
                 title="Connect Stripe"
                 onPress={() => setShowConnectModal(true)}
-                colors={["#635bff", "#7c3aed"]}
+                colors={["#635bff", "#0369a1"]}
                 testID="connect-stripe"
               />
             </View>
@@ -300,7 +300,7 @@ export default function StripeDashboardScreen() {
                   }
                 );
               }}
-              colors={["#635bff", "#7c3aed"]}
+              colors={["#635bff", "#0369a1"]}
               loading={connectMutation.isPending}
               testID="stripe-connect-confirm"
             />
