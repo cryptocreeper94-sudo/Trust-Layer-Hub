@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -14,12 +14,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
 import Colors from "@/constants/colors";
 import { BackgroundGlow } from "@/components/BackgroundGlow";
 import { GlassCard } from "@/components/GlassCard";
 import { GradientText } from "@/components/GradientText";
 import { GradientButton } from "@/components/GradientButton";
 import { useAuth } from "@/lib/auth-context";
+import { apiPost } from "@/lib/api";
+
+// Required for web OAuth redirect
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -35,7 +41,56 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Google OAuth configuration
+  const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: "trustlayer" });
+  const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
+
+  const [googleRequest, googleResponse, promptGoogleAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: ["openid", "profile", "email"],
+      redirectUri,
+      responseType: "id_token",
+    },
+    discovery
+  );
+
+  // Handle Google OAuth response
+  useEffect(() => {
+    if (googleResponse?.type === "success") {
+      const idToken = googleResponse.params?.id_token;
+      if (idToken) {
+        handleGoogleToken(idToken);
+      } else {
+        setGoogleLoading(false);
+        setError("Google sign-in did not return a token.");
+      }
+    } else if (googleResponse?.type === "error" || googleResponse?.type === "dismiss") {
+      setGoogleLoading(false);
+    }
+  }, [googleResponse]);
+
+  const handleGoogleToken = async (idToken: string) => {
+    try {
+      const data = await apiPost<{
+        user: any;
+        sessionToken: string;
+      }>("/api/auth/firebase/verify", { idToken }, false);
+
+      if (data.sessionToken) {
+        await loginWithSSO(data.sessionToken);
+      } else {
+        setError("Google sign-in failed. Please try again.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Google sign-in failed.");
+    }
+    setGoogleLoading(false);
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -265,6 +320,36 @@ export default function LoginScreen() {
             </>
           )}
         </Pressable>
+
+        {/* Google Sign-In */}
+        <Pressable
+          style={styles.googleButton}
+          onPress={async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setError("");
+            setGoogleLoading(true);
+            try {
+              await promptGoogleAsync();
+            } catch {
+              setError("Google sign-in unavailable.");
+              setGoogleLoading(false);
+            }
+          }}
+          disabled={googleLoading || !googleRequest}
+          testID="login-google-button"
+        >
+          {googleLoading ? (
+            <ActivityIndicator size="small" color="#4285F4" />
+          ) : (
+            <>
+              <View style={styles.googleIconBox}>
+                <Text style={styles.googleG}>G</Text>
+              </View>
+              <Text style={styles.googleButtonText}>Sign in with Google</Text>
+            </>
+          )}
+        </Pressable>
+
         <Text style={styles.ssoHint}>Already a Trust Layer member? Enter your email above and tap TrustLink to sign in instantly.</Text>
 
         <View style={styles.forgotRow}>
@@ -477,6 +562,37 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     textTransform: "uppercase" as const,
     letterSpacing: 1,
+  },
+  googleButton: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 12,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: "rgba(66,133,244,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(66,133,244,0.25)",
+    marginTop: 8,
+  },
+  googleIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  googleG: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#4285F4",
+    fontFamily: "Inter_700Bold",
+  },
+  googleButtonText: {
+    fontSize: 15,
+    color: "#4285F4",
+    fontFamily: "Inter_600SemiBold",
   },
   ssoButton: {
     flexDirection: "row" as const,

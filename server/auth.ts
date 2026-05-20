@@ -760,6 +760,126 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
+  // ── Firebase Auth: verify Google Sign-In ID token ─────────────────────────
+  app.post("/api/auth/firebase/verify", async (req: Request, res: Response) => {
+    try {
+      const { idToken } = req.body;
+      if (!idToken) {
+        return res.status(400).json({ error: "Firebase ID token is required" });
+      }
+
+      // Verify the token with Firebase Admin SDK
+      let verifyFn: (token: string) => Promise<any>;
+      try {
+        const firebaseAdminModule = await import("./firebase-admin");
+        verifyFn = firebaseAdminModule.verifyFirebaseToken;
+      } catch {
+        return res.status(503).json({ error: "Firebase Admin not configured on this server" });
+      }
+
+      let decodedToken: any;
+      try {
+        decodedToken = await verifyFn(idToken);
+        if (!decodedToken) {
+          return res.status(401).json({ error: "Invalid or expired Firebase token" });
+        }
+      } catch (err: any) {
+        console.error("[Firebase Auth] Token verification failed:", err?.message);
+        return res.status(401).json({ error: "Invalid or expired Firebase token" });
+      }
+
+      const firebaseEmail = decodedToken.email;
+      const firebaseName = decodedToken.name || decodedToken.displayName || null;
+      const firebasePhoto = decodedToken.picture || null;
+      const firebaseUid = decodedToken.uid;
+
+      if (!firebaseEmail) {
+        return res.status(400).json({ error: "Firebase account has no email" });
+      }
+
+      // Find or create the local user
+      let [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, firebaseEmail.toLowerCase()));
+
+      if (!existingUser) {
+        const uniqueHash = crypto.randomBytes(16).toString("hex");
+        const tempPassword = await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 12);
+
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            email: firebaseEmail.toLowerCase(),
+            username: firebaseEmail.split("@")[0] + "_" + uniqueHash.slice(0, 4),
+            passwordHash: tempPassword,
+            firstName: firebaseName || null,
+            uniqueHash,
+            emailVerified: true,
+            role: "user",
+          })
+          .returning();
+
+        existingUser = newUser;
+
+        try {
+          await generateTrustHubHallmark({
+            userId: newUser.id,
+            appId: "trusthub",
+            appName: "Trust Hub",
+            productName: "Firebase Registration",
+            releaseType: "verification",
+            metadata: { source: "google_sso", firebaseUid },
+          });
+          await createTrustStamp({
+            userId: newUser.id,
+            category: "firebase_registration",
+            data: { source: "google_sso", firebaseUid },
+          });
+        } catch {}
+      }
+
+      // Create session
+      const sessionToken = generateToken();
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      await db.insert(sessions).values({
+        userId: existingUser.id,
+        token: sessionToken,
+        expiresAt,
+      });
+
+      try {
+        await createTrustStamp({
+          userId: existingUser.id,
+          category: "firebase_login",
+          data: { source: "google_sso", firebaseUid },
+        });
+      } catch {}
+
+      res.json({
+        user: {
+          id: existingUser.id.toString(),
+          email: existingUser.email,
+          username: existingUser.username,
+          firstName: existingUser.firstName,
+          displayName: existingUser.firstName || existingUser.username,
+          uniqueHash: existingUser.uniqueHash,
+          role: existingUser.role || "user",
+          emailVerified: true,
+          phoneVerified: existingUser.phoneVerified,
+          twoFactorEnabled: existingUser.twoFactorEnabled,
+        },
+        sessionToken,
+        ssoLinked: true,
+        provider: "google",
+      });
+    } catch (error: any) {
+      console.error("[Firebase Auth] Error:", error?.message);
+      res.status(500).json({ error: "Firebase authentication failed" });
+    }
+  });
+
   app.post("/api/auth/forgot-password", forgotPasswordLimiter, async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
