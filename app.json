@@ -2,7 +2,7 @@
   "expo": {
     "name": "Trust Layer",
     "slug": "trust-layer-hub",
-    "owner": "darkwavestudios",
+    "owner": "cryptocreeper",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -80,6 +80,14 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://trusthub.tlid.io"
+      },
+      "eas": {
+        "projectId": "76fc8289-a844-48bc-852d-e94ee79e4789"
+      }
     }
   }
 }
