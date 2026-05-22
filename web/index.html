@@ -32,5 +32,18 @@
         });
       }
     </script>
+      <!-- DarkWave Studios Ecosystem Analytics -->
+    <script>
+      (function(){
+        var id = window.location.hostname;
+        function track(type) {
+          try { navigator.sendBeacon('https://darkwavestudios.io/api/analytics', JSON.stringify({ app: id, type: type, url: window.location.href, ref: document.referrer, ts: Date.now() })); } catch(e) {}
+        }
+        track('pageview');
+        window.addEventListener('popstate', function(){ track('navigate'); });
+        var origPush = history.pushState;
+        history.pushState = function(){ origPush.apply(this, arguments); track('navigate'); };
+      })();
+    </script>
   </body>
 </html>
