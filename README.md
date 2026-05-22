@@ -1,45 +1,43 @@
-﻿# Trust Hub
+# Trust Layer Hub
 
-> $([char]0x1F512) **Patent Pending:** The core deterministic governance capabilities (Lume-V) within this repository are protected under U.S. Provisional Patent Application **No. 64/032,339** (Filed April 7, 2026).
+**The mobile home of everything Trust Layer, TLL, and Lume — your DarkWave ecosystem command center.**
 
-Ecosystem management hub — centralized admin, app directory, and fleet management interface.
+Single entry point to the Trust Layer Ledger, Signal asset, Lume Auto, Lume Scan, and every DarkWave property. Browse the live PoA chain, verify hashes, trace provenance, and launch into any ecosystem app — all from your pocket.
 
-**Live:** [trusthub.tlid.io](https://trusthub.tlid.io)
+## Download
 
-## Lume-OS Integration
+📱 **[Download APK](https://expo.dev/artifacts/eas/uMa4aF2vVyLVUWWqpqzR72.apk)**
 
-This application is registered with **Lume Cortex** — the deterministic meta-operating system governing the Trust Layer ecosystem.
+🏪 Google Play & Apple App Store — Coming Soon
 
-| Property | Value |
-|---|---|
-| **Cortex Bridge** | `cortex-bridge.js` |
-| **Lume-V Wrapper** | `lume-v.wrapper.lume` |
-| **Ecosystem** | trust-layer-42 (42 apps · 42 papers) |
-| **Cortex Endpoint** | lume-cortex.onrender.com |
+## Features
 
-## Stack
+- 🏠 **Ecosystem Hub** — Single entry point to TLL, Lume Auto, Lume Scan, TrustGen, TrustVault, TrustShield, Axiom Studio, and all DarkWave properties
+- ⛓️ **Trust Layer Ledger (TLL)** — Browse the live Proof-of-Authority chain, verify hashes, trace provenance
+- 💎 **Signal Asset Dashboard** — Monitor the native Signal asset with 400ms finality and 200K+ TPS
+- 📋 **Provenance Explorer** — Look up any seal, verify any hash, trace any chain-of-custody
+- 🔗 **Deep Links** — Launch directly into any ecosystem app from the hub
 
-| Layer | Tech |
-|---|---|
-| React Native (Expo) | | Express + TypeScript | | PostgreSQL | | Trust Layer SSO | | Render |
+## System Requirements
 
-## Development
+- **Android**: 7.0+ (API 24)
 
-``bash
-npm install
-npm run dev
-``
+## Tech Stack
 
----
+- Expo SDK 54 + React Native
+- WebView shell targeting dwtl.io
+- EAS Build (preview profile, `latest` image)
 
-## Intellectual Property
+## Build
 
-**Patent Pending:**
-- U.S. Pat. App. No. 64/032,339 — Lume-V
-- U.S. Pat. App. No. 64/047,512 — Lume Core
-- U.S. Pat. App. No. 64/047,467 — Axiom
-- U.S. Pat. App. No. 64/047,496 — Lume-X
-- U.S. Pat. App. No. 64/047,536 — Synthetic Organisms
-- U.S. Pat. App. No. 64/056,378 — Meridian Wireless Energy Routing
+```bash
+npx eas-cli build --platform android --profile preview
+```
 
-© 2026 DarkWave Studios LLC. All rights reserved.
+## License
+
+Proprietary — DarkWave Studios LLC © 2026
+
+- [dwtl.io](https://dwtl.io)
+- [darkwavestudios.io](https://darkwavestudios.io)
+- U.S. Provisional Patent 64/032,339
