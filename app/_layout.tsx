@@ -18,14 +18,14 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider, useThemeColors } from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
-import { PresaleBanner } from "@/components/PresaleBanner";
+
 import { EcosystemAccountHub } from "@/components/EcosystemAccountHub";
 
 function RootLayoutNav() {
   const { isDark } = useThemeColors();
   return (
     <>
-      <PresaleBanner />
+
       <EcosystemAccountHub />
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
