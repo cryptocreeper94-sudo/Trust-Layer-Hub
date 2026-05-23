@@ -19,14 +19,15 @@ import { ThemeProvider, useThemeColors } from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
 
-import { EcosystemAccountHub } from "@/components/EcosystemAccountHub";
+
+
 
 function RootLayoutNav() {
   const { isDark } = useThemeColors();
   return (
     <>
 
-      <EcosystemAccountHub />
+
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
