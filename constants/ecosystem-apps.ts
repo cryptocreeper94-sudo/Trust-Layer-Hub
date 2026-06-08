@@ -7,6 +7,7 @@ export interface EcosystemApp {
   category: string;
   tags: string[];
   icon: string;
+  image?: any;
 }
 
 export const CATEGORIES = [
@@ -236,7 +237,7 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Gaming",
     tags: ["Gaming", "3D", "Sports", "Golf"],
     icon: "golf",
-    image: require("@/assets/images/hub_retro_space.jpg"),
+    image: require("@/assets/images/games_hero_banner.jpg"),
   },
   {
     id: 17,
@@ -513,5 +514,71 @@ export const ECOSYSTEM_APPS: EcosystemApp[] = [
     category: "Core",
     tags: ["Research", "Academic", "Registry", "DOIs"],
     icon: "library",
+  },
+  {
+    id: 43,
+    name: "LumeScan",
+    hook: "Verified OBD-II Diagnostics",
+    description: "Hardware OBD-II dongle providing blockchain-verified vehicle diagnostics, 42 live engine signals, Mode 05 Key Management, and Mode 06 Remote Start capabilities.",
+    url: "https://lumescan.tech",
+    category: "Automotive",
+    tags: ["Automotive", "OBD-II", "Hardware", "Diagnostics"],
+    icon: "car-sport",
+    image: require("@/assets/images/hub_smart_contract.jpg"),
+  },
+  {
+    id: 44,
+    name: "Lume-Cortex",
+    hook: "The Deterministic Meta-OS",
+    description: "The OS-style control surface for Lume-OS. Powered by the Axiom cognitive kernel with 60,600 topics across 74 domains.",
+    url: "https://lume-cortex.com",
+    category: "Core",
+    tags: ["OS", "Desktop", "Web", "Core"],
+    icon: "desktop",
+    image: require("@/assets/images/hub_home_overview.jpg"),
+  },
+  {
+    id: 45,
+    name: "AxiomNews",
+    hook: "Deterministic AI News Engine",
+    description: "Real-time AI news engine processing global topics through the Axiom Deterministic Language Architecture (DLA).",
+    url: "https://axiomnews.tlid.io",
+    category: "Publishing",
+    tags: ["News", "AI", "Publishing"],
+    icon: "newspaper",
+    image: require("@/assets/images/news-hero-1.png"),
+  },
+  {
+    id: 46,
+    name: "Enterprise Modernization Platform",
+    hook: "Enterprise Trust Automation",
+    description: "Complete enterprise architecture for adopting the Trust Layer. Features the Certified Operational Record Engine (CORE) private ledger and COP dashboard.",
+    url: "https://emp.tlid.io",
+    category: "Enterprise",
+    tags: ["Enterprise", "B2B", "Infrastructure"],
+    icon: "business",
+    image: require("@/assets/images/cc_security_shield.jpg"),
+  },
+  {
+    id: 47,
+    name: "TrustHub",
+    hook: "The Ecosystem Mobile App",
+    description: "The mobile gateway to the entire Trust Layer ecosystem. 50+ interconnected apps, native wallet, and Signal chat in your pocket.",
+    url: "https://trusthub.tlid.io",
+    category: "Core",
+    tags: ["Mobile", "Hub", "Wallet", "Chat"],
+    icon: "phone-portrait",
+    image: require("@/assets/images/hub_community_social.jpg"),
+  },
+  {
+    id: 48,
+    name: "AxiomStudio",
+    hook: "The Apex Predator IDE",
+    description: "The world's first offline-capable, deterministic AI knowledge engine with multi-agent coding. Claude Opus, Sonnet, GPT-4o — all in one IDE.",
+    url: "https://axiomstudio.dev",
+    category: "Developer Tools",
+    tags: ["IDE", "AI", "Development", "Coding"],
+    icon: "code-working",
+    image: require("@/assets/images/cc_developer_tools.jpg"),
   },
 ];

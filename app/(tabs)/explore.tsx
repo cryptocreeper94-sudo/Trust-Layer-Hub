@@ -113,6 +113,8 @@ function AppCard({ app, cardWidth }: { app: EcosystemApp; cardWidth: number }) {
   );
 }
 
+const CORE_IDS = [44, 47, 48, 3, 34, 5, 8, 14, 45, 43];
+
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const webTopInset = Platform.OS === "web" ? 67 : 0;
@@ -129,10 +131,17 @@ export default function ExploreScreen() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
 
+  const coreApps = useMemo(() => {
+    return CORE_IDS.map(id => ECOSYSTEM_APPS.find(a => a.id === id)).filter(Boolean) as EcosystemApp[];
+  }, []);
+
   const filteredApps = useMemo(() => {
     let apps = ECOSYSTEM_APPS;
     if (selectedCategory !== "All") {
       apps = apps.filter(a => a.category === selectedCategory);
+    } else if (search.trim() === "") {
+      // In "All" view with no search, hide core apps from the comprehensive grid because they are in the top carousel
+      apps = apps.filter(a => !CORE_IDS.includes(a.id));
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -230,8 +239,29 @@ export default function ExploreScreen() {
           </View>
         </View>
 
+        {/* Core Flagships Carousel */}
+        {search.trim() === "" && selectedCategory === "All" && (
+          <View style={[styles.coreSection, { maxWidth: isDesktop ? 1080 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
+            <View style={styles.coreHeader}>
+              <Text style={styles.coreTitle}>Core Flagships</Text>
+              <Text style={styles.coreSubtitle}>The foundational OS and native apps of the ecosystem</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.coreCarousel}>
+              {coreApps.map(app => (
+                <AppCard key={app.id} app={app} cardWidth={280} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* App Grid */}
         <View style={[styles.gridContainer, { maxWidth: isDesktop ? 1080 : undefined, alignSelf: isDesktop ? "center" as const : undefined, width: isDesktop ? "100%" : undefined }]}>
+          {search.trim() === "" && selectedCategory === "All" && (
+            <View style={styles.comprehensiveHeader}>
+              <Text style={styles.coreTitle}>Comprehensive Grid</Text>
+              <Text style={styles.coreSubtitle}>All 38 ecosystem apps, organized by category</Text>
+            </View>
+          )}
           {categoriesToRender.length === 0 ? (
             <EmptyState icon="search" title="No apps found" subtitle="Try a different search term" />
           ) : (
@@ -359,6 +389,32 @@ const styles = StyleSheet.create({
   gridContainer: {
     paddingHorizontal: 16,
     paddingBottom: 120,
+  },
+  coreSection: {
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  coreHeader: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  comprehensiveHeader: {
+    marginBottom: 20,
+  },
+  coreTitle: {
+    fontSize: 22,
+    color: Colors.textPrimary,
+    fontFamily: "Inter_700Bold",
+    marginBottom: 4,
+  },
+  coreSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontFamily: "Inter_400Regular",
+  },
+  coreCarousel: {
+    paddingHorizontal: 16,
+    gap: 16,
   },
   categorySection: {
     marginBottom: 28,
