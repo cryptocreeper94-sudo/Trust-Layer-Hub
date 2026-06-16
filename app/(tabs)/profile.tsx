@@ -323,7 +323,7 @@ export default function ProfileScreen() {
           <InfoBubble title="Linked Apps" message="Ecosystem apps connected to your Trust Layer account. Connected apps share your verified identity and can interact with your wallet. You can manage connections at any time." />
         </View>
         <GlassCard>
-          <LinkedAppItem name="TrustVault" connected />
+          <LinkedAppItem name="Axiom42 Suite" connected />
           <View style={styles.divider} />
           <LinkedAppItem name="THE VOID" connected />
           <View style={styles.divider} />

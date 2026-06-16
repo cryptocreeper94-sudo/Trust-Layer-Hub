@@ -159,7 +159,7 @@ export function registerEcosystemRoutes(app: Express): void {
         { id: "paintpros", name: "PaintPros", prefix: "PP", domain: "paintpros.io", status: "active" },
         { id: "arbora", name: "Arbora", prefix: "AR", domain: "arbora.tlid.io", status: "active" },
         { id: "bomber3d", name: "Bomber 3D", prefix: "B3", domain: "bomber.tlid.io", status: "active" },
-        { id: "trustvault", name: "TrustVault", prefix: "TV", domain: "trustvault.tlid.io", status: "active" },
+        { id: "axiom42suite", name: "Axiom42 Suite", prefix: "TV", domain: "axiom42suite.tlid.io", status: "active" },
         { id: "signalchat", name: "Signal Chat", prefix: "SC", domain: "signalchat.tlid.io", status: "active" },
         { id: "trustgen3d", name: "TrustGen 3D", prefix: "TG", domain: "trustgen.tlid.io", status: "active" },
         { id: "garagebot", name: "GarageBot", prefix: "GB", domain: "garagebot.io", status: "active" },

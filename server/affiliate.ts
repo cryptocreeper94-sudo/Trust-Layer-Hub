@@ -106,7 +106,7 @@ export function registerAffiliateRoutes(app: Express): void {
         referralLink,
         platforms: [
           { name: "Trust Layer Hub", url: `https://trusthub.tlid.io/ref/${user.uniqueHash}` },
-          { name: "TrustVault", url: `https://trustvault.tlid.io/ref/${user.uniqueHash}` },
+          { name: "Axiom42 Suite", url: `https://axiom42suite.tlid.io/ref/${user.uniqueHash}` },
           { name: "THE VOID", url: `https://thevoid.tlid.io/ref/${user.uniqueHash}` },
           { name: "TradeWorks AI", url: `https://tradeworks.tlid.io/ref/${user.uniqueHash}` },
           { name: "Signal Chat", url: `https://signalchat.tlid.io/ref/${user.uniqueHash}` },

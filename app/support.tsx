@@ -30,7 +30,7 @@ const FAQ_ITEMS = [
   { q: "What is the affiliate program?", a: "Earn SIG rewards by referring new users to the ecosystem. Navigate to the Affiliate section from the hamburger menu to get your unique referral link." },
   { q: "When does Trust Layer launch?", a: "Trust Layer launches on August 23, 2026 (CST). Early access is available now through the Hub app." },
   { q: "How do I connect my bank for fiat?", a: "Navigate to Profile → Banking and connect through Plaid. This enables fiat on/off ramps and bank transfers within the ecosystem." },
-  { q: "What wallets are supported?", a: "Trust Layer supports its native TrustVault wallet, plus external connections to MetaMask, Phantom, and other major wallets." },
+  { q: "What wallets are supported?", a: "Trust Layer supports its native Axiom42 Suite wallet, plus external connections to MetaMask, Phantom, and other major wallets." },
   { q: "How do I report a bug?", a: "Use the contact form below, email support@trustlayer.io, or reach out through Signal Chat within the app." },
   { q: "Can I delete my account?", a: "Yes. Go to Settings → Danger Zone → Delete Account. Note that on-chain records (hallmarks, transactions) are immutable and cannot be deleted." },
   { q: "What are DW-STAMPs?", a: "DW-STAMPs (DarkWave Stamps) are premium hallmarks issued by DarkWave Studios for official ecosystem verifications and certifications." },

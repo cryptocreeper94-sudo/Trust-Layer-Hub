@@ -293,7 +293,7 @@ For reference, here are all the apps that should implement TrustLink:
 | DarkWave Studios | darkwavestudios.io |
 | Signal Chat | signalchat.tlid.io |
 | Trust Book | trustbook.tlid.io |
-| Trust Vault | trustvault.tlid.io |
+| Axiom42 Suite | axiom42suite.tlid.io |
 | TrustHome | trusthome.tlid.io |
 | TrustShield | trustshield.tech |
 | TLID | tlid.io |

@@ -638,7 +638,7 @@ function TransferModal({ visible, onClose }: { visible: boolean; onClose: () => 
     
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     transferMutation.mutate(
-      { fromAccountId: selectedAccountId, toApp: "TrustVault", amount: num, direction },
+      { fromAccountId: selectedAccountId, toApp: "Axiom42 Suite", amount: num, direction },
       {
         onSuccess: (data) => {
           Alert.alert("Transfer Initiated", data.message || `Transfer of $${num} is processing.`);

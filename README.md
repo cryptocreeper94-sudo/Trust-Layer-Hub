@@ -12,7 +12,7 @@ Single entry point to the Trust Layer Ledger, Signal asset, Lume Auto, Lume Scan
 
 ## Features
 
-- 🏠 **Ecosystem Hub** — Single entry point to TLL, Lume Auto, Lume Scan, TrustGen, TrustVault, TrustShield, Axiom Studio, and all DarkWave properties
+- 🏠 **Ecosystem Hub** — Single entry point to TLL, Lume Auto, Lume Scan, TrustGen, Axiom42 Suite, TrustShield, Axiom Studio, and all DarkWave properties
 - ⛓️ **Trust Layer Ledger (TLL)** — Browse the live Proof-of-Authority chain, verify hashes, trace provenance
 - 💎 **Signal Asset Dashboard** — Monitor the native Signal asset with 400ms finality and 200K+ TPS
 - 📋 **Provenance Explorer** — Look up any seal, verify any hash, trace any chain-of-custody

@@ -41,7 +41,7 @@ Every app in the ecosystem MUST use its assigned prefix. No two apps share a pre
 | 1 | Trust Layer Hub | `TH` | TH-00000001 | trusthub.tlid.io |
 | 2 | Trust Layer (L1) | `TL` | TL-00000001 | dwtl.io |
 | 3 | TrustHome | `TR` | TR-00000001 | trusthome.tlid.io |
-| 4 | TrustVault | `TV` | TV-00000001 | trustvault.tlid.io |
+| 4 | Axiom42 Suite | `TV` | TV-00000001 | axiom42suite.tlid.io |
 | 5 | TLID.io | `TI` | TI-00000001 | tlid.io |
 | 6 | THE VOID | `VO` | VO-00000001 | thevoid.tlid.io |
 | 7 | Signal Chat | `SC` | SC-00000001 | signalchat.tlid.io |
@@ -314,7 +314,7 @@ https://[app-domain].tlid.io/ref/[uniqueHash]
 **Examples:**
 ```
 https://trusthub.tlid.io/ref/a7b3c9d2e1f4
-https://trustvault.tlid.io/ref/a7b3c9d2e1f4
+https://axiom42suite.tlid.io/ref/a7b3c9d2e1f4
 https://thevoid.tlid.io/ref/a7b3c9d2e1f4
 https://tradeworks.tlid.io/ref/a7b3c9d2e1f4
 ```
@@ -365,7 +365,7 @@ Tiers are based on the number of **converted** referrals (not just clicks). A "c
 
 The `platform` field on referrals tracks which app generated the referral. This allows:
 
-- A user can refer someone to TrustVault, and separately refer someone to THE VOID
+- A user can refer someone to Axiom42 Suite, and separately refer someone to THE VOID
 - Each referral is attributed to the specific app
 - Commission rates are per-user (not per-app) — a Diamond tier user earns 20% on ALL apps
 - The affiliate dashboard in the Hub aggregates referrals across all platforms
