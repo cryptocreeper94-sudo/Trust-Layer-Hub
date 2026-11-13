@@ -38,6 +38,6 @@ npx eas-cli build --platform android --profile preview
 
 Proprietary — DarkWave Studios LLC © 2026
 
-- [dwtl.io](https://dwtl.io)
+- [dwtl.io](https://trustlayer.tlid.io)
 - [darkwavestudios.io](https://darkwavestudios.io)
 - U.S. Provisional Patent 64/032,339
